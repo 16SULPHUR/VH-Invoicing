@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import PrintFriendlyInvoice from './PrintFriendlyInvoice';
+import ReactDOMServer from 'react-dom/server';
+
 
 const supabase = createClient(
   "https://basihmnebvsflzkaivds.supabase.co",
@@ -15,6 +18,8 @@ const VarietyHeavenBill = () => {
   const [customerNumber, setCustomerNumber] = useState("");
   const [invoices, setInvoices] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const printAreaRef = useRef(null);
 
   useEffect(() => {
@@ -83,41 +88,66 @@ const VarietyHeavenBill = () => {
       .toFixed(2);
   };
 
-  const handlePrint = async () => {
-    if (products.length === 0) {
-      alert("Please add at least one product before printing the invoice.");
-      return;
-    }
+  function getCurrentFormattedDate() {
+    const date = new Date();
+    
+    const day = String(date.getDate()).padStart(2, '0'); // Get day and pad with leading 0 if needed
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (0-indexed) and pad with 0
+    const year = date.getFullYear(); // Get full year
+    const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]; // Array for day names
+    const weekDay = daysOfWeek[date.getDay()]; // Get the day of the week
 
-    const printContent = printAreaRef.current;
-    const windowPrint = window.open(
-      "",
-      "",
-      "left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0",
+    return `${day}/${month}/${year} ${weekDay}`;
+}
+
+
+
+
+  const handlePrint = async () => {
+    // if (products.length === 0) {
+    //   alert("Please add at least one product before printing the invoice.");
+    //   return;
+    // }
+
+    const date =  getCurrentFormattedDate()
+
+    const printContent = (
+      <PrintFriendlyInvoice
+        invoiceId={currentInvoiceId}
+        invoiceDate={date}
+        customerName={customerName}
+        customerNumber={customerNumber}
+        products={products}
+        calculateTotal={calculateTotal}
+      />
     );
-    windowPrint.document.write(`
-          <html>
-            <head>
-              <title>Variety Heaven Bill</title>
-              <style>
-                body { font-family: Arial, sans-serif; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-              </style>
-            </head>
-            <body>
-              ${printContent.innerHTML}
-            </body>
-          </html>
-        `);
-    windowPrint.document.close();
-    windowPrint.focus();
-    windowPrint.print();
-    // windowPrint.close();
+  
+    const printWindow = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Variety Heaven Bill</title>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            @media print {
+              body { -webkit-print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          ${ReactDOMServer.renderToString(printContent)}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
 
     const newInvoice = {
-      date: new Date().toISOString(),
+      date: currentDate.toISOString(),
       customerName,
       customerNumber,
       products,
@@ -126,19 +156,22 @@ const VarietyHeavenBill = () => {
 
     const { data, error } = await supabase
       .from("invoices")
-      .insert([newInvoice]);
+      .insert([newInvoice])
+      .select();
 
     if (error) {
       console.error("Error saving invoice:", error);
     } else {
       console.log("Invoice saved successfully:", data);
-      fetchInvoices(); // Refresh the invoices list
+      setCurrentInvoiceId(data[0].id);
+      fetchInvoices();
     }
 
     // Clear the form after saving
     setProducts([]);
     setCustomerName("");
     setCustomerNumber("");
+    setCurrentDate(new Date());
   };
 
   const exportToCSV = async () => {
@@ -198,7 +231,7 @@ const VarietyHeavenBill = () => {
           {invoices.map((invoice, index) => (
             <div key={invoice.id} className="card mb-3">
               <div className="card-body">
-                <h5 className="card-title">Invoice #{index + 1}</h5>
+                <h5 className="card-title">Invoice #{invoice.id}</h5>
                 <p className="card-text">
                   Date: {new Date(invoice.date).toLocaleDateString()}
                 </p>
