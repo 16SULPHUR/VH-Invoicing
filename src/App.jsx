@@ -114,7 +114,7 @@ const VarietyHeavenBill = () => {
     windowPrint.document.close();
     windowPrint.focus();
     windowPrint.print();
-    windowPrint.close();
+    // windowPrint.close();
 
     const newInvoice = {
       date: new Date().toISOString(),
