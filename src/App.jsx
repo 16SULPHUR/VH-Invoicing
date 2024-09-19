@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
-import PrintFriendlyInvoice from './PrintFriendlyInvoice';
-import ReactDOMServer from 'react-dom/server';
+import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
 
+import ReactDOMServer from "react-dom/server";
 
 const supabase = createClient(
   "https://basihmnebvsflzkaivds.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhc2lobW5lYnZzZmx6a2FpdmRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2NDg4NDUsImV4cCI6MjA0MjIyNDg0NX0.9qX5k7Jin6T-TfZJt6YWSp0nWDypi4NkAwyhzerAC7U",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhc2lobW5lYnZzZmx6a2FpdmRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2NDg4NDUsImV4cCI6MjA0MjIyNDg0NX0.9qX5k7Jin6T-TfZJt6YWSp0nWDypi4NkAwyhzerAC7U"
 );
 
 const VarietyHeavenBill = () => {
@@ -21,10 +21,21 @@ const VarietyHeavenBill = () => {
   const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const printAreaRef = useRef(null);
+  const [recentInvoices, setRecentInvoices] = useState([]);
 
   useEffect(() => {
     fetchInvoices();
+    fetchRecentInvoices();
   }, []);
+
+  const fetchRecentInvoices = async () => {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("id, date, customerName, total")
+      .order("date", { ascending: false });
+    if (error) console.error("Error fetching recent invoices:", error);
+    else setRecentInvoices(data || []);
+  };
 
   const fetchInvoices = async () => {
     const { data, error } = await supabase
@@ -32,7 +43,10 @@ const VarietyHeavenBill = () => {
       .select("*")
       .order("date", { ascending: false });
     if (error) console.error("Error fetching invoices:", error);
-    else setInvoices(data || []);
+    else {
+      setInvoices(data || []);
+      setCurrentInvoiceId(data[0].id + 1);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -90,29 +104,26 @@ const VarietyHeavenBill = () => {
 
   function getCurrentFormattedDate() {
     const date = new Date();
-    
-    const day = String(date.getDate()).padStart(2, '0'); // Get day and pad with leading 0 if needed
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (0-indexed) and pad with 0
+
+    const day = String(date.getDate()).padStart(2, "0"); // Get day and pad with leading 0 if needed
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get month (0-indexed) and pad with 0
     const year = date.getFullYear(); // Get full year
     const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]; // Array for day names
     const weekDay = daysOfWeek[date.getDay()]; // Get the day of the week
 
     return `${day}/${month}/${year} ${weekDay}`;
-}
-
-
-
+  }
 
   const handlePrint = async () => {
-    // if (products.length === 0) {
-    //   alert("Please add at least one product before printing the invoice.");
-    //   return;
-    // }
+    if (products.length === 0) {
+      alert("Please add at least one product before printing the invoice.");
+      return;
+    }
 
-    const date =  getCurrentFormattedDate()
+    const date = getCurrentFormattedDate();
 
     const printContent = (
-      <PrintFriendlyInvoice
+      <UpdatedVarietyHeavenInvoice
         invoiceId={currentInvoiceId}
         invoiceDate={date}
         customerName={customerName}
@@ -121,8 +132,12 @@ const VarietyHeavenBill = () => {
         calculateTotal={calculateTotal}
       />
     );
-  
-    const printWindow = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
+
+    const printWindow = window.open(
+      "",
+      "",
+      "left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0"
+    );
     printWindow.document.write(`
       <html>
         <head>
@@ -163,7 +178,7 @@ const VarietyHeavenBill = () => {
       console.error("Error saving invoice:", error);
     } else {
       console.log("Invoice saved successfully:", data);
-      setCurrentInvoiceId(data[0].id);
+      // setCurrentInvoiceId(data[0].id);
       fetchInvoices();
     }
 
@@ -211,6 +226,21 @@ const VarietyHeavenBill = () => {
       csvContent += row + "\n";
     });
 
+    const startEditing = (index) => {
+      const productToEdit = products[index];
+      setProductName(productToEdit.name);
+      setProductPrice(productToEdit.price.toString());
+      setProductQuantity(productToEdit.quantity.toString());
+      setEditingProduct(index);
+    };
+
+    const cancelEditing = () => {
+      setProductName("");
+      setProductPrice("");
+      setProductQuantity("");
+      setEditingProduct(null);
+    };
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -219,184 +249,315 @@ const VarietyHeavenBill = () => {
     link.click();
     document.body.removeChild(link);
   };
+  const styles = {
+    container: {
+      fontFamily: "Arial, sans-serif",
+      display: "flex",
+      maxWidth: "1200px",
+      margin: "auto",
+      padding: "20px",
+      gap:"20px"
+    },
+    mainContent: {
+      flex: "1",
+      marginRight: "20px",
+    },
+    sidebar: {
+      width: "300px",
+      height: "90vh",
+      "overflow-y":"scroll",
+      backgroundColor: "#f0f0f0",
+      padding: "20px",
+      borderRadius: "4px",
+    },
+    sidebarTitle: {
+      fontSize: "18px",
+      fontWeight: "bold",
+      marginBottom: "10px",
+    },
+    invoiceItem: {
+      backgroundColor: "white",
+      padding: "10px",
+      marginBottom: "10px",
+      borderRadius: "4px",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)",
+    },
+    invoiceItemTitle: {
+      fontWeight: "bold",
+      marginBottom: "5px",
+    },
+
+    // container: {
+    //   fontFamily: "Arial, sans-serif",
+    //   maxWidth: "800px",
+    //   margin: "auto",
+    //   padding: "20px",
+    // },
+    editButton: {
+      backgroundColor: "#FFA500",
+      color: "white",
+      padding: "5px 10px",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      marginRight: "5px",
+    },
+    header: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: "20px",
+      borderBottom: "1px solid #000",
+      paddingBottom: "10px",
+    },
+    logo: {
+      width: "100px",
+    },
+    companyDetails: {
+      fontSize: "14px",
+      lineHeight: "1.4",
+    },
+    form: {
+      marginBottom: "20px",
+    },
+    formGroup: {
+      marginBottom: "15px",
+    },
+    label: {
+      display: "block",
+      marginBottom: "5px",
+      fontWeight: "bold",
+      fontSize: "15px",
+    },
+    input: {
+      width: "100%",
+      padding: "8px",
+      border: "1px solid #ccc",
+      borderRadius: "4px",
+    },
+    table: {
+      width: "100%",
+      borderCollapse: "collapse",
+      marginTop: "20px",
+    },
+    th: {
+      backgroundColor: "#e8f5e9",
+      border: "1px solid #000",
+      padding: "10px",
+      textAlign: "left",
+    },
+    td: {
+      border: "1px solid #000",
+      padding: "10px",
+    },
+    button: {
+      backgroundColor: "#4CAF50",
+      color: "white",
+      padding: "10px 15px",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      marginRight: "10px",
+    },
+  };
 
   return (
-    <div className="container-fluid mt-4">
-      <div className="row">
-        <div
-          className="col-md-3 border-end p-3"
-          style={{ maxHeight: "600px", overflowY: "auto" }}
+    <div style={styles.container}>
+      <div style={styles.sidebar}>
+        <h3 style={styles.sidebarTitle}>Recent Invoices</h3>
+        {recentInvoices.map((invoice) => (
+          <div key={invoice.id} style={styles.invoiceItem}>
+            <div style={styles.invoiceItemTitle}>{invoice.customerName}</div>
+            <div>Date: {new Date(invoice.date).toLocaleDateString()}</div>
+            <div>Total: ₹{invoice.total}</div>
+          </div>
+        ))}
+      </div>
+      <div style={styles.mainContent}>
+        <h2
+          style={{
+            textAlign: "center",
+            backgroundColor: "#e8f5e9",
+            border: "1px solid #000",
+            padding: "5px",
+          }}
         >
-          <h2 className="mb-4">Recent Invoices</h2>
-          {invoices.map((invoice, index) => (
-            <div key={invoice.id} className="card mb-3">
-              <div className="card-body">
-                <h5 className="card-title">Invoice #{invoice.id}</h5>
-                <p className="card-text">
-                  Date: {new Date(invoice.date).toLocaleDateString()}
-                </p>
-                <p className="card-text">
-                  Customer: {invoice.customerName || "N/A"}
-                </p>
-                <p className="card-text">Total: ₹{invoice.total}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="col-md-9 p-3">
-          <form className="mb-4">
-            <div className="row">
-              <div className="col-md-6 mb-3">
+          Tax Invoice
+        </h2>
+
+        <form style={styles.form} onSubmit={handleSubmit}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div style={{ width: "48%" }}>
+              <div style={styles.formGroup}>
+                <label style={styles.label} htmlFor="customerName">
+                  Customer Name:
+                </label>
                 <input
+                  style={styles.input}
                   type="text"
-                  className="form-control"
+                  id="customerName"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Customer Name (Optional)"
                 />
               </div>
-              <div className="col-md-6 mb-3">
+              <div style={styles.formGroup}>
+                <label style={styles.label} htmlFor="customerNumber">
+                  Customer Number:
+                </label>
                 <input
-                  type="tel"
-                  className="form-control"
+                  style={styles.input}
+                  type="text"
+                  id="customerNumber"
                   value={customerNumber}
                   onChange={(e) => setCustomerNumber(e.target.value)}
-                  placeholder="Customer Number (Optional)"
                 />
               </div>
             </div>
-          </form>
-          <form onSubmit={handleSubmit} className="mb-4">
-            <div className="row">
-              <div className="col-md-3 mb-3">
+            <div style={{ width: "48%" }}>
+              <div style={styles.formGroup}>
+                <label style={styles.label} htmlFor="invoiceId">
+                  Invoice No:
+                </label>
                 <input
+                  style={styles.input}
                   type="text"
-                  className="form-control"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  placeholder="Product Name"
-                  required
+                  id="invoiceId"
+                  value={currentInvoiceId}
+                  readOnly
                 />
               </div>
-              <div className="col-md-3 mb-3">
+              <div style={styles.formGroup}>
+                <label style={styles.label} htmlFor="invoiceDate">
+                  Date:
+                </label>
                 <input
-                  type="number"
-                  className="form-control"
-                  value={productPrice}
-                  onChange={(e) => setProductPrice(e.target.value)}
-                  placeholder="Price"
-                  step="0.01"
-                  required
+                  style={styles.input}
+                  type="text"
+                  id="invoiceDate"
+                  value={getCurrentFormattedDate()}
+                  onChange={(e) => setCurrentDate(e.target.value)}
                 />
-              </div>
-              <div className="col-md-3 mb-3">
-                <input
-                  type="number"
-                  className="form-control"
-                  value={productQuantity}
-                  onChange={(e) => setProductQuantity(e.target.value)}
-                  placeholder="Quantity"
-                  required
-                />
-              </div>
-              <div className="col-md-3 mb-3">
-                <button type="submit" className="btn btn-primary w-100">
-                  {editingProduct !== null ? "Update Product" : "Add Product"}
-                </button>
-                {editingProduct !== null && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary w-100 mt-2"
-                    onClick={cancelEditing}
-                  >
-                    Cancel Editing
-                  </button>
-                )}
               </div>
             </div>
-          </form>
-          <div ref={printAreaRef}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <img
-                src="https://ik.imagekit.io/dqn1rnabh/logo-vh.png?updatedAt=1726645373505"
-                alt="Variety Heaven Logo"
-                style={{ width: "100px" }}
+          </div>
+
+          <h5>{editingProduct !== null ? "Edit Product" : "Add Product"}</h5>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div style={{ width: "30%" }}>
+              <label style={styles.label} htmlFor="productName">
+                Item name:
+              </label>
+              <input
+                style={styles.input}
+                type="text"
+                id="productName"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
               />
-              <div
-                className="text-end seller-details"
-                style={{ fontSize: "0.8rem", lineHeight: "1.2" }}
+            </div>
+            <div style={{ width: "30%" }}>
+              <label style={styles.label} htmlFor="productQuantity">
+                Quantity:
+              </label>
+              <input
+                style={styles.input}
+                type="number"
+                id="productQuantity"
+                value={productQuantity}
+                onChange={(e) => setProductQuantity(e.target.value)}
+              />
+            </div>
+            <div style={{ width: "30%" }}>
+              <label style={styles.label} htmlFor="productPrice">
+                Price/Unit:
+              </label>
+              <input
+                style={styles.input}
+                type="number"
+                id="productPrice"
+                value={productPrice}
+                onChange={(e) => setProductPrice(e.target.value)}
+              />
+            </div>
+          </div>
+          <button style={{ ...styles.button, marginTop: "10px" }} type="submit">
+            {editingProduct !== null ? "Update Product" : "Add Product"}
+          </button>
+          {editingProduct !== null && (
+            <button
+              style={{
+                ...styles.button,
+                marginTop: "10px",
+                marginLeft: "10px",
+                backgroundColor: "#ccc",
+              }}
+              type="button"
+              onClick={cancelEditing}
+            >
+              Cancel
+            </button>
+          )}
+        </form>
+
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>S.N.</th>
+              <th style={styles.th}>Item name</th>
+              <th style={styles.th}>Quantity</th>
+              <th style={styles.th}>Price/Unit</th>
+              <th style={styles.th}>Amount</th>
+              <th style={styles.th}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((product, index) => (
+              <tr key={index}>
+                <td style={styles.td}>{index + 1}</td>
+                <td style={styles.td}>{product.name}</td>
+                <td style={styles.td}>{product.quantity}</td>
+                <td style={styles.td}>₹ {product.price.toFixed(2)}</td>
+                <td style={styles.td}>₹ {product.amount.toFixed(2)}</td>
+                <td style={styles.td}>
+                  <button
+                    onClick={() => startEditing(index)}
+                    style={styles.editButton}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteProduct(index)}
+                    style={{ ...styles.button, backgroundColor: "red" }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td
+                colSpan="4"
+                style={{ ...styles.td, textAlign: "right", fontWeight: "bold" }}
               >
-                <h1 className="mb-1" style={{ fontSize: "1.5rem" }}>
-                  VARIETY HEAVEN
-                </h1>
-                <p className="mb-0">
-                  Shop no. 09, Sentosa Enclave, Near Ramipark soc.,
-                </p>
-                <p className="mb-0">Dindoli, Surat. PIN: 394-210</p>
-                <p className="mb-0">Phone: 8160185875, 7990057097</p>
-                <p className="mb-0">Email: supatil1975@gmail.com</p>
-                <p className="mb-0">GSTIN: 24GGEPP0013E1ZZ</p>
-              </div>
-            </div>
-            {(customerName || customerNumber) && (
-              <div className="mb-4">
-                <h3>Customer Information:</h3>
-                {customerName && <p>Name: {customerName}</p>}
-                {customerNumber && <p>Number: {customerNumber}</p>}
-              </div>
-            )}
-            <h2 className="text-center mb-4">Invoice</h2>
-            <table className="table table-bordered mb-4">
-              <thead className="table-light">
-                <tr>
-                  <th>S.N.</th>
-                  <th>Item name</th>
-                  <th>Quantity</th>
-                  <th>Price/Unit</th>
-                  <th>Amount</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{product.name}</td>
-                    <td>{product.quantity}</td>
-                    <td>₹{product.price.toFixed(2)}</td>
-                    <td>₹{product.amount.toFixed(2)}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-warning me-2"
-                        onClick={() => startEditing(index)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => deleteProduct(index)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="text-end">
-              <p className="fw-bold fs-5">Total Amount: ₹{calculateTotal()}</p>
-            </div>
-          </div>
-          <div className="mt-4">
-            <button onClick={handlePrint} className="btn btn-primary me-2">
-              Print Bill
-            </button>
-            <button onClick={exportToCSV} className="btn btn-secondary">
-              Export Invoices to CSV
-            </button>
-          </div>
+                Total:
+              </td>
+              <td style={{ ...styles.td, fontWeight: "bold" }}>
+                ₹ {calculateTotal()}
+              </td>
+              <td style={styles.td}></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style={{ marginTop: "20px", textAlign: "right" }}>
+          <button onClick={handlePrint} style={styles.button}>
+            Generate Invoice
+          </button>
         </div>
       </div>
+      
     </div>
   );
 };
