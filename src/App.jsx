@@ -24,6 +24,7 @@ const VarietyHeavenBill = () => {
   const printAreaRef = useRef(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [note, setNote] = useState("");
 
 
   const handleInvoiceClick = async (invoiceId) => {
@@ -147,6 +148,7 @@ const VarietyHeavenBill = () => {
         customerContact={customerNumber}
         products={products}
         calculateTotal={calculateTotal}
+        note={note} 
       />
     );
 
@@ -184,6 +186,7 @@ const VarietyHeavenBill = () => {
       customerNumber,
       products,
       total: calculateTotal(),
+      note
     };
 
     const { data, error } = await supabase
@@ -204,6 +207,7 @@ const VarietyHeavenBill = () => {
     setCustomerName("");
     setCustomerNumber("");
     setCurrentDate(new Date());
+    setNote("");
   };
 
   const exportToCSV = async () => {
@@ -571,6 +575,20 @@ const VarietyHeavenBill = () => {
             </tr>
           </tfoot>
         </table>
+
+        <div style={styles.formGroup}>
+          <label style={styles.label} htmlFor="note">
+            Note:
+          </label>
+          <input
+            style={styles.input}
+            placeholder="NOTE"
+            type="text"
+            id="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
 
         <div style={{ marginTop: "20px", textAlign: "right" }}>
           <button onClick={handlePrint} style={styles.button}>

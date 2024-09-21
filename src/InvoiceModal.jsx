@@ -5,6 +5,7 @@ import ReactDOMServer from "react-dom/server";
 export const InvoiceModal = ({ invoice, onClose }) => {
   if (!invoice) return null;
 
+  console.log(invoice)
   // Ensure products is an array
   // const products = Array.isArray(invoice.products) ? JSON.parse(invoice.products) : [];
 
@@ -18,6 +19,7 @@ export const InvoiceModal = ({ invoice, onClose }) => {
         customerContact={invoice.customerNumber}
         products={JSON.parse(invoice.products)}
         calculateTotal={() => invoice.total}
+        note={invoice.note}
       />
     );
 
@@ -78,6 +80,7 @@ export const InvoiceModal = ({ invoice, onClose }) => {
           customerContact={invoice.customerNumber}
           products={JSON.parse(invoice.products)}
           calculateTotal={() => invoice.total}
+          note={invoice.note}
         />
         <div style={{ marginTop: '20px', textAlign: 'right' }}>
           <button onClick={handlePrint} style={{ marginRight: '10px' }}>Print Invoice</button>

@@ -7,6 +7,7 @@ export const UpdatedVarietyHeavenInvoice = ({
   invoiceDate,
   products,
   calculateTotal,
+  note,
 }) => {
   const formatCurrency = (amount) => `₹ ${parseFloat(amount).toFixed(2)}`;
 
@@ -160,13 +161,12 @@ export const UpdatedVarietyHeavenInvoice = ({
           <h3 style={{ margin: "0 0 2mm 0", fontSize: "14px" }}>
             TERMS AND CONDITIONS:
           </h3>
-          <ol style={{ margin: "0", fontSize: "12px",  }}>
+          <ol style={{ margin: "0", fontSize: "12px" }}>
             <li>Goods once sold will not taken back.</li>
             <li>Exchange timing is from 4:00 PM to 6:00 PM.</li>
             <li>No guarantee for color and zari quality.</li>
             <li>Subject to Surat jurisdiction only.</li>
           </ol>
-
         </div>
         <div
           style={{
@@ -188,7 +188,12 @@ export const UpdatedVarietyHeavenInvoice = ({
           </p>
         </div>
       </div>
+      {note && (
+        <div style={{ marginTop: "10mm", border: "1px solid #000", padding: "2mm" }}>
+          <h3 style={{ margin: "0", fontSize: "14px" }}>Note:</h3>
+          <p style={{ fontSize: "12px" }}>{note}</p>
+        </div>
+      )}
     </div>
   );
 };
-
