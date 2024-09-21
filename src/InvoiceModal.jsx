@@ -6,8 +6,9 @@ export const InvoiceModal = ({ invoice, onClose }) => {
   if (!invoice) return null;
 
   // Ensure products is an array
-  const products = Array.isArray(invoice.products) ? invoice.products : [];
+  // const products = Array.isArray(invoice.products) ? JSON.parse(invoice.products) : [];
 
+  console.log(JSON.parse(invoice.products))
   const handlePrint = () => {
     const printContent = (
       <UpdatedVarietyHeavenInvoice
@@ -15,7 +16,7 @@ export const InvoiceModal = ({ invoice, onClose }) => {
         invoiceDate={new Date(invoice.date).toLocaleDateString()}
         customerName={invoice.customerName}
         customerContact={invoice.customerNumber}
-        products={products}
+        products={JSON.parse(invoice.products)}
         calculateTotal={() => invoice.total}
       />
     );
@@ -75,7 +76,7 @@ export const InvoiceModal = ({ invoice, onClose }) => {
           invoiceDate={new Date(invoice.date).toLocaleDateString()}
           customerName={invoice.customerName}
           customerContact={invoice.customerNumber}
-          products={products}
+          products={JSON.parse(invoice.products)}
           calculateTotal={() => invoice.total}
         />
         <div style={{ marginTop: '20px', textAlign: 'right' }}>
