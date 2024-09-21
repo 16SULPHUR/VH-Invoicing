@@ -127,7 +127,7 @@ const VarietyHeavenBill = () => {
         invoiceId={currentInvoiceId}
         invoiceDate={date}
         customerName={customerName}
-        customerNumber={customerNumber}
+        customerContact={customerNumber}
         products={products}
         calculateTotal={calculateTotal}
       />
@@ -367,7 +367,7 @@ const VarietyHeavenBill = () => {
         <h3 style={styles.sidebarTitle}>Recent Invoices</h3>
         {recentInvoices.map((invoice) => (
           <div key={invoice.id} style={styles.invoiceItem}>
-            <div style={styles.invoiceItemTitle}>{invoice.customerName}</div>
+            <div style={styles.invoiceItemTitle}>#{invoice.id} {invoice.customerName}</div>
             <div>Date: {new Date(invoice.date).toLocaleDateString()}</div>
             <div>Total: ₹{invoice.total}</div>
           </div>
