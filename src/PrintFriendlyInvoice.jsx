@@ -10,6 +10,13 @@ export const UpdatedVarietyHeavenInvoice = ({
   note,
 }) => {
   const formatCurrency = (amount) => `₹ ${parseFloat(amount).toFixed(2)}`;
+  function formatDate(date){
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   const total = calculateTotal();
   const subTotal = total;
@@ -115,7 +122,7 @@ export const UpdatedVarietyHeavenInvoice = ({
             <strong>Invoice No:</strong> {invoiceId}
           </p>
           <p style={{ margin: "1mm 0" }}>
-            <strong>Date:</strong> {invoiceDate}
+            <strong>Date:</strong> {formatDate(invoiceDate)}
           </p>
         </div>
       </div>

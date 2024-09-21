@@ -26,7 +26,14 @@ const VarietyHeavenBill = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [note, setNote] = useState("");
 
-
+  function formatDate(date){
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+  
   const handleInvoiceClick = async (invoiceId) => {
     const { data, error } = await supabase
       .from("invoices")
@@ -143,7 +150,7 @@ const VarietyHeavenBill = () => {
     const printContent = (
       <UpdatedVarietyHeavenInvoice
         invoiceId={currentInvoiceId}
-        invoiceDate={date}
+        invoiceDate={currentDate}
         customerName={customerName}
         customerContact={customerNumber}
         products={products}
@@ -180,7 +187,7 @@ const VarietyHeavenBill = () => {
     printWindow.print();
 
     const newInvoice = {
-      date: currentDate.toISOString(),
+      date: currentDate,
       customerName,
       customerNumber,
       products,
@@ -392,7 +399,7 @@ const VarietyHeavenBill = () => {
             onClick={() => handleInvoiceClick(invoice.id)}
           >
             <div style={styles.invoiceItemTitle}>#{invoice.id} {invoice.customerName}</div>
-            <div>Date: {new Date(invoice.date).toLocaleDateString()}</div>
+            <div>Date: {formatDate(new Date(invoice.date).toLocaleDateString())}</div>
             <div>Total: ₹{invoice.total}</div>
           </div>
         ))}
