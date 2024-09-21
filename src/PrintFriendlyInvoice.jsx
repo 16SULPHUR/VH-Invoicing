@@ -157,15 +157,16 @@ export const UpdatedVarietyHeavenInvoice = ({
 
       <div style={styles.footer}>
         <div style={{ width: "48%", border: "1px solid #000", padding: "2mm" }}>
-          <h3 style={{ margin: "0 0 2mm 0", fontSize: "18px" }}>
+          <h3 style={{ margin: "0 0 2mm 0", fontSize: "14px" }}>
             TERMS AND CONDITIONS:
           </h3>
-          <ol style={{ margin: "0", fontSize: "12px", fontWeight: "bold" }}>
-            <li>GOODS SOLD ONCE SOLD WILL NOT TAKEN BACK</li>
-            <li>EXCHANGE TIMING 4.00PM TO 6.00 PM</li>
-            <li>NO GAURANTEE FOR COLOUR & JARI</li>
-            <li>SUBJECT TO SURAT JURISDICTION ONLY</li>
+          <ol style={{ margin: "0", fontSize: "12px",  }}>
+            <li>Goods once sold will not taken back.</li>
+            <li>Exchange timing is from 4:00 PM to 6:00 PM.</li>
+            <li>No guarantee for color and zari quality.</li>
+            <li>Subject to Surat jurisdiction only.</li>
           </ol>
+
         </div>
         <div
           style={{
