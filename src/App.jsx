@@ -148,7 +148,6 @@ const VarietyHeavenBill = () => {
         customerContact={customerNumber}
         products={products}
         calculateTotal={calculateTotal}
-        note={note} 
       />
     );
 

@@ -95,7 +95,7 @@ export const UpdatedVarietyHeavenInvoice = ({
       </div>
 
       <div style={styles.invoiceTitle}>
-        <h2 style={{ margin: "0", fontSize: "20px" }}>Tax Invoice</h2>
+        <h2 style={{ margin: "0", fontSize: "20px" }}>Invoice</h2>
       </div>
 
       <div
