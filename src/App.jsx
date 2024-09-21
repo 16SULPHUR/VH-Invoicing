@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
+import {InvoiceModal} from "./InvoiceModal"
 
 import ReactDOMServer from "react-dom/server";
 
@@ -22,6 +23,22 @@ const VarietyHeavenBill = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const printAreaRef = useRef(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+
+  const handleInvoiceClick = async (invoiceId) => {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .eq("id", invoiceId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching invoice details:", error);
+    } else {
+      setSelectedInvoice(data);
+    }
+  };
 
   useEffect(() => {
     fetchInvoices();
@@ -366,7 +383,11 @@ const VarietyHeavenBill = () => {
       <div style={styles.sidebar}>
         <h3 style={styles.sidebarTitle}>Recent Invoices</h3>
         {recentInvoices.map((invoice) => (
-          <div key={invoice.id} style={styles.invoiceItem}>
+          <div 
+            key={invoice.id} 
+            style={{...styles.invoiceItem, cursor: 'pointer'}}
+            onClick={() => handleInvoiceClick(invoice.id)}
+          >
             <div style={styles.invoiceItemTitle}>#{invoice.id} {invoice.customerName}</div>
             <div>Date: {new Date(invoice.date).toLocaleDateString()}</div>
             <div>Total: ₹{invoice.total}</div>
@@ -557,8 +578,13 @@ const VarietyHeavenBill = () => {
           </button>
         </div>
       </div>
-      
-    </div>
+        {selectedInvoice && (
+          <InvoiceModal
+            invoice={selectedInvoice}
+            onClose={() => setSelectedInvoice(null)}
+          />
+        )}
+      </div>
   );
 };
 
