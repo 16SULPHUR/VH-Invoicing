@@ -421,68 +421,68 @@ const VarietyHeavenBill = () => {
   
 
   return (
-    <div className="flex gap-10 font-sans w-full mx-auto my-2">
+    <div className="flex gap-10 font-sans w-full h-full mx-auto py-12 bg-zinc-800 ">
       {/* Left Sidebar: Daily Sales */}
-      <div className="w-[300px] h-[90vh] overflow-y-scroll bg-gray-100 rounded-md p-5">
-        <h3 className="text-lg font-bold mb-2.5">Daily Sales</h3>
+      <div className="w-[450px] h-[90vh] overflow-y-scroll rounded-md p-5 border-r-4 border-indigo-500">
+        <h3 className="text-lg font-bold text-sky-500 mb-2.5">Daily Sales</h3>
         <div className="mb-5 bg-white rounded-md shadow-md">
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={dailySales}>
               <XAxis
                 dataKey="formattedDate"
-                angle={-45}
+                angle={0}
                 textAnchor="end"
-                height={50}
+                height={30}
               />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="total" stroke="#8884d8" />
+              <Line type="monotone" dataKey="total" stroke="#38b6ff" />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
-  
+
       {/* Main Content: Invoice Form */}
       <div className="flex-grow">
-        <h5 className="text-center font-bold bg-green-100 border border-black p-1.5">
+        <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5">
           Create Invoice
         </h5>
-  
+
         <form onSubmit={handleSubmit}>
           {/* Customer Details */}
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sm" htmlFor="customerName">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="customerName">
                 Customer Name:
               </label>
               <input
                 className="w-full p-2 border border-gray-300 rounded-md"
                 type="text"
                 id="customerName"
-                placeholder="customerName"
+                placeholder="Customer Name"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
               />
             </div>
             <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sm" htmlFor="customerNumber">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="customerNumber">
                 Customer Number:
               </label>
               <input
                 className="w-full p-2 border border-gray-300 rounded-md"
                 type="text"
                 id="customerNumber"
-                placeholder="customerNumber"
+                placeholder="Customer Number"
                 value={customerNumber}
                 onChange={(e) => setCustomerNumber(e.target.value)}
               />
             </div>
           </div>
-  
+
           {/* Invoice Details */}
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sm" htmlFor="invoiceId">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="invoiceId">
                 Invoice No:
               </label>
               <input
@@ -494,7 +494,7 @@ const VarietyHeavenBill = () => {
               />
             </div>
             <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sm" htmlFor="invoiceDate">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="invoiceDate">
                 Date:
               </label>
               <input
@@ -510,10 +510,9 @@ const VarietyHeavenBill = () => {
 
         {/* Product Input Form */}
         <form onSubmit={handleSubmit}>
-          {/* Product Input Form */}
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sm" htmlFor="productName">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productName">
                 Product Name:
               </label>
               <input
@@ -525,7 +524,7 @@ const VarietyHeavenBill = () => {
               />
             </div>
             <div className="w-[24%]">
-              <label className="block mb-1 font-bold text-sm" htmlFor="productQuantity">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productQuantity">
                 Quantity:
               </label>
               <input
@@ -537,7 +536,7 @@ const VarietyHeavenBill = () => {
               />
             </div>
             <div className="w-[24%]">
-              <label className="block mb-1 font-bold text-sm" htmlFor="productPrice">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productPrice">
                 Price/Unit:
               </label>
               <input
@@ -549,44 +548,43 @@ const VarietyHeavenBill = () => {
               />
             </div>
           </div>
-
-          {/* Submit Button */}
           <div className="text-right">
             <button
               type="submit"
-              className="bg-green-500 text-white px-4 py-2 rounded-md cursor-pointer"
+              className="bg-sky-500 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               {editingProduct !== null ? "Update Product" : "Add Product"}
             </button>
           </div>
+
         </form>
-  
+
         {/* Product Table with Inputs */}
-        <h5 className="text-lg font-semibold mb-2">
+        <h5 className="text-lg font-semibold mb-2 text-sky-500">
           {editingProduct !== null ? "Edit Product" : "Add Product"}
         </h5>
-        {/* Product Table */}
+
         {/* Product Table */}
         <table className="w-full border-collapse mb-5">
           <thead>
             <tr>
-              <th className="bg-green-100 border border-black p-2.5 text-left">Item Name</th>
-              <th className="bg-green-100 border border-black p-2.5 text-left">Quantity</th>
-              <th className="bg-green-100 border border-black p-2.5 text-left">Price/Unit</th>
-              <th className="bg-green-100 border border-black p-2.5 text-left">Amount</th>
-              <th className="bg-green-100 border border-black p-2.5 text-left">Action</th>
+              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Item Name</th>
+              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Quantity</th>
+              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Price/Unit</th>
+              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Amount</th>
+              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
             {products.map((product, index) => (
               <tr key={index}>
-                <td className="border border-black p-2.5">{product.name}</td>
-                <td className="border border-black p-2.5">{product.quantity}</td>
-                <td className="border border-black p-2.5">₹ {product.price.toFixed(2)}</td>
-                <td className="border border-black p-2.5">₹ {product.amount.toFixed(2)}</td>
-                <td className="border border-black p-2.5">
+                <td className="border border-white text-white font-semibold text-lg p-2.5">{product.name}</td>
+                <td className="border border-white text-white font-semibold text-lg p-2.5">{product.quantity}</td>
+                <td className="border border-white text-white font-semibold text-lg p-2.5">₹ {product.price.toFixed(2)}</td>
+                <td className="border border-white text-white font-semibold text-lg p-2.5">₹ {product.amount.toFixed(2)}</td>
+                <td className="border border-white text-white font-semibold text-lg p-2.5">
                   <button
-                    className="bg-blue-500 text-white px-2 py-1 rounded-md mr-2"
+                    className="bg-sky-500 text-white px-2 py-1 rounded-md mr-2"
                     onClick={() => startEditing(index)}
                   >
                     Edit
@@ -603,13 +601,13 @@ const VarietyHeavenBill = () => {
           </tbody>
         </table>
 
-        <div className="text-right font-bold">
+        <div className="text-right font-bold text-sky-500">
           Total: ₹ {calculateTotal()}
         </div>
-  
+
         {/* Note Field */}
         <div className="mb-4">
-          <label className="block mb-1 font-bold text-sm" htmlFor="note">
+          <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="note">
             Note:
           </label>
           <input
@@ -621,34 +619,35 @@ const VarietyHeavenBill = () => {
             onChange={(e) => setNote(e.target.value)}
           />
         </div>
-  
+
         {/* Generate Invoice Button */}
         <div className="mt-5 text-right">
           <button
             type="button"
-            className={`bg-${isEditing ? 'yellow' : 'green'}-500 text-white px-4 py-2 rounded-md cursor-pointer`}
+            className={`bg-${isEditing ? 'yellow' : 'sky'}-500 text-white px-4 py-2 rounded-md cursor-pointer`}
             onClick={isEditing ? handleUpdateInvoice : handlePrint}
           >
             {isEditing ? 'Update Invoice' : 'Generate Invoice'}
           </button>
         </div>
       </div>
-  
+
       {/* Right Sidebar: Recent Invoices */}
-      <div className="w-[300px] h-[90vh] overflow-y-scroll bg-gray-100 p-5 rounded-md">
-        <h3 className="text-lg font-bold mb-2.5">Recent Invoices</h3>
+      <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-500 rounded-md border-l-4 border-indigo-500">
+        <h3 className="text-lg font-bold text-sky-500 mb-2.5">Recent Invoices</h3>
         {recentInvoices.map((invoice) => (
           <div
             key={invoice.id}
-            className="bg-white p-2.5 mb-2.5 rounded-md shadow-md cursor-pointer"
+            className="bg-blue-950 p-1 mb-2.5 rounded-md shadow-md cursor-pointer flex justify-around items-center text-md"
             onClick={() => handleInvoiceClick(invoice.id)}
           >
-            <h5 className="font-bold">{invoice.customerName}</h5>
-            <p className="text-sm">{invoice.invoiceId}</p>
-            <p className="text-sm">₹ {invoice.total}</p>
+            <h6 className="font-bold">{invoice.customerName}</h6>
+            <p className="text-md font-bold">{invoice.invoiceId}</p>
+            <p className="text-md font-bold">₹ {invoice.total}</p>
           </div>
         ))}
       </div>
+
       {showInvoiceModal && selectedInvoice && (
         <InvoiceModal
           invoice={selectedInvoice}
@@ -656,9 +655,9 @@ const VarietyHeavenBill = () => {
           onEdit={handleEditInvoice}
         />
       )}
-
     </div>
   );
+
 }
 
 export default VarietyHeavenBill;
