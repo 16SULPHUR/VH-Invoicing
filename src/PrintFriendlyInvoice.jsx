@@ -168,7 +168,7 @@ export const UpdatedVarietyHeavenInvoice = ({
           <h3 style={{ margin: "0 0 2mm 0", fontSize: "14px" }}>
             TERMS AND CONDITIONS:
           </h3>
-          <ol style={{ margin: "0", fontSize: "12px" }}>
+          <ol className="list-decimal" style={{ margin: "0", fontSize: "12px" }}>
             <li>Goods once sold will not taken back.</li>
             <li>Exchange timing is from 4:00 PM to 6:00 PM.</li>
             <li>No guarantee for color and zari quality.</li>

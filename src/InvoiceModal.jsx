@@ -19,7 +19,6 @@ export const InvoiceModal = ({ invoice, onClose }) => {
         customerContact={invoice.customerNumber}
         products={JSON.parse(invoice.products)}
         calculateTotal={() => invoice.total}
-        note={invoice.note}
       />
     );
 
@@ -53,26 +52,9 @@ export const InvoiceModal = ({ invoice, onClose }) => {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        maxWidth: '80%',
-        maxHeight: '80%',
-        overflow: 'auto'
-      }}>
+    <div className='absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4'>
+      <div className='bg-white p-5 rounded-lg max-w-4xl max-h-[90vh] overflow-auto relative'>
+        {/* Modal Content */}
         <UpdatedVarietyHeavenInvoice
           invoiceId={invoice.id}
           invoiceDate={new Date(invoice.date).toLocaleDateString()}
@@ -82,11 +64,23 @@ export const InvoiceModal = ({ invoice, onClose }) => {
           calculateTotal={() => invoice.total}
           note={invoice.note}
         />
-        <div style={{ marginTop: '20px', textAlign: 'right' }}>
-          <button onClick={handlePrint} style={{ marginRight: '10px' }}>Print Invoice</button>
-          <button onClick={onClose}>Close</button>
+  
+        {/* Top-right Button Container */}
+        <div className='fixed top-4 right-4 space-x-2'>
+          <button 
+            onClick={handlePrint} 
+            className='bg-blue-500 text-white px-4 py-2 rounded'
+          >
+            Print Invoice
+          </button>
+          <button 
+            onClick={onClose} 
+            className='bg-red-500 text-white px-4 py-2 rounded'
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
   );
-};
+}  

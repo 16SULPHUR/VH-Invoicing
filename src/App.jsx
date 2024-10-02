@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
-import {InvoiceModal} from "./InvoiceModal"
+import { InvoiceModal } from "./InvoiceModal";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 import ReactDOMServer from "react-dom/server";
 
@@ -25,15 +33,16 @@ const VarietyHeavenBill = () => {
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [note, setNote] = useState("");
+  const [dailySales, setDailySales] = useState([]);
 
-  function formatDate(date){
+  function formatDate(date) {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, "0");
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
-  };
-  
+  }
+
   const handleInvoiceClick = async (invoiceId) => {
     const { data, error } = await supabase
       .from("invoices")
@@ -51,7 +60,40 @@ const VarietyHeavenBill = () => {
   useEffect(() => {
     fetchInvoices();
     fetchRecentInvoices();
+    fetchDailySales();
   }, []);
+
+  const fetchDailySales = async () => {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("date, total")
+      .order("date", { ascending: false })
+      .limit(30); // Fetch last 30 days of sales
+
+    if (error) {
+      console.error("Error fetching daily sales:", error);
+    } else {
+      const salesByDate = data.reduce((acc, invoice) => {
+        const date = new Date(invoice.date).toISOString().split("T")[0];
+        acc[date] = (acc[date] || 0) + parseFloat(invoice.total);
+        return acc;
+      }, {});
+
+      const salesArray = Object.entries(salesByDate)
+        .map(([date, total]) => {
+          const d = new Date(date);
+
+          return {
+            date,
+            total,
+            formattedDate: String(d.getDate()).padStart(2, "0"),
+          };
+        })
+        .reverse(); // Reverse to show oldest date first in the graph
+
+      setDailySales(salesArray);
+    }
+  };
 
   const fetchRecentInvoices = async () => {
     const { data, error } = await supabase
@@ -122,6 +164,7 @@ const VarietyHeavenBill = () => {
   };
 
   const calculateTotal = () => {
+    console.log(products)
     return products
       .reduce((sum, product) => sum + product.amount, 0)
       .toFixed(2);
@@ -192,7 +235,7 @@ const VarietyHeavenBill = () => {
       customerNumber,
       products,
       total: calculateTotal(),
-      note
+      note,
     };
 
     const { data, error } = await supabase
@@ -276,318 +319,237 @@ const VarietyHeavenBill = () => {
     link.click();
     document.body.removeChild(link);
   };
-  const styles = {
-    container: {
-      fontFamily: "Arial, sans-serif",
-      display: "flex",
-      maxWidth: "1200px",
-      margin: "auto",
-      padding: "20px",
-      gap:"20px"
-    },
-    mainContent: {
-      flex: "1",
-      marginRight: "20px",
-    },
-    sidebar: {
-      width: "300px",
-      height: "90vh",
-      "overflow-y":"scroll",
-      backgroundColor: "#f0f0f0",
-      padding: "20px",
-      borderRadius: "4px",
-    },
-    sidebarTitle: {
-      fontSize: "18px",
-      fontWeight: "bold",
-      marginBottom: "10px",
-    },
-    invoiceItem: {
-      backgroundColor: "white",
-      padding: "10px",
-      marginBottom: "10px",
-      borderRadius: "4px",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)",
-    },
-    invoiceItemTitle: {
-      fontWeight: "bold",
-      marginBottom: "5px",
-    },
 
-    // container: {
-    //   fontFamily: "Arial, sans-serif",
-    //   maxWidth: "800px",
-    //   margin: "auto",
-    //   padding: "20px",
-    // },
-    editButton: {
-      backgroundColor: "#FFA500",
-      color: "white",
-      padding: "5px 10px",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer",
-      marginRight: "5px",
-    },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      marginBottom: "20px",
-      borderBottom: "1px solid #000",
-      paddingBottom: "10px",
-    },
-    logo: {
-      width: "100px",
-    },
-    companyDetails: {
-      fontSize: "14px",
-      lineHeight: "1.4",
-    },
-    form: {
-      marginBottom: "20px",
-    },
-    formGroup: {
-      marginBottom: "15px",
-    },
-    label: {
-      display: "block",
-      marginBottom: "5px",
-      fontWeight: "bold",
-      fontSize: "15px",
-    },
-    input: {
-      width: "100%",
-      padding: "8px",
-      border: "1px solid #ccc",
-      borderRadius: "4px",
-    },
-    table: {
-      width: "100%",
-      borderCollapse: "collapse",
-      marginTop: "20px",
-    },
-    th: {
-      backgroundColor: "#e8f5e9",
-      border: "1px solid #000",
-      padding: "10px",
-      textAlign: "left",
-    },
-    td: {
-      border: "1px solid #000",
-      padding: "10px",
-    },
-    button: {
-      backgroundColor: "#4CAF50",
-      color: "white",
-      padding: "10px 15px",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer",
-      marginRight: "10px",
-    },
+  const addProduct = () => {
+    // Check if the inputs are valid (e.g., all fields are filled)
+    if (!productName || productQuantity <= 0 || productPrice <= 0) {
+      alert("Please enter valid product details.");
+      return;
+    }
+  
+    // Create a new product object
+    const newProduct = {
+      name: productName,
+      quantity: parseInt(productQuantity, 10), // Convert quantity to integer
+      price: parseFloat(productPrice), // Convert price to float
+    };
+  
+    // Add the new product to the products list
+    setProducts([...products, newProduct]);
+  
+    // Reset input fields after adding the product
+    setProductName("");
+    setProductQuantity("");
+    setProductPrice("");
   };
 
+  
+
   return (
-    <div style={styles.container}>
-      <div style={styles.sidebar}>
-        <h3 style={styles.sidebarTitle}>Recent Invoices</h3>
-        {recentInvoices.map((invoice) => (
-          <div 
-            key={invoice.id} 
-            style={{...styles.invoiceItem, cursor: 'pointer'}}
-            onClick={() => handleInvoiceClick(invoice.id)}
-          >
-            <div style={styles.invoiceItemTitle}>#{invoice.id} {invoice.customerName}</div>
-            <div>Date: {formatDate(new Date(invoice.date).toLocaleDateString())}</div>
-            <div>Total: ₹{invoice.total}</div>
-          </div>
-        ))}
+    <div className="flex gap-10 font-sans max-w-[1400px] mx-auto my-2">
+      {/* Left Sidebar: Daily Sales */}
+      <div className="w-[300px] h-[90vh] overflow-y-scroll bg-gray-100 rounded-md p-5">
+        <h3 className="text-lg font-bold mb-2.5">Daily Sales</h3>
+        <div className="mb-5 bg-white p-2.5 rounded-md shadow-md">
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={dailySales}>
+              <XAxis
+                dataKey="formattedDate"
+                angle={-45}
+                textAnchor="end"
+                height={50}
+              />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="total" stroke="#8884d8" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
-      <div style={styles.mainContent}>
-        <h2
-          style={{
-            textAlign: "center",
-            backgroundColor: "#e8f5e9",
-            border: "1px solid #000",
-            padding: "5px",
-          }}
-        >
-          Tax Invoice
-        </h2>
-
-        <form style={styles.form} onSubmit={handleSubmit}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <div style={{ width: "48%" }}>
-              <div style={styles.formGroup}>
-                <label style={styles.label} htmlFor="customerName">
-                  Customer Name:
-                </label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  id="customerName"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label} htmlFor="customerNumber">
-                  Customer Number:
-                </label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  id="customerNumber"
-                  value={customerNumber}
-                  onChange={(e) => setCustomerNumber(e.target.value)}
-                />
-              </div>
-            </div>
-            <div style={{ width: "48%" }}>
-              <div style={styles.formGroup}>
-                <label style={styles.label} htmlFor="invoiceId">
-                  Invoice No:
-                </label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  id="invoiceId"
-                  value={currentInvoiceId}
-                  readOnly
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label} htmlFor="invoiceDate">
-                  Date:
-                </label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  id="invoiceDate"
-                  value={getCurrentFormattedDate()}
-                  onChange={(e) => setCurrentDate(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          <h5>{editingProduct !== null ? "Edit Product" : "Add Product"}</h5>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <div style={{ width: "30%" }}>
-              <label style={styles.label} htmlFor="productName">
-                Item name:
+  
+      {/* Main Content: Invoice Form */}
+      <div className="flex-grow">
+        <h5 className="text-center font-bold bg-green-100 border border-black p-1.5">
+          Create Invoice
+        </h5>
+  
+        <form className="mb-5" onSubmit={handleSubmit}>
+          {/* Customer Details */}
+          <div className="flex justify-between mb-4">
+            <div className="w-[48%]">
+              <label className="block mb-1 font-bold text-sm" htmlFor="customerName">
+                Customer Name:
               </label>
               <input
-                style={styles.input}
+                className="w-full p-2 border border-gray-300 rounded-md"
                 type="text"
-                id="productName"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
+                id="customerName"
+                placeholder="customerName"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
               />
             </div>
-            <div style={{ width: "30%" }}>
-              <label style={styles.label} htmlFor="productQuantity">
-                Quantity:
+            <div className="w-[48%]">
+              <label className="block mb-1 font-bold text-sm" htmlFor="customerNumber">
+                Customer Number:
               </label>
               <input
-                style={styles.input}
-                type="number"
-                id="productQuantity"
-                value={productQuantity}
-                onChange={(e) => setProductQuantity(e.target.value)}
-              />
-            </div>
-            <div style={{ width: "30%" }}>
-              <label style={styles.label} htmlFor="productPrice">
-                Price/Unit:
-              </label>
-              <input
-                style={styles.input}
-                type="number"
-                id="productPrice"
-                value={productPrice}
-                onChange={(e) => setProductPrice(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                type="text"
+                id="customerNumber"
+                placeholder="customerNumber"
+                value={customerNumber}
+                onChange={(e) => setCustomerNumber(e.target.value)}
               />
             </div>
           </div>
-          <button style={{ ...styles.button, marginTop: "10px" }} type="submit">
-            {editingProduct !== null ? "Update Product" : "Add Product"}
-          </button>
-          {editingProduct !== null && (
-            <button
-              style={{
-                ...styles.button,
-                marginTop: "10px",
-                marginLeft: "10px",
-                backgroundColor: "#ccc",
-              }}
-              type="button"
-              onClick={cancelEditing}
-            >
-              Cancel
-            </button>
-          )}
+  
+          {/* Invoice Details */}
+          <div className="flex justify-between mb-4">
+            <div className="w-[48%]">
+              <label className="block mb-1 font-bold text-sm" htmlFor="invoiceId">
+                Invoice No:
+              </label>
+              <input
+                className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
+                type="text"
+                id="invoiceId"
+                value={currentInvoiceId}
+                readOnly
+              />
+            </div>
+            <div className="w-[48%]">
+              <label className="block mb-1 font-bold text-sm" htmlFor="invoiceDate">
+                Date:
+              </label>
+              <input
+                className="w-full p-2 border border-gray-300 rounded-md"
+                type="text"
+                id="invoiceDate"
+                value={getCurrentFormattedDate()}
+                onChange={(e) => setCurrentDate(e.target.value)}
+              />
+            </div>
+          </div>
         </form>
-
-        <table style={styles.table}>
+  
+        {/* Product Table with Inputs */}
+        <h5 className="text-lg font-semibold mb-2">
+          {editingProduct !== null ? "Edit Product" : "Add Product"}
+        </h5>
+        <table className="w-full border-collapse mb-5">
           <thead>
             <tr>
-              <th style={styles.th}>S.N.</th>
-              <th style={styles.th}>Item name</th>
-              <th style={styles.th}>Quantity</th>
-              <th style={styles.th}>Price/Unit</th>
-              <th style={styles.th}>Amount</th>
-              <th style={styles.th}>Action</th>
+              <th className="bg-green-100 border border-black p-2.5 text-left">Item Name</th>
+              <th className="bg-green-100 border border-black p-2.5 text-left">Quantity</th>
+              <th className="bg-green-100 border border-black p-2.5 text-left">Price/Unit</th>
+              <th className="bg-green-100 border border-black p-2.5 text-left">Amount</th>
+              <th className="bg-green-100 border border-black p-2.5 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
             {products.map((product, index) => (
               <tr key={index}>
-                <td style={styles.td}>{index + 1}</td>
-                <td style={styles.td}>{product.name}</td>
-                <td style={styles.td}>{product.quantity}</td>
-                <td style={styles.td}>₹ {product.price.toFixed(2)}</td>
-                <td style={styles.td}>₹ {product.amount.toFixed(2)}</td>
-                <td style={styles.td}>
-                  <button
-                    onClick={() => startEditing(index)}
-                    style={styles.editButton}
-                  >
-                    Edit
-                  </button>
+                <td className="border border-black p-2.5">
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    type="text"
+                    value={product.name}
+                    onChange={(e) => updateProductField(index, 'name', e.target.value)}
+                  />
+                </td>
+                <td className="border border-black p-2.5">
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    type="number"
+                    value={product.quantity}
+                    onChange={(e) => updateProductField(index, 'quantity', e.target.value)}
+                  />
+                </td>
+                <td className="border border-black p-2.5">
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    type="number"
+                    value={product.price}
+                    onChange={(e) => updateProductField(index, 'price', e.target.value)}
+                  />
+                </td>
+                <td className="border border-black p-2.5">
+                  ₹ {(product.quantity * product.price).toFixed(2)}
+                </td>
+                <td className="border border-black p-2.5">
                   <button
                     onClick={() => deleteProduct(index)}
-                    style={{ ...styles.button, backgroundColor: "red" }}
+                    className="bg-red-500 text-white px-2.5 py-1 rounded-md cursor-pointer"
                   >
                     Delete
                   </button>
                 </td>
               </tr>
             ))}
+            {/* Add New Product Row */}
+            <tr>
+              <td className="border border-black p-2.5">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="text"
+                  placeholder="Item Name"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                />
+              </td>
+              <td className="border border-black p-2.5">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="number"
+                  placeholder="Quantity"
+                  value={productQuantity}
+                  onChange={(e) => setProductQuantity(e.target.value)}
+                />
+              </td>
+              <td className="border border-black p-2.5">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="number"
+                  placeholder="Price/Unit"
+                  value={productPrice}
+                  onChange={(e) => setProductPrice(e.target.value)}
+                />
+              </td>
+              <td className="border border-black p-2.5">₹ {(productQuantity * productPrice).toFixed(2)}</td>
+              <td className="border border-black p-2.5">
+                <button
+                  onClick={addProduct}
+                  className="bg-green-500/[.7] text-white p-2 rounded-md cursor-pointer"
+                >
+                  ➕
+                </button>
+              </td>
+            </tr>
           </tbody>
           <tfoot>
             <tr>
               <td
-                colSpan="4"
-                style={{ ...styles.td, textAlign: "right", fontWeight: "bold" }}
+                colSpan="3"
+                className="border border-black p-2.5 text-right font-bold"
               >
                 Total:
               </td>
-              <td style={{ ...styles.td, fontWeight: "bold" }}>
+              <td className="border border-black p-2.5 font-bold">
                 ₹ {calculateTotal()}
               </td>
-              <td style={styles.td}></td>
+              <td className="border border-black p-2.5"></td>
             </tr>
           </tfoot>
         </table>
-
-        <div style={styles.formGroup}>
-          <label style={styles.label} htmlFor="note">
+  
+        {/* Note Field */}
+        <div className="mb-4">
+          <label className="block mb-1 font-bold text-sm" htmlFor="note">
             Note:
           </label>
           <input
-            style={styles.input}
+            className="w-full p-2 border border-gray-300 rounded-md"
             placeholder="NOTE"
             type="text"
             id="note"
@@ -595,21 +557,35 @@ const VarietyHeavenBill = () => {
             onChange={(e) => setNote(e.target.value)}
           />
         </div>
-
-        <div style={{ marginTop: "20px", textAlign: "right" }}>
-          <button onClick={handlePrint} style={styles.button}>
+  
+        {/* Generate Invoice Button */}
+        <div className="mt-5 text-right">
+          <button
+            onClick={handlePrint}
+            className="bg-green-500 text-white px-4 py-2 rounded-md cursor-pointer"
+          >
             Generate Invoice
           </button>
         </div>
       </div>
-        {selectedInvoice && (
-          <InvoiceModal
-            invoice={selectedInvoice}
-            onClose={() => setSelectedInvoice(null)}
-          />
-        )}
+  
+      {/* Right Sidebar: Recent Invoices */}
+      <div className="w-[300px] h-[90vh] overflow-y-scroll bg-gray-100 p-5 rounded-md">
+        <h3 className="text-lg font-bold mb-2.5">Recent Invoices</h3>
+        {recentInvoices.map((invoice) => (
+          <div
+            key={invoice.id}
+            className="bg-white p-2.5 mb-2.5 rounded-md shadow-md cursor-pointer"
+            onClick={() => handleInvoiceClick(invoice.id)}
+          >
+            <h5 className="font-bold">{invoice.customerName}</h5>
+            <p className="text-sm">{invoice.invoiceId}</p>
+            <p className="text-sm">₹ {invoice.total}</p>
+          </div>
+        ))}
       </div>
+    </div>
   );
-};
+}
 
 export default VarietyHeavenBill;
