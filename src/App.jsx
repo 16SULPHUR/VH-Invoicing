@@ -42,7 +42,7 @@ const VarietyHeavenBill = () => {
     const day = String(d.getDate()).padStart(2, "0");
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${day}/${month}`;
   }
 
   const handleInvoiceClick = async (invoiceId) => {
@@ -633,17 +633,17 @@ const VarietyHeavenBill = () => {
       </div>
 
       {/* Right Sidebar: Recent Invoices */}
-      <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-500 rounded-md border-l-4 border-indigo-500">
+      <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-200 rounded-md border-l-4 border-indigo-500">
         <h3 className="text-lg font-bold text-sky-500 mb-2.5">Recent Invoices</h3>
         {recentInvoices.map((invoice) => (
           <div
             key={invoice.id}
-            className="bg-blue-950 p-1 mb-2.5 rounded-md shadow-md cursor-pointer flex justify-around items-center text-md"
+            className="bg-blue-950 mb-2.5 rounded-md shadow-md cursor-pointer flex justify-between items-center  px-2 text-md"
             onClick={() => handleInvoiceClick(invoice.id)}
           >
+            <p className="text-md font-bold border-b">{formatDate(invoice.date)}</p>
             <h6 className="font-bold">{invoice.customerName}</h6>
-            <p className="text-md font-bold">{invoice.invoiceId}</p>
-            <p className="text-md font-bold">₹ {invoice.total}</p>
+            <p className="text-md font-bold text-black bg-white rounded-md px-1">₹ {invoice.total}</p>
           </div>
         ))}
       </div>
