@@ -8,6 +8,7 @@ export const UpdatedVarietyHeavenInvoice = ({
   products,
   calculateTotal,
   note,
+  cash
 }) => {
   const formatCurrency = (amount) => `₹ ${parseFloat(amount).toFixed(2)}`;
   function formatDate(date){
@@ -17,6 +18,8 @@ export const UpdatedVarietyHeavenInvoice = ({
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
   };
+
+  console.log(cash)
 
   const total = calculateTotal();
   const subTotal = total;
@@ -95,7 +98,7 @@ export const UpdatedVarietyHeavenInvoice = ({
           <p style={styles.companyDetails}>State: Gujarat</p>
         </div>
         <img
-          src="https://ik.imagekit.io/dqn1rnabh/logo-vh.png?updatedAt=1726645373505"
+          src="./logo.png"
           alt="Variety Heaven Logo"
           style={styles.logo}
         />

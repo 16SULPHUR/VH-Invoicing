@@ -24,6 +24,7 @@ export const InvoiceModal = ({ invoice, onClose, onEdit   }) => {
         customerContact={invoice.customerNumber}
         products={JSON.parse(invoice.products)}
         calculateTotal={() => invoice.total}
+        cash={invoice.cash}
       />
     );
 
@@ -55,24 +56,59 @@ export const InvoiceModal = ({ invoice, onClose, onEdit   }) => {
     `);
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
+    setTimeout(() => {
+      printWindow.print();
+    }, 1500);
   };
 
   return (
     <div className='absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4'>
-      <div className='bg-white p-5 rounded-lg max-w-4xl max-h-[90vh] overflow-auto relative'>
-        <UpdatedVarietyHeavenInvoice
-          invoiceId={invoice.id}
-          invoiceDate={new Date(invoice.date).toLocaleDateString()}
-          customerName={invoice.customerName}
-          customerContact={invoice.customerNumber}
-          products={JSON.parse(invoice.products)}
-          calculateTotal={() => invoice.total}
-          note={invoice.note}
-        />
+      <div className='flex space-x-4'>
+      <div className='flex flex-col space-y-2'>
+          <div 
+            className='bg-white text-blue-900 px-3 text-lg font-semibold py-2 rounded'
+          >
+            🧾 Total {invoice.total}
+          </div>
+          <div 
+            className='bg-white text-blue-900 px-3 text-lg font-semibold py-2 rounded'
+          >
+            💸 Cash {invoice.cash}
+          </div>
+          <div 
+            className='bg-white text-blue-900 px-3 text-lg font-semibold py-2 rounded'
+          >
+            🏛️ UPI {invoice.upi}
+          </div>
+          <div 
+            className='bg-white text-blue-900 px-3 text-lg font-semibold py-2 rounded'
+          >
+            ❌ Credit {invoice.credit}
+          </div>
+        </div>
 
-        {/* Centered buttons on top */}
-        <div className='absolute bottom-8 left-1/2 transform -translate-x-1/2 space-x-2'>
+        {/* Invoice Section */}
+        <div className='bg-white p-5 rounded-lg max-w-4xl max-h-[90vh] overflow-auto relative'>
+          <UpdatedVarietyHeavenInvoice
+            invoiceId={invoice.id}
+            invoiceDate={new Date(invoice.date).toLocaleDateString()}
+            customerName={invoice.customerName}
+            customerContact={invoice.customerNumber}
+            products={JSON.parse(invoice.products)}
+            calculateTotal={() => invoice.total}
+            note={invoice.note}
+            cash={invoice.cash}
+          />
+        </div>
+  
+        {/* Buttons Section */}
+        <div className='flex flex-col space-y-2'>
+          <button 
+            onClick={onClose} 
+            className='bg-red-500 text-white px-3 text-lg font-semibold py-2 rounded'
+          >
+            ❌ Close
+          </button>
           <button 
             onClick={handlePrint} 
             className='bg-blue-500 text-white px-3 text-lg font-semibold py-2 rounded'
@@ -85,16 +121,11 @@ export const InvoiceModal = ({ invoice, onClose, onEdit   }) => {
           >
             🖊️ Edit
           </button>
-          <button 
-            onClick={onClose} 
-            className='bg-red-500 text-white px-3 text-lg font-semibold py-2 rounded'
-          >
-            ❌ Close
-          </button>
         </div>
       </div>
     </div>
   );
+  
 
 
   };
