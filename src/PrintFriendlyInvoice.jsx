@@ -98,7 +98,7 @@ export const UpdatedVarietyHeavenInvoice = ({
           <p style={styles.companyDetails}>State: Gujarat</p>
         </div>
         <img
-          src="./logo.png"
+          src="https://ik.imagekit.io/dqn1rnabh/logo-vh.png?updatedAt=1726645373505"
           alt="Variety Heaven Logo"
           style={styles.logo}
         />
