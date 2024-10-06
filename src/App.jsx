@@ -37,10 +37,67 @@ const VarietyHeavenBill = () => {
   const [cash, setCash] = useState("");
   const [upi, setUpi] = useState("");
   const [credit, setCredit] = useState("");
+  const [salesType, setSalesType] = useState("today"); // For dropdown selection
+  const [customDateRange, setCustomDateRange] = useState({ start: "", end: "" }); // For custom date range
+  const [salesData, setSalesData] = useState([]); // Store the fetched sales
+
+
+  const [invoices, setInvoices] = useState([]);
+  const printAreaRef = useRef(null);
+
+
+  const handleSalesTypeChange = (e) => {
+    setSalesType(e.target.value);
+    fetchSales(e.target.value);
+  };
+
+  const handleCustomDateChange = (e) => {
+    const { name, value } = e.target;
+    setCustomDateRange({ ...customDateRange, [name]: value });
+  };
+
+  const fetchSales = async (type) => {
+    let startDate, endDate;
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0];
+  
+    if (type === "today") {
+      startDate = todayString + "T00:00:00";
+      endDate = todayString + "T23:59:59"; // Include the whole day range
+    } else if (type === "week") {
+      startDate = new Date(today.setDate(today.getDate() - 7)).toISOString().split("T")[0] + "T00:00:00";
+      endDate = todayString + "T23:59:59"; // End date is today's end
+    } else if (type === "month") {
+      startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0] + "T00:00:00";
+      endDate = todayString + "T23:59:59"; // End date is today's end
+    } else if (type === "custom") {
+      startDate = customDateRange.start + "T00:00:00"; // Include the start of the day
+      endDate = customDateRange.end + "T23:59:59"; // Include the end of the day
+    }
+  
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("date, total")
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .order("date", { ascending: false });
+  
+    if (error) {
+      console.error("Error fetching sales:", error);
+    } else {
+      const totalSales = data.reduce((acc, invoice) => acc + parseFloat(invoice.total), 0);
+      setSalesData(totalSales.toFixed(2)); // Display total sales
+    }
+  };
+  
+
+  useEffect(() => {
+    fetchSales(salesType);
+  }, [salesType]);
 
   const handleDoubleClick = (method) => {
     const totalAmount = calculateTotal();
-    
+
     if (method === "cash") {
       setCash(totalAmount);
     } else if (method === "upi") {
@@ -274,7 +331,7 @@ const VarietyHeavenBill = () => {
     const upiAmount = parseFloat(upi) || 0;
     const creditAmount = parseFloat(credit) || 0;
 
-    if (total != cashAmount + upiAmount + creditAmount) {
+    if (total != cashAmount + upiAmount + creditAmount && 0 != (cashAmount + upiAmount + creditAmount)) {
       alert("The total must be equal to the sum of Cash, UPI, and Credit.");
       return;
     }
@@ -384,297 +441,356 @@ const VarietyHeavenBill = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
 
-      {/* Main Content: Invoice Form */}
-      <div className="flex-grow border p-3">
-        <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5">
-          Create Invoice
-        </h5>
+        <div>
+        <h3 className="text-lg font-bold text-sky-500 mb-2.5">Sales Information</h3>
+        
+        <div className="mb-5 bg-white rounded-md shadow-md p-4">
+          <label htmlFor="salesPeriod" className="block mb-2 font-semibold text-gray-700">
+            Select Sales Period:
+          </label>
+          <select
+            id="salesPeriod"
+            className="w-full p-2 border border-gray-300 rounded-md"
+            value={salesType}
+            onChange={handleSalesTypeChange}
+          >
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="custom">Custom Date Range</option>
+          </select>
 
-        <form onSubmit={handleSubmit}>
-          {/* Customer Details */}
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="customerName">
-                Customer Name:
+          {/* Custom Date Range Inputs */}
+          {salesType === "custom" && (
+            <div className="mt-4">
+              <label className="block mb-1 text-sm text-gray-700" htmlFor="start">
+                Start Date:
               </label>
               <input
+                type="date"
+                name="start"
                 className="w-full p-2 border border-gray-300 rounded-md"
-                type="text"
-                id="customerName"
-                placeholder="Customer Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                value={customDateRange.start}
+                onChange={handleCustomDateChange}
               />
+              <label className="block mt-4 mb-1 text-sm text-gray-700" htmlFor="end">
+                End Date:
+              </label>
+              <input
+                type="date"
+                name="end"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                value={customDateRange.end}
+                onChange={handleCustomDateChange}
+              />
+              <button
+                className="mt-4 w-full bg-sky-500 text-white py-2 rounded-md"
+                onClick={() => fetchSales("custom")}
+              >
+                Fetch Custom Sales
+              </button>
             </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="customerNumber">
-                Customer Number:
+          )}
+
+          {/* Sales Display */}
+          <div className="mt-6">
+            <h4 className="text-lg font-semibold text-gray-700">Total Sales:</h4>
+            <p className="text-3xl text-sky-500 mt-2">₹ {salesData}</p>
+          </div>
+        </div>
+        </div>
+        </div>
+
+        {/* Main Content: Invoice Form */}
+        <div className="flex-grow border p-3">
+          <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5">
+            Create Invoice
+          </h5>
+
+          <form onSubmit={handleSubmit}>
+            {/* Customer Details */}
+            <div className="flex justify-between mb-4">
+              <div className="w-[48%]">
+                <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="customerName">
+                  Customer Name:
+                </label>
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="text"
+                  id="customerName"
+                  placeholder="Customer Name"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+              </div>
+              <div className="w-[48%]">
+                <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="customerNumber">
+                  Customer Number:
+                </label>
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="text"
+                  id="customerNumber"
+                  placeholder="Customer Number"
+                  value={customerNumber}
+                  onChange={(e) => setCustomerNumber(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Invoice Details */}
+            <div className="flex justify-between mb-4">
+              <div className="w-[48%]">
+                <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="invoiceId">
+                  Invoice No:
+                </label>
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
+                  type="text"
+                  id="invoiceId"
+                  value={currentInvoiceId}
+                  readOnly
+                />
+              </div>
+              <div className="w-[48%]">
+                <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="invoiceDate">
+                  Date:
+                </label>
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="text"
+                  id="invoiceDate"
+                  value={getCurrentFormattedDate()}
+                  onChange={(e) => setCurrentDate(e.target.value)}
+                />
+              </div>
+            </div>
+          </form>
+
+          {/* Product Input Form */}
+          <form onSubmit={handleSubmit}>
+            <div className="flex justify-between mb-4">
+              <div className="w-[48%]">
+                <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productName">
+                  Product Name:
+                </label>
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="text"
+                  id="productName"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                />
+              </div>
+              <div className="w-[24%]">
+                <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productQuantity">
+                  Quantity:
+                </label>
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="number"
+                  id="productQuantity"
+                  value={productQuantity}
+                  onChange={(e) => setProductQuantity(e.target.value)}
+                />
+              </div>
+              <div className="w-[24%]">
+                <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productPrice">
+                  Price/Unit:
+                </label>
+                <input
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  type="number"
+                  id="productPrice"
+                  value={productPrice}
+                  onChange={(e) => setProductPrice(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="text-right">
+              <button
+                type="submit"
+                className="bg-sky-500 text-white px-4 py-2 rounded-md cursor-pointer"
+              >
+                {editingProduct !== null ? "Update Product" : "Add Product"}
+              </button>
+            </div>
+
+          </form>
+
+          {/* Product Table with Inputs */}
+          <h5 className="text-lg font-semibold mb-2 text-sky-500">
+            {editingProduct !== null ? "Edit Product" : "Add Product"}
+          </h5>
+
+          {/* Product Table */}
+          <table className="w-full border-collapse mb-5">
+            <thead>
+              <tr>
+                <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Item Name</th>
+                <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Quantity</th>
+                <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Price/Unit</th>
+                <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Amount</th>
+                <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product, index) => (
+                <tr key={index}>
+                  <td className="border border-white text-white font-semibold text-lg p-2.5">{product.name}</td>
+                  <td className="border border-white text-white font-semibold text-lg p-2.5">{product.quantity}</td>
+                  <td className="border border-white text-white font-semibold text-lg p-2.5">₹ {product.price.toFixed(2)}</td>
+                  <td className="border border-white text-white font-semibold text-lg p-2.5">₹ {product.amount.toFixed(2)}</td>
+                  <td className="border border-white text-white font-semibold text-lg p-2.5">
+                    <button
+                      className="bg-sky-500 text-white px-2 py-1 rounded-md mr-2"
+                      onClick={() => startEditing(index)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-2 py-1 rounded-md"
+                      onClick={() => deleteProduct(index)}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="text-right font-bold text-sky-500">
+            Total: ₹ {calculateTotal()}
+          </div>
+
+          {/* Note Field */}
+          <div>
+
+
+
+            <div className="flex justify-around">
+              <div className="mb-4">
+                <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="cash">
+                  Cash:
+                </label>
+                <div className="flex gap-3">
+                  <span
+                    className="text-3xl cursor-pointer"
+                    onDoubleClick={() => handleDoubleClick("cash")}
+                  >
+                    💸
+                  </span>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Cash"
+                    type="number"
+                    id="cash"
+                    value={cash}
+                    onChange={(e) => setCash(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="upi">
+                  UPI:
+                </label>
+                <div className="flex gap-3">
+                  <span
+                    className="text-3xl cursor-pointer"
+                    onDoubleClick={() => handleDoubleClick("upi")}
+                  >
+                    🏛️
+                  </span>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="UPI"
+                    type="number"
+                    id="upi"
+                    value={upi}
+                    onChange={(e) => setUpi(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="credit">
+                  Credit:
+                </label>
+                <div className="flex gap-3">
+                  <span
+                    className="text-3xl cursor-pointer"
+                    onDoubleClick={() => handleDoubleClick("credit")}
+                  >
+                    ❌
+                  </span>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Credit"
+                    type="number"
+                    id="credit"
+                    value={credit}
+                    onChange={(e) => setCredit(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="note">
+                Note:
               </label>
               <input
                 className="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="NOTE"
                 type="text"
-                id="customerNumber"
-                placeholder="Customer Number"
-                value={customerNumber}
-                onChange={(e) => setCustomerNumber(e.target.value)}
+                id="note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
               />
             </div>
           </div>
 
-          {/* Invoice Details */}
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="invoiceId">
-                Invoice No:
-              </label>
-              <input
-                className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                type="text"
-                id="invoiceId"
-                value={currentInvoiceId}
-                readOnly
-              />
-            </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="invoiceDate">
-                Date:
-              </label>
-              <input
-                className="w-full p-2 border border-gray-300 rounded-md"
-                type="text"
-                id="invoiceDate"
-                value={getCurrentFormattedDate()}
-                onChange={(e) => setCurrentDate(e.target.value)}
-              />
-            </div>
-          </div>
-        </form>
-
-        {/* Product Input Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productName">
-                Product Name:
-              </label>
-              <input
-                className="w-full p-2 border border-gray-300 rounded-md"
-                type="text"
-                id="productName"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-              />
-            </div>
-            <div className="w-[24%]">
-              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productQuantity">
-                Quantity:
-              </label>
-              <input
-                className="w-full p-2 border border-gray-300 rounded-md"
-                type="number"
-                id="productQuantity"
-                value={productQuantity}
-                onChange={(e) => setProductQuantity(e.target.value)}
-              />
-            </div>
-            <div className="w-[24%]">
-              <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productPrice">
-                Price/Unit:
-              </label>
-              <input
-                className="w-full p-2 border border-gray-300 rounded-md"
-                type="number"
-                id="productPrice"
-                value={productPrice}
-                onChange={(e) => setProductPrice(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="text-right">
+          {/* Generate Invoice Button */}
+          <div className="mt-5 text-right">
             <button
-              type="submit"
-              className="bg-sky-500 text-white px-4 py-2 rounded-md cursor-pointer"
+              type="button"
+              className={`bg-${isEditing ? 'yellow' : 'sky'}-500 text-white px-4 py-2 rounded-md cursor-pointer`}
+              onClick={isEditing ? handleUpdateInvoice : handlePrint}
             >
-              {editingProduct !== null ? "Update Product" : "Add Product"}
+              {isEditing ? 'Update Invoice' : 'Generate Invoice'}
             </button>
           </div>
-
-        </form>
-
-        {/* Product Table with Inputs */}
-        <h5 className="text-lg font-semibold mb-2 text-sky-500">
-          {editingProduct !== null ? "Edit Product" : "Add Product"}
-        </h5>
-
-        {/* Product Table */}
-        <table className="w-full border-collapse mb-5">
-          <thead>
-            <tr>
-              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Item Name</th>
-              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Quantity</th>
-              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Price/Unit</th>
-              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Amount</th>
-              <th className="bg-sky-500 text-white border border-black p-2.5 text-left">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product, index) => (
-              <tr key={index}>
-                <td className="border border-white text-white font-semibold text-lg p-2.5">{product.name}</td>
-                <td className="border border-white text-white font-semibold text-lg p-2.5">{product.quantity}</td>
-                <td className="border border-white text-white font-semibold text-lg p-2.5">₹ {product.price.toFixed(2)}</td>
-                <td className="border border-white text-white font-semibold text-lg p-2.5">₹ {product.amount.toFixed(2)}</td>
-                <td className="border border-white text-white font-semibold text-lg p-2.5">
-                  <button
-                    className="bg-sky-500 text-white px-2 py-1 rounded-md mr-2"
-                    onClick={() => startEditing(index)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-2 py-1 rounded-md"
-                    onClick={() => deleteProduct(index)}
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="text-right font-bold text-sky-500">
-          Total: ₹ {calculateTotal()}
         </div>
 
-        {/* Note Field */}
-        <div>
+        {/* Right Sidebar: Recent Invoices */}
+        <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-200 rounded-md">
+          <h3 className="text-lg font-bold text-sky-500 mb-2.5">Recent Invoices</h3>
+          {recentInvoices.map((invoice) => (
+            <div
+              key={invoice.id}
+              className="bg-blue-950 mb-2.5 rounded-md shadow-md cursor-pointer flex justify-between items-center  px-2 text-md"
+              onClick={() => handleInvoiceClick(invoice.id)}
+            >
+              <p className="text-md font-bold border-b">{formatDate(invoice.date)}</p>
+              <h6 className="font-bold">{invoice.customerName.split(' ')[0]}</h6>
+              <p className="text-md font-bold text-black bg-white rounded-md px-1">₹ {invoice.total}</p>
+            </div>
+          ))}
+        </div>
 
-
-
-        <div className="flex justify-around">
-      <div className="mb-4">
-        <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="cash">
-          Cash:
-        </label>
-        <div className="flex gap-3">
-          <span 
-            className="text-3xl cursor-pointer" 
-            onDoubleClick={() => handleDoubleClick("cash")}
-          >
-            💸
-          </span>
-          <input
-            className="w-full p-2 border border-gray-300 rounded-md"
-            placeholder="Cash"
-            type="number"
-            id="cash"
-            value={cash}
-            onChange={(e) => setCash(e.target.value)}
+        {showInvoiceModal && selectedInvoice && (
+          <InvoiceModal
+            invoice={selectedInvoice}
+            onClose={() => setShowInvoiceModal(false)}
+            onEdit={handleEditInvoice}
           />
-        </div>
+        )}
       </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="upi">
-          UPI:
-        </label>
-        <div className="flex gap-3">
-          <span 
-            className="text-3xl cursor-pointer" 
-            onDoubleClick={() => handleDoubleClick("upi")}
-          >
-            🏛️
-          </span>
-          <input
-            className="w-full p-2 border border-gray-300 rounded-md"
-            placeholder="UPI"
-            type="number"
-            id="upi"
-            value={upi}
-            onChange={(e) => setUpi(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="credit">
-          Credit:
-        </label>
-        <div className="flex gap-3">
-          <span 
-            className="text-3xl cursor-pointer" 
-            onDoubleClick={() => handleDoubleClick("credit")}
-          >
-            ❌
-          </span>
-          <input
-            className="w-full p-2 border border-gray-300 rounded-md"
-            placeholder="Credit"
-            type="number"
-            id="credit"
-            value={credit}
-            onChange={(e) => setCredit(e.target.value)}
-          />
-        </div>
-      </div>
-    </div>
-
-          <div className="mb-4">
-            <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="note">
-              Note:
-            </label>
-            <input
-              className="w-full p-2 border border-gray-300 rounded-md"
-              placeholder="NOTE"
-              type="text"
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Generate Invoice Button */}
-        <div className="mt-5 text-right">
-          <button
-            type="button"
-            className={`bg-${isEditing ? 'yellow' : 'sky'}-500 text-white px-4 py-2 rounded-md cursor-pointer`}
-            onClick={isEditing ? handleUpdateInvoice : handlePrint}
-          >
-            {isEditing ? 'Update Invoice' : 'Generate Invoice'}
-          </button>
-        </div>
-      </div>
-
-      {/* Right Sidebar: Recent Invoices */}
-      <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-200 rounded-md">
-        <h3 className="text-lg font-bold text-sky-500 mb-2.5">Recent Invoices</h3>
-        {recentInvoices.map((invoice) => (
-          <div
-            key={invoice.id}
-            className="bg-blue-950 mb-2.5 rounded-md shadow-md cursor-pointer flex justify-between items-center  px-2 text-md"
-            onClick={() => handleInvoiceClick(invoice.id)}
-          >
-            <p className="text-md font-bold border-b">{formatDate(invoice.date)}</p>
-            <h6 className="font-bold">{invoice.customerName.split(' ')[0]}</h6>
-            <p className="text-md font-bold text-black bg-white rounded-md px-1">₹ {invoice.total}</p>
-          </div>
-        ))}
-      </div>
-
-      {showInvoiceModal && selectedInvoice && (
-        <InvoiceModal
-          invoice={selectedInvoice}
-          onClose={() => setShowInvoiceModal(false)}
-          onEdit={handleEditInvoice}
-        />
-      )}
-    </div>
-  );
+      );
 
 }
 
-export default VarietyHeavenBill;
+      export default VarietyHeavenBill;
