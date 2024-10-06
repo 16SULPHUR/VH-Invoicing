@@ -25,11 +25,9 @@ const VarietyHeavenBill = () => {
   const [productQuantity, setProductQuantity] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerNumber, setCustomerNumber] = useState("");
-  const [invoices, setInvoices] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const printAreaRef = useRef(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [note, setNote] = useState("");
@@ -39,6 +37,18 @@ const VarietyHeavenBill = () => {
   const [cash, setCash] = useState("");
   const [upi, setUpi] = useState("");
   const [credit, setCredit] = useState("");
+
+  const handleDoubleClick = (method) => {
+    const totalAmount = calculateTotal();
+    
+    if (method === "cash") {
+      setCash(totalAmount);
+    } else if (method === "upi") {
+      setUpi(totalAmount);
+    } else if (method === "credit") {
+      setCredit(totalAmount);
+    }
+  };
 
 
   function formatDate(date) {
@@ -72,6 +82,9 @@ const VarietyHeavenBill = () => {
     setCurrentDate(new Date(invoice.date));
     setProducts(JSON.parse(invoice.products));
     setNote(invoice.note);
+    setCash(invoice.cash)
+    setUpi(invoice.upi)
+    setCredit(invoice.credit)
     setShowInvoiceModal(false);
   };
 
@@ -126,31 +139,11 @@ const VarietyHeavenBill = () => {
     }
   };
 
-
-  const closeModal = () => {
-    setShowInvoiceModal(false);
-  };
-
   useEffect(() => {
     fetchInvoices();
     fetchRecentInvoices();
     fetchDailySales();
   }, []);
-
-  const formatPrice = (price) => {
-    if (price >= 1_000_000) {
-      return (price / 1_000_000).toFixed(1) + 'M';
-    } else if (price >= 1_000) {
-      return (price / 1_000).toFixed(1) + 'k';
-    } else {
-      return price.toFixed(2);  // Default to two decimal places for small values
-    }
-  };
-
-
-
-
-
 
   const fetchDailySales = async () => {
     const today = new Date();
@@ -244,13 +237,6 @@ const VarietyHeavenBill = () => {
     setProductPrice(productToEdit.price.toString());
     setProductQuantity(productToEdit.quantity.toString());
     setEditingProduct(index);
-  };
-
-  const cancelEditing = () => {
-    setProductName("");
-    setProductPrice("");
-    setProductQuantity("");
-    setEditingProduct(null);
   };
 
   const deleteProduct = (index) => {
@@ -376,96 +362,12 @@ const VarietyHeavenBill = () => {
 
 
 
-  const exportToCSV = async () => {
-    const { data: invoices, error } = await supabase
-      .from("invoices")
-      .select("*");
-
-    if (error) {
-      console.error("Error fetching invoices:", error);
-      alert("An error occurred while exporting invoices.");
-      return;
-    }
-
-    if (invoices.length === 0) {
-      alert("No invoices to export.");
-      return;
-    }
-
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent +=
-      "Invoice Number,Date,Customer Name,Customer Number,Total Amount,Products\n";
-
-    invoices.forEach((invoice, index) => {
-      const productsList = invoice.products
-        .map((p) => `${p.name} (${p.quantity} x ₹${p.price})`)
-        .join("; ");
-      const row = [
-        index + 1,
-        invoice.date,
-        invoice.customerName || "N/A",
-        invoice.customerNumber || "N/A",
-        invoice.total,
-        productsList,
-      ]
-        .map((e) => `"${e}"`)
-        .join(",");
-      csvContent += row + "\n";
-    });
-
-    const startEditing = (index) => {
-      const productToEdit = products[index];
-      setProductName(productToEdit.name);
-      setProductPrice(productToEdit.price.toString());
-      setProductQuantity(productToEdit.quantity.toString());
-      setEditingProduct(index);
-    };
-
-    const cancelEditing = () => {
-      setProductName("");
-      setProductPrice("");
-      setProductQuantity("");
-      setEditingProduct(null);
-    };
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "variety_heaven_invoices.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const addProduct = () => {
-    // Check if the inputs are valid (e.g., all fields are filled)
-    if (!productName || productQuantity <= 0 || productPrice <= 0) {
-      alert("Please enter valid product details.");
-      return;
-    }
-
-    // Create a new product object
-    const newProduct = {
-      name: productName,
-      quantity: parseInt(productQuantity, 10), // Convert quantity to integer
-      price: parseFloat(productPrice), // Convert price to float
-    };
-
-    // Add the new product to the products list
-    setProducts([...products, newProduct]);
-
-    // Reset input fields after adding the product
-    setProductName("");
-    setProductQuantity("");
-    setProductPrice("");
-  };
-
 
 
   return (
-    <div className="flex gap-10 font-sans w-full h-full mx-auto py-12 bg-zinc-800 ">
+    <div className="flex font-sans w-full h-full mx-auto py-12 bg-zinc-800">
       {/* Left Sidebar: Daily Sales */}
-      <div className="w-[450px] h-[90vh] overflow-y-scroll rounded-md p-5 border-r-4 border-indigo-500">
+      <div className="w-[400px] h-[90vh] overflow-y-scroll rounded-md px-2">
         <h3 className="text-lg font-bold text-sky-500 mb-2.5">Daily Sales</h3>
         <div className="mb-5 bg-white rounded-md shadow-md">
           <ResponsiveContainer width="100%" height={200}>
@@ -485,7 +387,7 @@ const VarietyHeavenBill = () => {
       </div>
 
       {/* Main Content: Invoice Form */}
-      <div className="flex-grow">
+      <div className="flex-grow border p-3">
         <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5">
           Create Invoice
         </h5>
@@ -652,56 +554,73 @@ const VarietyHeavenBill = () => {
 
 
 
-          <div className="flex justify-around">
-            <div className="mb-4">
-              <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="cash">
-                Cash:
-              </label>
-              <div className="flex gap-3">
-                <span className="text-3xl">💸</span>
-                <input
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Cash"
-                  type="number"
-                  id="cash"
-                  value={cash}
-                  onChange={(e) => setCash(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="upi">
-                UPI:
-              </label>
-              <div className="flex gap-3">
-                <span className="text-3xl">🏛️</span>
-                <input
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="UPI"
-                  type="number"
-                  id="upi"
-                  value={upi}
-                  onChange={(e) => setUpi(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="credit">
-                Credit:
-              </label>
-              <div className="flex gap-3">
-                <span className="text-3xl">❌</span>
-                <input
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Credit"
-                  type="number"
-                  id="credit"
-                  value={credit}
-                  onChange={(e) => setCredit(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-around">
+      <div className="mb-4">
+        <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="cash">
+          Cash:
+        </label>
+        <div className="flex gap-3">
+          <span 
+            className="text-3xl cursor-pointer" 
+            onDoubleClick={() => handleDoubleClick("cash")}
+          >
+            💸
+          </span>
+          <input
+            className="w-full p-2 border border-gray-300 rounded-md"
+            placeholder="Cash"
+            type="number"
+            id="cash"
+            value={cash}
+            onChange={(e) => setCash(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="upi">
+          UPI:
+        </label>
+        <div className="flex gap-3">
+          <span 
+            className="text-3xl cursor-pointer" 
+            onDoubleClick={() => handleDoubleClick("upi")}
+          >
+            🏛️
+          </span>
+          <input
+            className="w-full p-2 border border-gray-300 rounded-md"
+            placeholder="UPI"
+            type="number"
+            id="upi"
+            value={upi}
+            onChange={(e) => setUpi(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="credit">
+          Credit:
+        </label>
+        <div className="flex gap-3">
+          <span 
+            className="text-3xl cursor-pointer" 
+            onDoubleClick={() => handleDoubleClick("credit")}
+          >
+            ❌
+          </span>
+          <input
+            className="w-full p-2 border border-gray-300 rounded-md"
+            placeholder="Credit"
+            type="number"
+            id="credit"
+            value={credit}
+            onChange={(e) => setCredit(e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
 
           <div className="mb-4">
             <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="note">
@@ -731,7 +650,7 @@ const VarietyHeavenBill = () => {
       </div>
 
       {/* Right Sidebar: Recent Invoices */}
-      <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-200 rounded-md border-l-4 border-indigo-500">
+      <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-200 rounded-md">
         <h3 className="text-lg font-bold text-sky-500 mb-2.5">Recent Invoices</h3>
         {recentInvoices.map((invoice) => (
           <div
@@ -740,7 +659,7 @@ const VarietyHeavenBill = () => {
             onClick={() => handleInvoiceClick(invoice.id)}
           >
             <p className="text-md font-bold border-b">{formatDate(invoice.date)}</p>
-            <h6 className="font-bold">{invoice.customerName}</h6>
+            <h6 className="font-bold">{invoice.customerName.split(' ')[0]}</h6>
             <p className="text-md font-bold text-black bg-white rounded-md px-1">₹ {invoice.total}</p>
           </div>
         ))}

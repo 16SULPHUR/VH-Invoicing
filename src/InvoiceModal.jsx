@@ -62,7 +62,13 @@ export const InvoiceModal = ({ invoice, onClose, onEdit   }) => {
   };
 
   return (
-    <div className='absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4'>
+    <div 
+    onClick={(e) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    }}
+     className='absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4'>
       <div className='flex space-x-4'>
       <div className='flex flex-col space-y-2'>
           <div 
