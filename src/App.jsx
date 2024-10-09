@@ -67,56 +67,64 @@ const App = () => {
     setLoading(false);
   };
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError("Failed to sign up: " + error.message);
-    } else {
-      setError("Sign-up successful, please sign in.");
-    }
-    setLoading(false);
-  };
-
   return (
-    <div>
+    <div className="flex flex-row gap-48 items-center justify-center h-screen bg-gradient-to-b to-sky-950 from-sky-600 to-99%">
+      <div>
+      <img src="/src/logo.png" alt="Logo" className="self-start w-80" />
+      </div>
       {!isAuthenticated ? (
-        <form onSubmit={handleSignIn}>
-          <div>
-            <label>Email: </label>
-            <input
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              required
-            />
-          </div>
-          <div>
-            <label>Password: </label>
-            <input
-              type="password"
-              value={password}
-              onChange={handlePasswordChange}
-              required
-            />
-          </div>
-          <button type="submit" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+        <form
+        onSubmit={handleSignIn}
+        className="bg-zinc-900 p-8 rounded-md shadow-md w-[400px]"
+      >
+        <h1 className="text-center text-2xl font-bold text-sky-500 mb-6">
+          Welcome Back
+        </h1>
+        <div className="mb-4">
+          <label className="block text-sky-400 font-bold mb-2" htmlFor="email">
+            Email
+          </label>
+          <input
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-zinc-900 text-white"
+            type="email"
+            value={email}
+            onChange={handleEmailChange}
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label
+            className="block text-sky-400 font-bold mb-2"
+            htmlFor="password"
+          >
+            Password
+          </label>
+          <input
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-zinc-900 text-white"
+            type="password"
+            value={password}
+            onChange={handlePasswordChange}
+            required
+          />
+        </div>
+        <button
+          className={`w-full py-2 bg-sky-500 text-white font-bold rounded-md hover:bg-sky-600 transition duration-200 ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Signing in..." : "Sign In"}
+        </button>
+        {error && <p className="mt-4 text-red-500">{error}</p>}
+       
+      </form>
       ) : (
         <div>
           <Dashboard />
         </div>
       )}
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="mt-4 text-red-600">{error}</p>}
     </div>
   );
 };
