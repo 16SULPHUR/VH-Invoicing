@@ -1,8 +1,8 @@
 import React from 'react';
 
 const SalesInfo = ({ salesType, salesData, cashSales, upiSales, creditSales, handleSalesTypeChange, customDateRange, handleCustomDateChange, fetchSales }) => (
-  <div className="mb-5 bg-white rounded-md shadow-md p-4">
-    <label htmlFor="salesPeriod" className="block mb-2 font-semibold text-gray-700">
+  <div className="mb-5 bg-blue-950/80 rounded-md shadow-md p-4">
+    <label htmlFor="salesPeriod" className="block mb-2 font-semibold text-white">
       Select Sales Period:
     </label>
     <select
@@ -19,7 +19,7 @@ const SalesInfo = ({ salesType, salesData, cashSales, upiSales, creditSales, han
 
     {salesType === "custom" && (
       <div className="mt-4">
-        <label className="block mb-1 text-sm text-gray-700" htmlFor="start">
+        <label className="block mb-1 text-sm text-white" htmlFor="start">
           Start Date:
         </label>
         <input
@@ -29,7 +29,7 @@ const SalesInfo = ({ salesType, salesData, cashSales, upiSales, creditSales, han
           value={customDateRange.start}
           onChange={handleCustomDateChange}
         />
-        <label className="block mt-4 mb-1 text-sm text-gray-700" htmlFor="end">
+        <label className="block mt-4 mb-1 text-sm text-white" htmlFor="end">
           End Date:
         </label>
         <input
@@ -49,7 +49,7 @@ const SalesInfo = ({ salesType, salesData, cashSales, upiSales, creditSales, han
     )}
 
     <div className="mt-6">
-      <h4 className="text-lg font-semibold text-gray-700">Total Sales:</h4>
+      <h4 className="text-lg font-semibold text-white">Total Sales:</h4>
       <p className="text-3xl text-sky-500 mt-2">₹ {salesData}</p>
     </div>
     <div className="flex gap-3">

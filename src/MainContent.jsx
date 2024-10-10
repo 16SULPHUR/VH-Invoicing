@@ -14,7 +14,7 @@ const MainContent = ({
     cash, setCash, upi, setUpi, credit, setCredit, handleDoubleClick,
     note, setNote, calculateTotal, isEditing, handleUpdateInvoice, handlePrint
   }) => (
-    <div className="flex-grow border p-3">
+    <div className="flex-grow border p-3 h-screen overflow-auto">
       <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5">
         Create Invoice
       </h5>

@@ -1,16 +1,3 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import { createClient } from "@supabase/supabase-js";
-// import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
-// import { InvoiceModal } from "./InvoiceModal";
-// import {
-//   LineChart,
-//   Line,
-//   XAxis,
-//   YAxis,
-//   Tooltip,
-//   ResponsiveContainer,
-// } from "recharts";
-
 import ReactDOMServer from "react-dom/server";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -20,6 +7,7 @@ import MainContent from './MainContent';
 import RecentInvoices from './RecentInvoices';
 import { InvoiceModal } from './InvoiceModal';
 import { UpdatedVarietyHeavenInvoice } from './PrintFriendlyInvoice';
+import Sidebar  from "./Sidebar";
 
 const supabase = createClient(
   "https://basihmnebvsflzkaivds.supabase.co",
@@ -63,6 +51,7 @@ const Dashboard = () => {
 
   const [invoices, setInvoices] = useState([]);
   const printAreaRef = useRef(null);
+
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -307,7 +296,7 @@ const Dashboard = () => {
   const fetchRecentInvoices = async () => {
     const { data, error } = await supabase
       .from("invoices")
-      .select("id, date, customerName, total, credit")
+      .select()
       .order("date", { ascending: false });
     if (error) console.error("Error fetching recent invoices:", error);
     else setRecentInvoices(data || []);
@@ -484,61 +473,63 @@ const Dashboard = () => {
     setNote("");
   };
 
-
   return (
-    <div className="flex font-sans w-full h-full mx-auto py-12 bg-zinc-800">
-      <LeftSidebar
-        dailySales={dailySales}
-        salesType={salesType}
-        salesData={salesData}
-        cashSales={cashSales}
-        upiSales={upiSales}
-        creditSales={creditSales}
-        handleSalesTypeChange={handleSalesTypeChange}
-        customDateRange={customDateRange}
-        handleCustomDateChange={handleCustomDateChange}
-        fetchSales={fetchSales}
-      />
+    <div id="dashboard" className="flex font-sans w-full h-full mx-auto bg-zinc-800">
+      <Sidebar /> {/* Add the new Sidebar component here */}
+      <div className="flex flex-1">
+        <LeftSidebar
+          dailySales={dailySales}
+          salesType={salesType}
+          salesData={salesData}
+          cashSales={cashSales}
+          upiSales={upiSales}
+          creditSales={creditSales}
+          handleSalesTypeChange={handleSalesTypeChange}
+          customDateRange={customDateRange}
+          handleCustomDateChange={handleCustomDateChange}
+          fetchSales={fetchSales}
+        />
 
-      <MainContent
-        customerName={customerName}
-        setCustomerName={setCustomerName}
-        customerNumber={customerNumber}
-        setCustomerNumber={setCustomerNumber}
-        currentInvoiceId={currentInvoiceId}
-        getCurrentFormattedDate={getCurrentFormattedDate}
-        setCurrentDate={setCurrentDate}
-        handleSubmit={handleSubmit}
-        productName={productName}
-        setProductName={setProductName}
-        productQuantity={productQuantity}
-        setProductQuantity={setProductQuantity}
-        productPrice={productPrice}
-        setProductPrice={setProductPrice}
-        editingProduct={editingProduct}
-        products={products}
-        startEditing={startEditing}
-        deleteProduct={deleteProduct}
-        cash={cash}
-        setCash={setCash}
-        upi={upi}
-        setUpi={setUpi}
-        credit={credit}
-        setCredit={setCredit}
-        handleDoubleClick={handleDoubleClick}
-        note={note}
-        setNote={setNote}
-        calculateTotal={calculateTotal}
-        isEditing={isEditing}
-        handleUpdateInvoice={handleUpdateInvoice}
-        handlePrint={handlePrint}
-      />
+        <MainContent
+          customerName={customerName}
+          setCustomerName={setCustomerName}
+          customerNumber={customerNumber}
+          setCustomerNumber={setCustomerNumber}
+          currentInvoiceId={currentInvoiceId}
+          getCurrentFormattedDate={getCurrentFormattedDate}
+          setCurrentDate={setCurrentDate}
+          handleSubmit={handleSubmit}
+          productName={productName}
+          setProductName={setProductName}
+          productQuantity={productQuantity}
+          setProductQuantity={setProductQuantity}
+          productPrice={productPrice}
+          setProductPrice={setProductPrice}
+          editingProduct={editingProduct}
+          products={products}
+          startEditing={startEditing}
+          deleteProduct={deleteProduct}
+          cash={cash}
+          setCash={setCash}
+          upi={upi}
+          setUpi={setUpi}
+          credit={credit}
+          setCredit={setCredit}
+          handleDoubleClick={handleDoubleClick}
+          note={note}
+          setNote={setNote}
+          calculateTotal={calculateTotal}
+          isEditing={isEditing}
+          handleUpdateInvoice={handleUpdateInvoice}
+          handlePrint={handlePrint}
+        />
 
-      <RecentInvoices
-        recentInvoices={recentInvoices}
-        handleInvoiceClick={handleInvoiceClick}
-        formatDate={formatDate}
-      />
+        <RecentInvoices
+          recentInvoices={recentInvoices}
+          handleInvoiceClick={handleInvoiceClick}
+          formatDate={formatDate}
+        />
+      </div>
 
       {showInvoiceModal && selectedInvoice && (
         <InvoiceModal
@@ -549,7 +540,6 @@ const Dashboard = () => {
       )}
     </div>
   );
-
 };
 
 export default Dashboard;
