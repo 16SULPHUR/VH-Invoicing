@@ -11,7 +11,7 @@
 //   ResponsiveContainer,
 // } from "recharts";
 
-// import ReactDOMServer from "react-dom/server";
+import ReactDOMServer from "react-dom/server";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
@@ -19,6 +19,7 @@ import LeftSidebar from './LeftSideBar';
 import MainContent from './MainContent';
 import RecentInvoices from './RecentInvoices';
 import { InvoiceModal } from './InvoiceModal';
+import { UpdatedVarietyHeavenInvoice } from './PrintFriendlyInvoice';
 
 const supabase = createClient(
   "https://basihmnebvsflzkaivds.supabase.co",
