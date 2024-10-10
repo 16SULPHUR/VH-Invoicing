@@ -94,7 +94,7 @@ export const InvoiceModal = ({ invoice, onClose, onEdit   }) => {
         </div>
 
         {/* Invoice Section */}
-        <div className='bg-white p-5 rounded-lg max-w-4xl max-h-[90vh] overflow-auto relative'>
+        <div className='bg-white p-2 rounded-lg max-w-4xl max-h-[90vh] overflow-auto relative'>
           <UpdatedVarietyHeavenInvoice
             invoiceId={invoice.id}
             invoiceDate={new Date(invoice.date).toLocaleDateString()}
