@@ -446,7 +446,7 @@ const Dashboard = () => {
     }, 1500);
 
     const newInvoice = {
-      date: currentDate.toISOString(),
+      // date: currentDate.toISOString(),
       customerName,
       customerNumber,
       products: JSON.stringify(products),
