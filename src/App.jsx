@@ -50,6 +50,7 @@ const App = () => {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
+        localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
         setIsAuthenticated(false);
       }
     }, 60000); // Check every minute
