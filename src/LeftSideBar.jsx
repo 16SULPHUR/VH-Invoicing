@@ -7,7 +7,7 @@ const LeftSidebar = ({ dailySales, salesType, salesData, cashSales, upiSales, cr
     <h3 className="text-lg font-bold text-sky-500 mb-2.5">Daily Sales</h3>
     <DailySalesChart dailySales={dailySales} />
     <div>
-      <h3 className="text-lg font-bold text-sky-500 mb-2.5">Sales Information</h3>
+      <h3 className="text-lg font-bold text-sky-500 mb-2.5 ">Sales Information</h3>
       <SalesInfo
         salesType={salesType}
         salesData={salesData}

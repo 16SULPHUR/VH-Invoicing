@@ -12,8 +12,8 @@
   scrollbar-width: none;     /* Firefox */
 }
 
-#dashboard{
-  background-image: url("./vh-white.png");
+#bg{
+  background-image: url("https://bill.varietyheaven.in/vh-white.png");
   background-position: center;
   background-size: 70%;
   background-repeat: no-repeat;

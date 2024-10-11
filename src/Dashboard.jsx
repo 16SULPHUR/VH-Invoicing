@@ -8,13 +8,14 @@ import RecentInvoices from './RecentInvoices';
 import { InvoiceModal } from './InvoiceModal';
 import { UpdatedVarietyHeavenInvoice } from './PrintFriendlyInvoice';
 import Sidebar  from "./Sidebar";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const supabase = createClient(
   "https://basihmnebvsflzkaivds.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhc2lobW5lYnZzZmx6a2FpdmRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2NDg4NDUsImV4cCI6MjA0MjIyNDg0NX0.9qX5k7Jin6T-TfZJt6YWSp0nWDypi4NkAwyhzerAC7U"
 );
 
-const Dashboard = () => {
+const Dashboard = ({ setIsAuthenticated }) => {
   const [products, setProducts] = useState([]);
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -45,12 +46,15 @@ const Dashboard = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [invoices, setInvoices] = useState([]);
   const printAreaRef = useRef(null);
+
+  const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);  
+  const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] = useState(false);
+
 
 
   const handleEmailChange = (e) => {
@@ -473,22 +477,37 @@ const Dashboard = () => {
     setNote("");
   };
 
+
+  const toggleLeftSidebar = () => setIsLeftSidebarExpanded(!isLeftSidebarExpanded);
+  const toggleRecentInvoices = () => setIsRecentInvoicesExpanded(!isRecentInvoicesExpanded);
+
+
   return (
-    <div id="dashboard" className="flex font-sans w-full h-full mx-auto bg-zinc-800">
-      <Sidebar /> {/* Add the new Sidebar component here */}
+    <div id="dashboard" className="flex font-sans w-full h-full mx-auto bg-zinc-80 backdrop-blur-sm">
+      <Sidebar setIsAuthenticated={setIsAuthenticated}/>
       <div className="flex flex-1">
-        <LeftSidebar
-          dailySales={dailySales}
-          salesType={salesType}
-          salesData={salesData}
-          cashSales={cashSales}
-          upiSales={upiSales}
-          creditSales={creditSales}
-          handleSalesTypeChange={handleSalesTypeChange}
-          customDateRange={customDateRange}
-          handleCustomDateChange={handleCustomDateChange}
-          fetchSales={fetchSales}
-        />
+        <div className={`transition-all duration-300 ${isLeftSidebarExpanded ? 'w-[400px]' : 'w-[40px]'}`}>
+          <button
+            onClick={toggleLeftSidebar}
+            className="absolute bottom-4 left-4 z-10 bg-sky-500 text-white p-1 rounded-full"
+          >
+            {isLeftSidebarExpanded ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+          </button>
+          {isLeftSidebarExpanded && (
+            <LeftSidebar
+              dailySales={dailySales}
+              salesType={salesType}
+              salesData={salesData}
+              cashSales={cashSales}
+              upiSales={upiSales}
+              creditSales={creditSales}
+              handleSalesTypeChange={handleSalesTypeChange}
+              customDateRange={customDateRange}
+              handleCustomDateChange={handleCustomDateChange}
+              fetchSales={fetchSales}
+            />
+          )}
+        </div>
 
         <MainContent
           customerName={customerName}
@@ -524,11 +543,21 @@ const Dashboard = () => {
           handlePrint={handlePrint}
         />
 
-        <RecentInvoices
-          recentInvoices={recentInvoices}
-          handleInvoiceClick={handleInvoiceClick}
-          formatDate={formatDate}
-        />
+        <div className={`transition-all duration-300 ${isRecentInvoicesExpanded ? 'w-[300px]' : 'w-[40px]'}`}>
+          <button
+            onClick={toggleRecentInvoices}
+            className="absolute bottom-4 right-4 z-10 bg-sky-500 text-white p-1 rounded-full"
+          >
+            {isRecentInvoicesExpanded ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+          </button>
+          {isRecentInvoicesExpanded && (
+            <RecentInvoices
+              recentInvoices={recentInvoices}
+              handleInvoiceClick={handleInvoiceClick}
+              formatDate={formatDate}
+            />
+          )}
+        </div>
       </div>
 
       {showInvoiceModal && selectedInvoice && (
