@@ -5,7 +5,11 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        skyBlue: '#38BDF8', // Tailwind's default sky color
+      },
+    },
   },
   plugins: [],
 }
