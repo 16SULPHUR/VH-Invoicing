@@ -401,7 +401,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     const printContent = (
       <UpdatedVarietyHeavenInvoice
         invoiceId={currentInvoiceId}
-        invoiceDate={currentDate}
+        invoiceDate={date}
         customerName={customerName}
         customerContact={customerNumber}
         products={products}
