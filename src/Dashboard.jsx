@@ -15,7 +15,7 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhc2lobW5lYnZzZmx6a2FpdmRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2NDg4NDUsImV4cCI6MjA0MjIyNDg0NX0.9qX5k7Jin6T-TfZJt6YWSp0nWDypi4NkAwyhzerAC7U"
 );
 
-const Dashboard = ({ setIsAuthenticated }) => {
+const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [products, setProducts] = useState([]);
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -484,7 +484,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
   return (
     <div id="dashboard" className="flex font-sans w-full h-full mx-auto bg-zinc-80 backdrop-blur-sm">
-      <Sidebar setIsAuthenticated={setIsAuthenticated}/>
       <div className="flex flex-1">
         <div className={`transition-all duration-300 ${isLeftSidebarExpanded ? 'w-[400px]' : 'w-[40px]'}`}>
           <button

@@ -1,18 +1,26 @@
 import React, { useState } from "react";
-import { Home, BarChart2, LogOut, EllipsisVertical } from "lucide-react";
+import { Home, Sticker , LogOut, EllipsisVertical } from "lucide-react";
 
-const Sidebar = ({ setIsAuthenticated }) => {
+const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuHovered, setIsMenuHovered] = useState(false); // State to track hover on EllipsisVertical
 
   const menuItems = [
-    { name: "Dashboard", icon: Home },
-    { name: "Sales", icon: BarChart2 },
+    { 
+      name: "Dashboard", 
+      icon: Home,
+      onClick: () => setCurrentView("dashboard") // Set view to Dashboard
+    },
+    { 
+      name: "Sticker Printer", 
+      icon: Sticker,
+      onClick: () => setCurrentView("productSticker") // Set view to ProductSticker
+    },
     {
       name: "Logout",
       icon: LogOut,
       onClick: () => {
-        localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token")
+        localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
         setIsAuthenticated(false);
       }, // Set isAuthenticated to false on logout click
     },

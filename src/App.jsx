@@ -2,10 +2,13 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 import Dashboard from "./Dashboard";
 import Login from "./Login";
+import ProductSticker from "./ProductSticker";
+import Sidebar from "./Sidebar";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentView, setCurrentView] = useState("dashboard");
 
   useEffect(() => {
     const checkSession = async () => {
@@ -66,14 +69,31 @@ const App = () => {
         <div className="relative w-full h-full">
           <div
             id="bg"
-            className="absolute inset-0 w-full h-full z-10 bg-cover bg-center bg-zinc-800"
+            className="absolute inset-0 w-full h-full z-10 bg-cover bg-center bg-zinc-800 bg-blend-soft-light"
             style={{
-              backgroundImage: 'url("https://bill.varietyheaven.in/vh-white.png")',
+              backgroundImage:
+                'url("https://bill.varietyheaven.in/vh-white.png")',
             }}
           ></div>
           <div className="relative z-20">
-            <Dashboard setIsAuthenticated={setIsAuthenticated}/>
+            {/* Render the appropriate component based on the current view */}
+            {currentView === "dashboard" ? (
+              <Dashboard
+                setCurrentView={setCurrentView}
+                setIsAuthenticated={setIsAuthenticated}
+              />
+            ) : (
+              <ProductSticker
+                setCurrentView={setCurrentView}
+                setIsAuthenticated={setIsAuthenticated}
+              />
+            )}
           </div>
+
+          <Sidebar
+            setIsAuthenticated={setIsAuthenticated}
+            setCurrentView={setCurrentView}
+          />
         </div>
       )}
     </div>
