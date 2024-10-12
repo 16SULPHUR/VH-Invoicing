@@ -364,7 +364,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       .reduce((sum, product) => sum + product.amount, 0)
       .toFixed(2);
   };
-
   function getCurrentFormattedDate() {
     const date = new Date();
 
@@ -401,7 +400,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     const printContent = (
       <UpdatedVarietyHeavenInvoice
         invoiceId={currentInvoiceId}
-        invoiceDate={date}
+        invoiceDate={new Date().toLocaleDateString()}
         customerName={customerName}
         customerContact={customerNumber}
         products={products}

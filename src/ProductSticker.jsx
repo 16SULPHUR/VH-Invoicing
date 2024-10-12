@@ -4,12 +4,12 @@ import ReactDOMServer from "react-dom/server";
 
 const PrintableSticker = ({ sku, price, quantity, barcodeUrl }) => {
   return (
-    <div className="border rounded-md text-center">
-      <h2 id='sticker-head' className="text-2xl font-semibold leading-5">VARIETY HEAVEN</h2>
-      <p className='font-mono font-semibold text-2xl leading-3'>MRP: ₹{price}</p>
-      {barcodeUrl && <img src={barcodeUrl} alt="Barcode" className="leading-3 h-28 mx-auto" />}
-      <p className='font-mono font-semibold text-md leading-3'>Mo: 8160185875, 9898437599</p>
-      <p className='font-mono font-semibold text-sm leading-3'>09, Sentosa Enclave, Dindoli, Surat</p>
+    <div style={{width:"2in", height:"1in"}} className="sticker rounded-md text-center">
+      {/* <h2 id='sticker-head' className="text-xs font-semibold leading-5">VARIETY HEAVEN</h2> */}
+      <p className='font-mono font-semibold text-xs'>MRP: ₹{price}</p>
+      {barcodeUrl && <img src={barcodeUrl} alt="Barcode" className="leading-3 h-16 mx-auto" />}
+      {/* <p className='font-mono font-semibold text-md leading-3'>Mo: 8160185875, 9898437599</p> */}
+      {/* <p className='font-mono font-semibold text-sm leading-3'>09, Sentosa Enclave, Dindoli, Surat</p> */}
     </div>
   );
 };
@@ -41,22 +41,6 @@ const ProductSticker = () => {
       <html>
         <head>
           <title>Print Product Sticker</title>
-          <style>
-            body { font-family: Arial, sans-serif; }
-            .sticker { 
-              width: 300px;
-              margin: 20px auto;
-              padding: 20px;
-            //   border: 2px solid #000;
-              text-align: center;
-              font-family: Georgia, 'Times New Roman', Times, serif;
-            }
-            img { max-width: 100%; }
-            @media print {
-              body { -webkit-print-color-adjust: exact; }
-            }
-              
-          </style>
         </head>
         <body>
           ${ReactDOMServer.renderToString(printContent)}
@@ -77,8 +61,8 @@ const ProductSticker = () => {
   };
 
   return (
-    <div className="flex-grow border p-3 h-screen overflow-auto">
-        <div className='bg-white w-fit'>
+    <div className="flex-grow border p-3 h-screen overflow-auto backdrop-blur-sm">
+        <div className='bg-white w-fit m-10'>
             <PrintableSticker sku={sku} barcodeUrl={barcodeUrl} price={price}/>
         </div>
       <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5 mb-4">

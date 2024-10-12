@@ -1,28 +1,37 @@
 import React, { useState } from "react";
-import { Home, Sticker , LogOut, EllipsisVertical } from "lucide-react";
+import { Home, Sticker, LogOut, Menu, Barcode } from "lucide-react";
 
 const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuHovered, setIsMenuHovered] = useState(false); // State to track hover on EllipsisVertical
 
   const menuItems = [
-    { 
-      name: "Dashboard", 
+    {
+      name: "Dashboard",
       icon: Home,
-      onClick: () => setCurrentView("dashboard") // Set view to Dashboard
+      onClick: () => setCurrentView("dashboard"), // Set view to Dashboard
     },
-    { 
-      name: "Sticker Printer", 
+    {
+      name: "Scan Products",
+      icon: Barcode,
+      onClick: () => {
+        // localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
+        // setIsAuthenticated(false);
+      },
+    },
+    {
+      name: "Sticker Printer",
       icon: Sticker,
-      onClick: () => setCurrentView("productSticker") // Set view to ProductSticker
+      onClick: () => setCurrentView("productSticker"), // Set view to ProductSticker
     },
+
     {
       name: "Logout",
       icon: LogOut,
       onClick: () => {
         localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
         setIsAuthenticated(false);
-      }, // Set isAuthenticated to false on logout click
+      },
     },
   ];
 
@@ -32,24 +41,29 @@ const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
-      <div className="flex flex-col h-full justify-between">
+      <div
+        className="flex flex-col h-full justify-between bg-zinc-950"
+      >
         <div className="flex flex-col">
           {/* Conditionally show either the EllipsisVertical or the menu items */}
           {!isMenuHovered ? (
             // Show EllipsisVertical icon when not hovered
             <div
-              className="flex items-center px-3 py-3 hover:bg-black cursor-pointer rounded-full bg-black"
+              className="flex items-center px-3 py-3 bg-zinc-950 cursor-pointer rounded-full hover:bg-zinc-900"
               onMouseEnter={() => setIsMenuHovered(true)}
             >
-              <EllipsisVertical size={24} />
+              <Menu size={24} />
             </div>
           ) : (
             // Show menu items when hovered
-            <div onMouseLeave={() => setIsMenuHovered(false)}>
+            <div
+              className="rounded-lg overflow-hidden "
+              onMouseLeave={() => setIsMenuHovered(false)}
+            >
               {menuItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center px-4 py-3 bg-black hover:bg-blue-950 cursor-pointer"
+                  className="flex items-center px-4 py-3  backdrop-blur-sm hover:bg-zinc-900 cursor-pointer"
                   onClick={item.onClick} // Add onClick handler here
                 >
                   <item.icon size={24} />
