@@ -1,3 +1,4 @@
+import { Instagram } from "lucide-react";
 import React from "react";
 
 export const UpdatedVarietyHeavenInvoice = ({
@@ -8,18 +9,18 @@ export const UpdatedVarietyHeavenInvoice = ({
   products,
   calculateTotal,
   note,
-  cash
+  cash,
 }) => {
   const formatCurrency = (amount) => `₹ ${parseFloat(amount).toFixed(2)}`;
-  function formatDate(date){
+  function formatDate(date) {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, "0");
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
-  };
+  }
 
-  console.log(cash)
+  console.log(cash);
 
   const total = calculateTotal();
   const subTotal = total;
@@ -28,11 +29,11 @@ export const UpdatedVarietyHeavenInvoice = ({
   const styles = {
     container: {
       fontFamily: "Arial, sans-serif",
-      width: "148mm", // A5 width
-      height: "210mm", // A5 height
+      width: "148mm",
+      height: "210mm",
       margin: "auto",
       padding: "5mm",
-      fontSize: "16px", // Doubled base font size
+      fontSize: "16px",
       border: "1px solid #000",
     },
     header: {
@@ -44,11 +45,11 @@ export const UpdatedVarietyHeavenInvoice = ({
       paddingBottom: "3mm",
     },
     logo: {
-      width: "120px", // Same logo size
+      width: "120px",
     },
     companyDetails: {
       margin: "0",
-      fontSize: "14px", // Doubled font for company details
+      fontSize: "14px",
     },
     invoiceTitle: {
       backgroundColor: "#e8f5e9",
@@ -70,51 +71,86 @@ export const UpdatedVarietyHeavenInvoice = ({
       border: "1px solid #000",
       padding: "2mm",
       textAlign: "left",
-      fontSize: "16px", // Doubled font for table headers
+      fontSize: "16px",
     },
     td: {
       border: "1px solid #000",
       padding: "2mm",
-      fontSize: "16px", // Doubled font for table data
+      fontSize: "16px",
     },
     footer: {
       display: "flex",
       justifyContent: "space-between",
     },
+    socialContainer: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      gap: "0.25rem",
+    },
+    socialHandle: {
+      display: "flex",
+      fontSize: "0.875rem",
+      gap: "0.5rem",
+      alignItems: "center",
+    },
+    socialText: {
+      fontWeight: "600",
+    },
+    whatsappQR: {
+      width: "6rem",
+    },
+    logoImage: {
+      width: "10rem",
+    },
+    termsContainer: {
+      margin: "0",
+      fontSize: "0.75rem",
+      paddingLeft: "1.25rem",
+    },
+    noteTitle: {
+      margin: "0",
+      fontSize: "0.875rem",
+    },
+    noteText: {
+      fontSize: "0.75rem",
+    }
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <div>
-          <h1 style={{ margin: "0", fontSize: "24px" }}>VARIETY HEAVEN</h1>
+          <h1 style={{ margin: "0", fontSize: "24px" }}>
+            <img src="vh-horizontal.png" alt="logo" style={styles.logoImage} />
+          </h1>
           <p style={styles.companyDetails}>
-            Shop no. 09, Sentosa Enclave, Near Ramipark soc.,
+            Shop no. 09, Sentosa Enclave, Near Ramipark soc., Dindoli, Surat,
+            Gujarat. PIN: 394-210
           </p>
-          <p style={styles.companyDetails}>Dindoli, Surat. PIN: 394-210</p>
           <p style={styles.companyDetails}>Phone No.: 8160185875, 7990057097</p>
-          <p style={styles.companyDetails}>Email ID: supatil1975@gmail.com</p>
           <p style={styles.companyDetails}>GSTIN: 24GGEPP0013E1ZZ</p>
-          <p style={styles.companyDetails}>State: Gujarat</p>
         </div>
-        <img
-          src="https://ik.imagekit.io/dqn1rnabh/logo-vh.png?updatedAt=1726645373505"
-          alt="Variety Heaven Logo"
-          style={styles.logo}
-        />
+        <div style={styles.socialContainer}>
+          <div style={styles.socialHandle}>
+            <Instagram size={20} />
+            <span style={styles.socialText}>@varietyheaven.in</span>
+          </div>
+          <div>
+            <img src="/whatsappQR.png" alt="whatsapp qr" style={styles.whatsappQR} />
+          </div>
+        </div>
       </div>
 
       <div style={styles.invoiceTitle}>
         <h2 style={{ margin: "0", fontSize: "20px" }}>Invoice</h2>
       </div>
 
-      <div
-        style={{
-          ...styles.section,
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
+      <div style={{
+        ...styles.section,
+        display: "flex",
+        justifyContent: "space-between",
+      }}>
         <div style={{ border: "1px solid #000", padding: "2mm", width: "48%" }}>
           <h3 style={{ margin: "0 0 2mm 0", fontSize: "18px" }}>Bill To:</h3>
           <p style={{ margin: "1mm 0" }}>Name: {customerName}</p>
@@ -153,10 +189,7 @@ export const UpdatedVarietyHeavenInvoice = ({
         </tbody>
         <tfoot>
           <tr>
-            <td
-              colSpan="4"
-              style={{ ...styles.td, textAlign: "right", fontWeight: "bold" }}
-            >
+            <td colSpan="4" style={{ ...styles.td, textAlign: "right", fontWeight: "bold" }}>
               Total:
             </td>
             <td style={{ ...styles.td, fontWeight: "bold" }}>
@@ -168,42 +201,45 @@ export const UpdatedVarietyHeavenInvoice = ({
 
       <div style={styles.footer}>
         <div style={{ width: "48%", border: "1px solid #000", padding: "2mm" }}>
-          <h3 style={{ margin: "0 0 2mm 0", fontSize: "14px" }}>
+          <h3 style={styles.noteTitle}>
             TERMS AND CONDITIONS:
           </h3>
-          <ol className="list-decimal" style={{ margin: "0", fontSize: "12px" }}>
+          <ol style={styles.termsContainer}>
             <li>Goods once sold will not taken back.</li>
             <li>Exchange timing is from 4:00 PM to 6:00 PM.</li>
             <li>No guarantee for color and zari quality.</li>
+            <li>Goods should be returned within 4 days.</li>
             <li>Subject to Surat jurisdiction only.</li>
           </ol>
         </div>
-        <div
-          style={{
-            width: "48%",
-            textAlign: "center",
-            border: "1px solid #000",
-            padding: "2mm",
-          }}
-        >
-          <p
-            style={{
-              marginTop: "15mm",
-              borderTop: "1px solid #000",
-              paddingTop: "2mm",
-              fontSize: "16px",
-            }}
-          >
+        <div style={{
+          width: "48%",
+          textAlign: "center",
+          border: "1px solid #000",
+          padding: "2mm",
+        }}>
+          <p style={{
+            marginTop: "15mm",
+            borderTop: "1px solid #000",
+            paddingTop: "2mm",
+            fontSize: "16px",
+          }}>
             For Variety Heaven
           </p>
         </div>
       </div>
       {note && (
-        <div style={{ marginTop: "10mm", border: "1px solid #000", padding: "2mm" }}>
-          <h3 style={{ margin: "0", fontSize: "14px" }}>Note:</h3>
-          <p style={{ fontSize: "12px" }}>{note}</p>
+        <div style={{
+          marginTop: "10mm",
+          border: "1px solid #000",
+          padding: "2mm",
+        }}>
+          <h3 style={styles.noteTitle}>Note:</h3>
+          <p style={styles.noteText}>{note}</p>
         </div>
       )}
     </div>
   );
 };
+
+export default UpdatedVarietyHeavenInvoice;

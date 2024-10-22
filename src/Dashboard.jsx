@@ -1,14 +1,14 @@
 import ReactDOMServer from "react-dom/server";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import LeftSidebar from './LeftSideBar';
-import MainContent from './MainContent';
-import RecentInvoices from './RecentInvoices';
-import { InvoiceModal } from './InvoiceModal';
-import { UpdatedVarietyHeavenInvoice } from './PrintFriendlyInvoice';
-import Sidebar  from "./Sidebar";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { createClient } from "@supabase/supabase-js";
+import LeftSidebar from "./LeftSideBar";
+import MainContent from "./MainContent";
+import RecentInvoices from "./RecentInvoices";
+import { InvoiceModal } from "./InvoiceModal";
+import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
+import Sidebar from "./Sidebar";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const supabase = createClient(
   "https://basihmnebvsflzkaivds.supabase.co",
@@ -52,10 +52,16 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [invoices, setInvoices] = useState([]);
   const printAreaRef = useRef(null);
 
-  const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);  
-  const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] = useState(false);
+  // const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);
+  // const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] =
+  //   useState(false);
 
-
+  const [isLeftSidebarExpanded, setLeftSidebarExpanded] = useState(false);
+  const [isRecentInvoicesExpanded, setRecentInvoicesExpanded] = useState(false);
+  const [leftSidebarExpandedByClick, setLeftSidebarExpandedByClick] =
+    useState(false);
+  const [recentInvoicesExpandedByClick, setRecentInvoicesExpandedByClick] =
+    useState(false);
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -476,34 +482,85 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     setNote("");
   };
 
+  // const toggleLeftSidebar = () =>
+  //   setIsLeftSidebarExpanded(!isLeftSidebarExpanded);
+  // const toggleRecentInvoices = () =>
+  //   setIsRecentInvoicesExpanded(!isRecentInvoicesExpanded);
 
-  const toggleLeftSidebar = () => setIsLeftSidebarExpanded(!isLeftSidebarExpanded);
-  const toggleRecentInvoices = () => setIsRecentInvoicesExpanded(!isRecentInvoicesExpanded);
+  const toggleLeftSidebar = () => {
+    setLeftSidebarExpanded(!isLeftSidebarExpanded);
+    setLeftSidebarExpandedByClick(!leftSidebarExpandedByClick); // Track toggle by button
+  };
 
+  const toggleRecentInvoices = () => {
+    setRecentInvoicesExpanded(!isRecentInvoicesExpanded);
+    setRecentInvoicesExpandedByClick(!recentInvoicesExpandedByClick); // Track toggle by button
+  };
+
+  const handleLeftMouseEnter = () => {
+    if (!leftSidebarExpandedByClick) {
+      setLeftSidebarExpanded(true);
+    }
+  };
+
+  const handleLeftMouseLeave = () => {
+    if (!leftSidebarExpandedByClick) {
+      setLeftSidebarExpanded(false);
+    }
+  };
+
+  const handleRightMouseEnter = () => {
+    if (!recentInvoicesExpandedByClick) {
+      setRecentInvoicesExpanded(true);
+    }
+  };
+
+  const handleRightMouseLeave = () => {
+    if (!recentInvoicesExpandedByClick) {
+      setRecentInvoicesExpanded(false);
+    }
+  };
 
   return (
-    <div id="dashboard" className="flex font-sans w-full h-full mx-auto bg-zinc-80 backdrop-blur-sm">
+    <div
+      id="dashboard"
+      className="flex font-sans w-full h-full mx-auto bg-zinc-80 backdrop-blur-sm"
+    >
       <div className="flex flex-1">
-        <div className={`transition-all duration-300 ${isLeftSidebarExpanded ? 'w-[400px]' : 'w-[40px]'}`}>
+        <div
+          className={`transition-all duration-300 ${
+            isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
+          }`}
+        >
+          <div
+            className="h-screen w-1 fixed"
+            onClick={toggleLeftSidebar}
+          ></div>
           <button
             onClick={toggleLeftSidebar}
             className="absolute bottom-4 left-4 z-10 bg-sky-500 text-white p-1 rounded-full"
           >
-            {isLeftSidebarExpanded ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+            {isLeftSidebarExpanded ? (
+              <ChevronLeft size={24} />
+            ) : (
+              <ChevronRight size={24} />
+            )}
           </button>
           {isLeftSidebarExpanded && (
-            <LeftSidebar
-              dailySales={dailySales}
-              salesType={salesType}
-              salesData={salesData}
-              cashSales={cashSales}
-              upiSales={upiSales}
-              creditSales={creditSales}
-              handleSalesTypeChange={handleSalesTypeChange}
-              customDateRange={customDateRange}
-              handleCustomDateChange={handleCustomDateChange}
-              fetchSales={fetchSales}
-            />
+            <div>
+              <LeftSidebar
+                dailySales={dailySales}
+                salesType={salesType}
+                salesData={salesData}
+                cashSales={cashSales}
+                upiSales={upiSales}
+                creditSales={creditSales}
+                handleSalesTypeChange={handleSalesTypeChange}
+                customDateRange={customDateRange}
+                handleCustomDateChange={handleCustomDateChange}
+                fetchSales={fetchSales}
+              />
+            </div>
           )}
         </div>
 
@@ -541,19 +598,33 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           handlePrint={handlePrint}
         />
 
-        <div className={`transition-all duration-300 ${isRecentInvoicesExpanded ? 'w-[300px]' : 'w-[40px]'}`}>
+        <div
+          className={`transition-all duration-300 ${
+            isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
+          }`}
+        >
+          <div
+            className="h-screen w-1 fixed right-0"
+            onClick={toggleRecentInvoices}
+          ></div>
           <button
             onClick={toggleRecentInvoices}
             className="absolute bottom-4 right-4 z-10 bg-sky-500 text-white p-1 rounded-full"
           >
-            {isRecentInvoicesExpanded ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+            {isRecentInvoicesExpanded ? (
+              <ChevronRight size={24} />
+            ) : (
+              <ChevronLeft size={24} />
+            )}
           </button>
           {isRecentInvoicesExpanded && (
-            <RecentInvoices
-              recentInvoices={recentInvoices}
-              handleInvoiceClick={handleInvoiceClick}
-              formatDate={formatDate}
-            />
+            <div>
+              <RecentInvoices
+                recentInvoices={recentInvoices}
+                handleInvoiceClick={handleInvoiceClick}
+                formatDate={formatDate}
+              />
+            </div>
           )}
         </div>
       </div>
