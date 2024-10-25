@@ -1,14 +1,14 @@
 import React from 'react';
 
 const ProductForm = ({ handleSubmit, productName, setProductName, productQuantity, setProductQuantity, productPrice, setProductPrice, editingProduct }) => (
-  <form onSubmit={handleSubmit}>
+  <form onSubmit={handleSubmit} className="mb-4">
     <div className="flex justify-between mb-4">
       <div className="w-[48%]">
         <label className="block mb-1 font-bold text-sky-500 text-sm" htmlFor="productName">
           Product Name:
         </label>
         <input
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
           type="text"
           id="productName"
           value={productName}
@@ -20,7 +20,7 @@ const ProductForm = ({ handleSubmit, productName, setProductName, productQuantit
           Quantity:
         </label>
         <input
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
           type="number"
           id="productQuantity"
           value={productQuantity}
@@ -32,7 +32,7 @@ const ProductForm = ({ handleSubmit, productName, setProductName, productQuantit
           Price/Unit:
         </label>
         <input
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
           type="number"
           id="productPrice"
           value={productPrice}
@@ -41,11 +41,11 @@ const ProductForm = ({ handleSubmit, productName, setProductName, productQuantit
       </div>
     </div>
     <div className="text-right">
-      <button type="submit" className="bg-sky-500 text-white px-4 py-2 rounded-md cursor-pointer">
+      <button type="submit" className="bg-sky-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-sky-600 transition-colors">
         {editingProduct !== null ? "Update Product" : "Add Product"}
       </button>
     </div>
   </form>
 );
 
-export default ProductForm
+export default ProductForm;

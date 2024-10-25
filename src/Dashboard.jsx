@@ -198,6 +198,32 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }
   };
 
+  const handleDeleteInvoice = async (invoiceId) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', invoiceId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Success message
+      alert('Invoice deleted successfully');
+      
+      // Refresh all the necessary data
+      fetchInvoices();
+      fetchRecentInvoices();
+      fetchDailySales();
+      fetchSales(salesType);
+      
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      alert('Failed to delete invoice: ' + error.message);
+    }
+  };
+
   const handleEditInvoice = (invoice) => {
     setIsEditing(true);
     setCurrentInvoiceId(invoice.id);
@@ -634,6 +660,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           invoice={selectedInvoice}
           onClose={() => setShowInvoiceModal(false)}
           onEdit={handleEditInvoice}
+          onDelete={handleDeleteInvoice}
         />
       )}
     </div>

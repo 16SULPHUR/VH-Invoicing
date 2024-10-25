@@ -20,7 +20,7 @@ const App = () => {
       } else {
         setIsAuthenticated(false);
       }
-      setIsLoading(false);
+      setIsLoading(false); 
     };
 
     checkSession();
@@ -70,11 +70,7 @@ const App = () => {
         <div className="relative w-full h-full">
           <div
             id="bg"
-            className="absolute inset-0 w-full h-full z-10 bg-cover bg-center bg-zinc-800 bg-blend-soft-light"
-            style={{
-              backgroundImage:
-                'url("https://bill.varietyheaven.in/vh-white.png")',
-            }}
+            className="absolute inset-0 w-full h-full z-10 bg-cover bg-center bg-gray-900 bg-blend-soft-light"
           ></div>
           <div className="relative z-20">
             {/* Render the appropriate component based on the current view */}

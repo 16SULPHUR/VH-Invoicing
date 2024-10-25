@@ -7,7 +7,7 @@ const InvoiceDetails = ({ currentInvoiceId, getCurrentFormattedDate, setCurrentD
         Invoice No:
       </label>
       <input
-        className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
+        className="w-full p-2 border border-gray-600 rounded-md bg-gray-700 text-white"
         type="text"
         id="invoiceId"
         value={currentInvoiceId}
@@ -19,7 +19,7 @@ const InvoiceDetails = ({ currentInvoiceId, getCurrentFormattedDate, setCurrentD
         Date:
       </label>
       <input
-        className="w-full p-2 border border-gray-300 rounded-md"
+        className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
         type="text"
         id="invoiceDate"
         value={getCurrentFormattedDate()}
@@ -29,4 +29,4 @@ const InvoiceDetails = ({ currentInvoiceId, getCurrentFormattedDate, setCurrentD
   </div>
 );
 
-export default InvoiceDetails
+export default InvoiceDetails;

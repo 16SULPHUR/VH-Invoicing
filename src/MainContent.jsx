@@ -14,8 +14,8 @@ const MainContent = ({
     cash, setCash, upi, setUpi, credit, setCredit, handleDoubleClick,
     note, setNote, calculateTotal, isEditing, handleUpdateInvoice, handlePrint
   }) => (
-    <div className="flex-grow border p-3 h-screen overflow-auto">
-      <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5">
+    <div className="flex-grow border border-gray-700 p-3 h-screen overflow-auto bg-gray-900 text-gray-100">
+      <h5 className="text-center font-bold bg-sky-500 text-white border border-sky-600 p-1.5 mb-4 rounded">
         Create Invoice
       </h5>
   
@@ -72,7 +72,7 @@ const MainContent = ({
       <div className="mt-5 text-right">
         <button
           type="button"
-          className={`bg-${isEditing ? "yellow" : "sky"}-500 text-white px-4 py-2 rounded-md cursor-pointer`}
+          className={`bg-${isEditing ? "yellow" : "sky"}-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-${isEditing ? "yellow" : "sky"}-600 transition-colors`}
           onClick={isEditing ? handleUpdateInvoice : handlePrint}
         >
           {isEditing ? "Update Invoice" : "Generate Invoice"}
@@ -80,4 +80,5 @@ const MainContent = ({
       </div>
     </div>
   );
-  export default MainContent
+
+export default MainContent;

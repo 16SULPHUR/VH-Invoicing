@@ -1,17 +1,17 @@
 import React from 'react';
 
 const PaymentDetails = ({ cash, setCash, upi, setUpi, credit, setCredit, handleDoubleClick }) => (
-  <div className="flex justify-around">
+  <div className="flex justify-around mb-4">
     <div className="mb-4">
       <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="cash">
         Cash:
       </label>
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center">
         <span className="text-3xl cursor-pointer" onDoubleClick={() => handleDoubleClick("cash")}>
           💸
         </span>
         <input
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
           placeholder="Cash"
           type="number"
           id="cash"
@@ -25,12 +25,12 @@ const PaymentDetails = ({ cash, setCash, upi, setUpi, credit, setCredit, handleD
       <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="upi">
         UPI:
       </label>
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center">
         <span className="text-3xl cursor-pointer" onDoubleClick={() => handleDoubleClick("upi")}>
           🏛️
         </span>
         <input
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
           placeholder="UPI"
           type="number"
           id="upi"
@@ -44,12 +44,12 @@ const PaymentDetails = ({ cash, setCash, upi, setUpi, credit, setCredit, handleD
       <label className="block mb-1 font-bold text-sky-500 text-sm ps-5" htmlFor="credit">
         Credit:
       </label>
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center">
         <span className="text-3xl cursor-pointer" onDoubleClick={() => handleDoubleClick("credit")}>
           ❌
         </span>
         <input
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
           placeholder="Credit"
           type="number"
           id="credit"
@@ -61,4 +61,4 @@ const PaymentDetails = ({ cash, setCash, upi, setUpi, credit, setCredit, handleD
   </div>
 );
 
-export default PaymentDetails
+export default PaymentDetails;

@@ -7,7 +7,7 @@ const CustomerDetails = ({ customerName, setCustomerName, customerNumber, setCus
         Customer Name:
       </label>
       <input
-        className="w-full p-2 border border-gray-300 rounded-md"
+        className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
         type="text"
         id="customerName"
         placeholder="Customer Name"
@@ -20,7 +20,7 @@ const CustomerDetails = ({ customerName, setCustomerName, customerNumber, setCus
         Customer Number:
       </label>
       <input
-        className="w-full p-2 border border-gray-300 rounded-md"
+        className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
         type="text"
         id="customerNumber"
         placeholder="Customer Number"
@@ -31,4 +31,4 @@ const CustomerDetails = ({ customerName, setCustomerName, customerNumber, setCus
   </div>
 );
 
-export default CustomerDetails
+export default CustomerDetails;

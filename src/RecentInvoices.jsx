@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
   const [hoveredInvoiceId, setHoveredInvoiceId] = useState(null);
@@ -24,60 +26,66 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
   };
 
   return (
-    <div className="w-[300px] h-[90vh] overflow-y-scroll p-3 text-sky-200 rounded-md">
-      <h3 className="text-lg font-bold text-sky-500 mb-2.5">Recent Invoices</h3>
-      {Object.entries(groupedInvoices).map(([date, { invoices, totalSale }]) => (
-        <div key={date} className="mb-4">
-          <p className="text-md font-bold border-b mb-2">{date}</p>
-          {invoices.map((invoice) => {
-            const paymentMethods = [];
-            if (invoice.cash != null && invoice.cash !== 0) paymentMethods.push("cash");
-            if (invoice.upi != null && invoice.upi !== 0) paymentMethods.push("upi");
-            if (invoice.credit != null && invoice.credit !== 0) paymentMethods.push("credit");
+    <Card className="w-[300px] h-[90vh] bg-gray-900 border-0">
+      <CardHeader>
+        <CardTitle className="text-lg font-bold text-sky-500">Recent Invoices</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className="h-[calc(90vh-4rem)] px-2 me-3">
+          {Object.entries(groupedInvoices).map(([date, { invoices, totalSale }]) => (
+            <div key={date} className="mb-4">
+              <p className="text-md font-bold border-b border-gray-700 mb-2 text-sky-400">{date}</p>
+              {invoices.map((invoice) => {
+                const paymentMethods = [];
+                if (invoice.cash != null && invoice.cash !== 0) paymentMethods.push("cash");
+                if (invoice.upi != null && invoice.upi !== 0) paymentMethods.push("upi");
+                if (invoice.credit != null && invoice.credit !== 0) paymentMethods.push("credit");
 
-            return (
-              <div
-                id="card"
-                key={invoice.id}
-                className={`
-                  ${invoice.credit != 0 ? "bg-red-950" : "bg-blue-950"}
-                  mb-2 rounded-md shadow-md cursor-pointer px-2 py-1 text-md
-                `}
-                onClick={() => handleInvoiceClick(invoice.id)}
-                onMouseEnter={() => setHoveredInvoiceId(invoice.id)}
-                onMouseLeave={() => setHoveredInvoiceId(null)}
-              >
-                <div className="flex justify-between items-center">
-                  <h6 className="font-bold">#{invoice.id}</h6>
-                  <h6 className="font-bold">{invoice.customerName.split(" ")[0]}</h6>
-                  <p className="text-md font-bold text-black bg-white rounded-md px-1">
-                    {renderPaymentIcons(paymentMethods)}
-                    {" "}₹ {invoice.total}
-                  </p>
-                </div>
-                {paymentMethods.length > 1 && hoveredInvoiceId === invoice.id && (
-                  <div id="payment-methods" className="flex gap-3 mt-2 transition-opacity duration-300">
-                    {paymentMethods.map((paymentMethod) => (
-                      <div key={paymentMethod} className="text-sm text-white">
-                        <p className="text-md font-bold text-black bg-white rounded-md px-1">
-                          {paymentMethod === "cash" ? "💸" : paymentMethod === "upi" ? "🏛️" : "❌"}{" "}
-                          ₹ {invoice[paymentMethod]}
-                        </p>
+                return (
+                  <div
+                    key={invoice.id}
+                    className={`
+                      ${invoice.credit != 0 ? "bg-red-900/50" : "bg-sky-900/50"}
+                      mb-2 rounded-md shadow-md cursor-pointer px-2 py-1 text-md
+                      hover:bg-gray-800 transition-colors duration-200
+                    `}
+                    onClick={() => handleInvoiceClick(invoice.id)}
+                    onMouseEnter={() => setHoveredInvoiceId(invoice.id)}
+                    onMouseLeave={() => setHoveredInvoiceId(null)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <h6 className="font-bold text-gray-300">#{invoice.id}</h6>
+                      <h6 className="font-bold text-gray-300">{invoice.customerName.split(" ")[0]}</h6>
+                      <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
+                        {renderPaymentIcons(paymentMethods)}
+                        {" "}₹ {invoice.total}
+                      </p>
+                    </div>
+                    {paymentMethods.length > 1 && hoveredInvoiceId === invoice.id && (
+                      <div className="flex gap-3 mt-2 transition-opacity duration-300">
+                        {paymentMethods.map((paymentMethod) => (
+                          <div key={paymentMethod} className="text-sm text-gray-300">
+                            <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
+                              {paymentMethod === "cash" ? "💸" : paymentMethod === "upi" ? "🏛️" : "❌"}{" "}
+                              ₹ {invoice[paymentMethod]}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                )}
+                );
+              })}
+              <div className="mt-2 text-right">
+                <p className="text-md font-bold text-sky-400">
+                  Total Sale: ₹ {totalSale.toFixed(2)}
+                </p>
               </div>
-            );
-          })}
-          <div className="mt-2 text-right">
-            <p className="text-md font-bold text-sky-300">
-              Total Sale: ₹ {totalSale.toFixed(2)}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
+            </div>
+          ))}
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 };
 
