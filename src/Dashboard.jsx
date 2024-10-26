@@ -1,19 +1,17 @@
 import ReactDOMServer from "react-dom/server";
-
+import { supabase } from "./supabaseClient";
 import React, { useState, useEffect, useRef } from "react";
-import { createClient } from "@supabase/supabase-js";
 import LeftSidebar from "./LeftSideBar";
 import MainContent from "./MainContent";
 import RecentInvoices from "./RecentInvoices";
 import { InvoiceModal } from "./InvoiceModal";
 import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
+import InvoiceForm from "./InvoiceForm";
+import SalesChart from "./SalesChart";
 import Sidebar from "./Sidebar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-const supabase = createClient(
-  "https://basihmnebvsflzkaivds.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhc2lobW5lYnZzZmx6a2FpdmRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2NDg4NDUsImV4cCI6MjA0MjIyNDg0NX0.9qX5k7Jin6T-TfZJt6YWSp0nWDypi4NkAwyhzerAC7U"
-);
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 
 const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [products, setProducts] = useState([]);
@@ -201,26 +199,25 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const handleDeleteInvoice = async (invoiceId) => {
     try {
       const { error } = await supabase
-        .from('invoices')
+        .from("invoices")
         .delete()
-        .eq('id', invoiceId);
+        .eq("id", invoiceId);
 
       if (error) {
         throw error;
       }
 
       // Success message
-      alert('Invoice deleted successfully');
-      
+      alert("Invoice deleted successfully");
+
       // Refresh all the necessary data
       fetchInvoices();
       fetchRecentInvoices();
       fetchDailySales();
       fetchSales(salesType);
-      
     } catch (error) {
-      console.error('Error deleting invoice:', error);
-      alert('Failed to delete invoice: ' + error.message);
+      console.error("Error deleting invoice:", error);
+      alert("Failed to delete invoice: " + error.message);
     }
   };
 

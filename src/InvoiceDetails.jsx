@@ -10,7 +10,7 @@ const InvoiceDetails = ({ currentInvoiceId, getCurrentFormattedDate, setCurrentD
         className="w-full p-2 border border-gray-600 rounded-md bg-gray-700 text-white"
         type="text"
         id="invoiceId"
-        value={currentInvoiceId}
+        value={currentInvoiceId || ""}
         readOnly
       />
     </div>

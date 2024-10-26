@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import JsBarcode from 'jsbarcode';
 import ReactDOMServer from "react-dom/server";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
 
-const PrintableSticker = ({ sku, price, quantity, barcodeUrl }) => {
+const PrintableSticker = ({ sku, price, barcodeUrl }) => {
   return (
-    <div style={{width:"2in", height:"1in"}} className="sticker rounded-md text-center">
-      {/* <h2 id='sticker-head' className="text-xs font-semibold leading-5">VARIETY HEAVEN</h2> */}
+    <div style={{width:"2in", height:"1in"}} className="sticker rounded-md text-center bg-white text-black p-2">
       <p className='font-mono font-semibold text-xs'>MRP: ₹{price}</p>
       {barcodeUrl && <img src={barcodeUrl} alt="Barcode" className="leading-3 h-16 mx-auto" />}
-      {/* <p className='font-mono font-semibold text-md leading-3'>Mo: 8160185875, 9898437599</p> */}
-      {/* <p className='font-mono font-semibold text-sm leading-3'>09, Sentosa Enclave, Dindoli, Surat</p> */}
     </div>
   );
 };
@@ -54,73 +56,62 @@ const ProductSticker = () => {
       printWindow.print();
       printWindow.close();
     }, 500);
-
-    // setSku('');
-    // setPrice('');
-    // setQuantity('');
   };
 
   return (
-    <div className="flex-grow border p-3 h-screen overflow-auto backdrop-blur-sm">
-        <div className='bg-white w-fit m-10'>
+    <div className="flex-grow p-6 h-screen overflow-auto bg-gray-900 text-gray-100">
+      <Card className="max-w-md mx-auto bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-sky-500">Create Product Sticker</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6 bg-white p-4 rounded-md">
             <PrintableSticker sku={sku} barcodeUrl={barcodeUrl} price={price}/>
-        </div>
-      <h5 className="text-center font-bold bg-sky-500 text-white border border-black p-1.5 mb-4">
-        Create Product Sticker
-      </h5>
-
-      <form className="mb-4">
-        <div className="mb-2">
-          <label className="block text-sm font-medium text-gray-700">SKU:</label>
-          <input
-            type="text"
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block text-sm font-medium text-gray-700">Price:</label>
-          <input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block text-sm font-medium text-gray-700">Quantity:</label>
-          <input
-            type="number"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            required
-          />
-        </div>
-      </form>
-
-      {/* <div className="mb-4">
-        <h5 className="text-lg font-semibold mb-2 text-sky-500">Sticker Preview</h5>
-        <PrintableSticker
-          sku={sku}
-          price={price}
-          quantity={quantity}
-          barcodeUrl={barcodeUrl}
-        />
-      </div> */}
-
-      <div className="mt-5 text-right">
-        <button
-          type="button"
-          className="bg-sky-500 text-white px-4 py-2 rounded-md cursor-pointer"
-          onClick={handlePrint}
-        >
-          Generate Sticker
-        </button>
-      </div>
+          </div>
+          <form className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="sku" className="text-sky-400">SKU:</Label>
+              <Input
+                id="sku"
+                type="text"
+                value={sku}
+                onChange={(e) => setSku(e.target.value)}
+                className="bg-gray-700 border-gray-600 text-gray-100"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price" className="text-sky-400">Price:</Label>
+              <Input
+                id="price"
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="bg-gray-700 border-gray-600 text-gray-100"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity" className="text-sky-400">Quantity:</Label>
+              <Input
+                id="quantity"
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="bg-gray-700 border-gray-600 text-gray-100"
+                required
+              />
+            </div>
+            <Button 
+              type="button"
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+              onClick={handlePrint}
+            >
+              <Printer className="mr-2 h-4 w-4" /> Generate Sticker
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

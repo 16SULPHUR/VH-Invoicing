@@ -4,6 +4,7 @@ import Dashboard from "./Dashboard";
 import Login from "./Login";
 import ProductSticker from "./ProductSticker";
 import Sidebar from "./Sidebar";
+import BarcodeScanner from "./BarcodeScanner";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,7 +21,7 @@ const App = () => {
       } else {
         setIsAuthenticated(false);
       }
-      setIsLoading(false); 
+      setIsLoading(false);
     };
 
     checkSession();
@@ -79,6 +80,8 @@ const App = () => {
                 setCurrentView={setCurrentView}
                 setIsAuthenticated={setIsAuthenticated}
               />
+            ) : currentView == "barcodeScanner" ? (
+              <BarcodeScanner />
             ) : (
               <ProductSticker
                 setCurrentView={setCurrentView}
