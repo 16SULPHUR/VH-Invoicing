@@ -4,115 +4,120 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { BrowserMultiFormatReader, NotFoundException, BarcodeFormat } from '@zxing/library';
 
 const BarcodeScanner = () => {
   const [scannedItems, setScannedItems] = useState([]);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState(null);
-  const [stream, setStream] = useState(null);
-  const videoRef = useRef(null);
-  const streamInterval = useRef(null);
   const [deviceList, setDeviceList] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [videoInitialized, setVideoInitialized] = useState(false);
+  
+  const videoRef = useRef(null);
+  const codeReaderRef = useRef(null);
 
-  const getDeviceList = async () => {
+  const initializeScanner = async () => {
     try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      // Initialize ZXing code reader
+      codeReaderRef.current = new BrowserMultiFormatReader();
+  
+      // Initialize hints if not defined
+      if (!codeReaderRef.current.hints) {
+        codeReaderRef.current.hints = new Map();
+      }
+  
+      // Set hints for better performance
+      codeReaderRef.current.hints.set(
+        2, // DecodeHintType.POSSIBLE_FORMATS
+        [
+          BarcodeFormat.QR_CODE,
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.CODE_39,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+        ]
+      );
+  
+      // Get available video devices
+      const devices = await codeReaderRef.current.listVideoInputDevices();
+      const videoDevices = devices.map(device => ({
+        deviceId: device.deviceId,
+        label: device.label || `Camera ${device.deviceId.slice(0, 5)}`
+      }));
+  
       setDeviceList(videoDevices);
       if (videoDevices.length > 0 && !selectedDevice) {
         setSelectedDevice(videoDevices[0].deviceId);
       }
     } catch (err) {
-      console.error('Error getting device list:', err);
-      setError('Unable to get camera list. Please check your browser permissions.');
+      console.error('Error initializing scanner:', err);
+      setError('Failed to initialize barcode scanner. Please check camera permissions.');
     }
   };
-
-  const initializeVideo = async () => {
-    if (!videoRef.current) {
-      console.error('Video element not initialized');
-      return false;
-    }
-
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Media devices not supported in this browser');
-      }
-
-      const constraints = {
-        video: {
-          deviceId: selectedDevice ? { exact: selectedDevice } : undefined,
-          facingMode: selectedDevice ? undefined : 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      };
-
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      
-      videoRef.current.srcObject = mediaStream;
-      setStream(mediaStream);
-      
-      return new Promise((resolve) => {
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play()
-            .then(() => {
-              setVideoInitialized(true);
-              resolve(true);
-            })
-            .catch(err => {
-              console.error('Error playing video:', err);
-              resolve(false);
-            });
-        };
-      });
-    } catch (err) {
-      console.error('Error initializing video:', err);
-      return false;
-    }
-  };
+  
 
   const startScanning = async () => {
     setError(null);
     setScanning(true);
 
     try {
-      // Clean up any existing stream
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      
-      // Initialize video with retry logic
-      let initSuccess = false;
-      for (let i = 0; i < 3; i++) {  // Try up to 3 times
-        initSuccess = await initializeVideo();
-        if (initSuccess) break;
-        await new Promise(resolve => setTimeout(resolve, 1000));  // Wait 1 second between attempts
+      if (!codeReaderRef.current) {
+        await initializeScanner();
       }
 
-      if (!initSuccess) {
-        throw new Error('Failed to initialize video after multiple attempts');
+      if (!videoRef.current) {
+        throw new Error('Video element not found');
       }
 
-      // Start simulated barcode detection
-      streamInterval.current = setInterval(simulateBarcodeDetection, 3000);
+      // Start decoding from video device
+      await codeReaderRef.current.decodeFromVideoDevice(
+        selectedDevice,
+        videoRef.current,
+        (result, err) => {
+          if (result) {
+            // Successfully decoded barcode
+            const newScan = {
+              barcode: result.getText(),
+              format: result.getBarcodeFormat().toString(),
+              timestamp: new Date().toLocaleString()
+            };
+
+            // Check for duplicates
+            setScannedItems(prev => {
+              const exists = prev.some(item => item.barcode === newScan.barcode);
+              if (!exists) {
+                // Play success sound
+                new Audio('data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAFAAAGUACFhYWFhYWFhYWFhYWFhYWFhYWFvb29vb29vb29vb29vb29vb29vb3r6+vr6+vr6+vr6+vr6+vr6+vr6/////////////////////////////////8AAAA5TEFNRTMuOTlyAm4AAAAALgsAABRGJAKBTQAARgAABlBCPlQhAAAAAAAAAAAAAAAAAAAA//uwxAAABLQ9YdT0AAh2kDG/MYAAAAAH/f7sEQANAfB8H4IQQBA5/B8/g+CAIAgcHwfBAEDn/B8HwQwBAEDg+D4IAgCAIHB8HwQBAEAQOfwfB8EAQBA4Pg+D4IAg9DeX4IAADnABzgA5wHABzgA5wAc4DgA5wHABzgA5wAc4ACu4NjjHGxhiYHGxwbHGONjjEwONjg2OMcbHGJgcbHBscY42OMf/AABwAHAA').play().catch(() => {});
+                return [...prev, newScan];
+              }
+              return prev;
+            });
+          } else if (err && !(err instanceof NotFoundException)) {
+            // Log error but don't stop scanning
+            console.error('Scanning error:', err);
+          }
+        }
+      );
+
+      setVideoInitialized(true);
 
     } catch (err) {
       console.error('Error starting scanner:', err);
       let errorMessage = 'Unable to access camera. ';
       
       if (err.name === 'NotReadableError') {
-        errorMessage += 'The camera may be in use by another application. Please close other apps using the camera and try again.';
+        errorMessage += 'The camera may be in use by another application.';
       } else if (err.name === 'NotAllowedError') {
-        errorMessage += 'Camera permission was denied. Please allow camera access and try again.';
+        errorMessage += 'Camera permission was denied.';
       } else if (err.name === 'NotFoundError') {
-        errorMessage += 'No camera device was found. Please connect a camera and try again.';
+        errorMessage += 'No camera device was found.';
       } else if (err.name === 'SecurityError') {
-        errorMessage += 'Camera access is restricted by your browser security settings.';
+        errorMessage += 'Camera access is restricted.';
       } else {
-        errorMessage += err.message || 'Please check your camera connections and permissions.';
+        errorMessage += err.message || 'Please check your camera connections.';
       }
       
       setError(errorMessage);
@@ -122,34 +127,17 @@ const BarcodeScanner = () => {
   };
 
   const stopScanning = () => {
-    if (streamInterval.current) {
-      clearInterval(streamInterval.current);
-      streamInterval.current = null;
+    if (codeReaderRef.current) {
+      codeReaderRef.current.reset();
     }
-    
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    
     setScanning(false);
     setVideoInitialized(false);
   };
 
   const retryConnection = async () => {
     stopScanning();
-    await getDeviceList();
+    await initializeScanner();
     startScanning();
-  };
-
-  const simulateBarcodeDetection = () => {
-    const mockBarcode = Math.random().toString(36).substring(2, 15);
-    const timestamp = new Date().toLocaleString();
-    setScannedItems(prev => [...prev, { barcode: mockBarcode, timestamp }]);
   };
 
   const clearScannedItems = () => {
@@ -157,10 +145,11 @@ const BarcodeScanner = () => {
   };
 
   useEffect(() => {
-    getDeviceList();
-    
+    initializeScanner();
     return () => {
-      stopScanning();
+      if (codeReaderRef.current) {
+        codeReaderRef.current.reset();
+      }
     };
   }, []);
 
@@ -185,7 +174,7 @@ const BarcodeScanner = () => {
                 >
                   {deviceList.map((device) => (
                     <option key={device.deviceId} value={device.deviceId}>
-                      {device.label || `Camera ${device.deviceId.slice(0, 5)}`}
+                      {device.label}
                     </option>
                   ))}
                 </select>
@@ -222,12 +211,15 @@ const BarcodeScanner = () => {
           <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
             <video
               ref={videoRef}
-              autoPlay
-              playsInline
               className={`w-full h-full object-cover ${scanning ? 'block' : 'hidden'}`}
             />
             {scanning && videoInitialized && (
-              <div className="absolute inset-0 border-2 border-blue-500 opacity-50 animate-pulse" />
+              <div className="absolute inset-0">
+                <div className="absolute left-1/4 right-1/4 top-1/3 bottom-1/3 border-2 border-blue-500 opacity-50">
+                  <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-blue-500 opacity-50" />
+                  <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-blue-500 opacity-50" />
+                </div>
+              </div>
             )}
             {scanning && !videoInitialized && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -243,6 +235,7 @@ const BarcodeScanner = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Barcode</TableHead>
+              <TableHead>Format</TableHead>
               <TableHead>Timestamp</TableHead>
             </TableRow>
           </TableHeader>
@@ -250,12 +243,13 @@ const BarcodeScanner = () => {
             {scannedItems.map((item, index) => (
               <TableRow key={index}>
                 <TableCell className="font-mono">{item.barcode}</TableCell>
+                <TableCell>{item.format}</TableCell>
                 <TableCell>{item.timestamp}</TableCell>
               </TableRow>
             ))}
             {scannedItems.length === 0 && (
               <TableRow>
-                <TableCell colSpan={2} className="text-center text-gray-500">
+                <TableCell colSpan={3} className="text-center text-gray-500">
                   No items scanned yet
                 </TableCell>
               </TableRow>
