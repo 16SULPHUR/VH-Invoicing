@@ -11,8 +11,10 @@ const BarcodeScanner = () => {
   const [error, setError] = useState(null);
   const [stream, setStream] = useState(null);
   const videoRef = useRef(null);
+  const streamInterval = useRef(null);
   const [deviceList, setDeviceList] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [videoInitialized, setVideoInitialized] = useState(false);
 
   const getDeviceList = async () => {
     try {
@@ -28,24 +30,21 @@ const BarcodeScanner = () => {
     }
   };
 
-  const startScanning = async () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+  const initializeVideo = async () => {
+    if (!videoRef.current) {
+      console.error('Video element not initialized');
+      return false;
     }
-    
-    setError(null);
-    
+
     try {
-      // First check if media devices are supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Media devices not supported in this browser');
       }
 
-      // Try to get the camera stream with specific constraints
       const constraints = {
         video: {
           deviceId: selectedDevice ? { exact: selectedDevice } : undefined,
-          facingMode: 'environment',
+          facingMode: selectedDevice ? undefined : 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -53,23 +52,55 @@ const BarcodeScanner = () => {
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      // Ensure video element exists
-      if (!videoRef.current) {
-        throw new Error('Video element not found');
-      }
-
       videoRef.current.srcObject = mediaStream;
       setStream(mediaStream);
-      setScanning(true);
       
-      // Verify the stream is actually working
-      const track = mediaStream.getVideoTracks()[0];
-      if (!track || !track.enabled) {
-        throw new Error('Video track not available or disabled');
+      return new Promise((resolve) => {
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play()
+            .then(() => {
+              setVideoInitialized(true);
+              resolve(true);
+            })
+            .catch(err => {
+              console.error('Error playing video:', err);
+              resolve(false);
+            });
+        };
+      });
+    } catch (err) {
+      console.error('Error initializing video:', err);
+      return false;
+    }
+  };
+
+  const startScanning = async () => {
+    setError(null);
+    setScanning(true);
+
+    try {
+      // Clean up any existing stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Initialize video with retry logic
+      let initSuccess = false;
+      for (let i = 0; i < 3; i++) {  // Try up to 3 times
+        initSuccess = await initializeVideo();
+        if (initSuccess) break;
+        await new Promise(resolve => setTimeout(resolve, 1000));  // Wait 1 second between attempts
       }
 
+      if (!initSuccess) {
+        throw new Error('Failed to initialize video after multiple attempts');
+      }
+
+      // Start simulated barcode detection
+      streamInterval.current = setInterval(simulateBarcodeDetection, 3000);
+
     } catch (err) {
-      console.error('Error accessing camera:', err);
+      console.error('Error starting scanner:', err);
       let errorMessage = 'Unable to access camera. ';
       
       if (err.name === 'NotReadableError') {
@@ -86,18 +117,27 @@ const BarcodeScanner = () => {
       
       setError(errorMessage);
       setScanning(false);
+      stopScanning();
     }
   };
 
   const stopScanning = () => {
+    if (streamInterval.current) {
+      clearInterval(streamInterval.current);
+      streamInterval.current = null;
+    }
+    
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
+    
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    
     setScanning(false);
+    setVideoInitialized(false);
   };
 
   const retryConnection = async () => {
@@ -106,7 +146,6 @@ const BarcodeScanner = () => {
     startScanning();
   };
 
-  // Simulate barcode detection with a random barcode for demo purposes
   const simulateBarcodeDetection = () => {
     const mockBarcode = Math.random().toString(36).substring(2, 15);
     const timestamp = new Date().toLocaleString();
@@ -119,10 +158,9 @@ const BarcodeScanner = () => {
 
   useEffect(() => {
     getDeviceList();
+    
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopScanning();
     };
   }, []);
 
@@ -137,7 +175,13 @@ const BarcodeScanner = () => {
                 <select
                   className="p-2 border rounded"
                   value={selectedDevice}
-                  onChange={(e) => setSelectedDevice(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedDevice(e.target.value);
+                    if (scanning) {
+                      stopScanning();
+                      setTimeout(startScanning, 100);
+                    }
+                  }}
                 >
                   {deviceList.map((device) => (
                     <option key={device.deviceId} value={device.deviceId}>
@@ -175,22 +219,22 @@ const BarcodeScanner = () => {
             </Alert>
           )}
 
-          {scanning && (
-            <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-                onLoadedMetadata={() => {
-                  // For demo purposes, simulate a barcode detection every few seconds
-                  const interval = setInterval(simulateBarcodeDetection, 3000);
-                  return () => clearInterval(interval);
-                }}
-              />
+          <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className={`w-full h-full object-cover ${scanning ? 'block' : 'hidden'}`}
+            />
+            {scanning && videoInitialized && (
               <div className="absolute inset-0 border-2 border-blue-500 opacity-50 animate-pulse" />
-            </div>
-          )}
+            )}
+            {scanning && !videoInitialized && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+              </div>
+            )}
+          </div>
         </div>
       </Card>
 
