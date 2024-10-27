@@ -13,6 +13,8 @@ const BarcodeScanner = () => {
   const [deviceList, setDeviceList] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [videoInitialized, setVideoInitialized] = useState(false);
+
+  const beep = new Audio('/beep.wav')
   
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
@@ -88,7 +90,7 @@ const BarcodeScanner = () => {
             // Check for duplicates
             setScannedItems(prev => {
                 // Play success sound
-                new Audio('/beep.wav').play().catch((e) => { console.log("cant play", e); });
+                beep.play().catch((e) => { console.log("cant play", e); });
 
                 return [...prev, newScan];
             });
