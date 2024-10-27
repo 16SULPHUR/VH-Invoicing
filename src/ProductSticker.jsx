@@ -15,7 +15,7 @@ const PrintableSticker = ({ sku, price, barcodeUrl }) => {
       style={{
         width: "55mm",
         height: "22mm",
-        border: "0.5px solid black",
+        // border: "0.5px solid black",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -26,36 +26,41 @@ const PrintableSticker = ({ sku, price, barcodeUrl }) => {
         backgroundColor: "white",
         color: "black",
         padding: "0", // Remove padding
+        marginTop:"0"
       }}
     >
       <div style={{
         display: "flex",
         justifyContent: "space-around",
         width: "100%",
+        padding:"0 4px",
         fontSize: "13px",
         margin: "0"
       }}>
         <p style={{ fontWeight: "bold", margin: "0" }}>VARIETY HEAVEN</p>
-        <p style={{ fontWeight: "bold", margin: "0" }}>MRP: ₹{price}</p>
+        <p style={{ fontWeight: "bold", margin: "0" }}>₹{price}</p>
       </div>
       {barcodeUrl && (
         <div style={{
           overflow: "hidden",
           width: "50mm",
-          height: "16mm",
+          height: "10mm",
+          marginTop:"3px",
+          marginBottom:"0px"
         }
         }>
           <img
             src={barcodeUrl}
             alt="Barcode"
             style={{
-
-              margin: "2px 0", // Minimal margin for spacing
+              margin: "0",
             }}
           />
-
+        
         </div>
+        
       )}
+      <p style={{ fontWeight: "bold", margin: "0", fontSize:"13px" }}>{sku}</p>
     </div>
   );
 };
