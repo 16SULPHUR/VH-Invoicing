@@ -289,7 +289,30 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchInvoices();
     fetchRecentInvoices();
     fetchDailySales();
+
+    // Set up real-time listener for scanned products
+    const scannedProductsSubscription = supabase
+      .channel('scanned_products')
+      .on('INSERT', handleScannedProduct)
+      .subscribe();
+
+    return () => {
+      scannedProductsSubscription.unsubscribe();
+    };
   }, []);
+
+  const handleScannedProduct = (payload) => {
+    const scannedProduct = payload.new;
+    setProducts(prevProducts => [
+      ...prevProducts,
+      {
+        name: scannedProduct.name,
+        quantity: scannedProduct.quantity,
+        price: scannedProduct.price,
+        amount: scannedProduct.quantity * scannedProduct.price
+      }
+    ]);
+  };
 
   const fetchDailySales = async () => {
     const today = new Date();
@@ -617,13 +640,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           )}
         </div>
 
-        <Tabs defaultValue="invoice" className="flex-1">
-          <TabsList>
-            <TabsTrigger value="invoice">Invoice</TabsTrigger>
-            <TabsTrigger value="scanner">Barcode Scanner</TabsTrigger>
-          </TabsList>
-          <TabsContent value="invoice">
-          <MainContent
+        <MainContent
           customerName={customerName}
           setCustomerName={setCustomerName}
           customerNumber={customerNumber}
@@ -656,11 +673,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           handleUpdateInvoice={handleUpdateInvoice}
           handlePrint={handlePrint}
         />
-          </TabsContent>
-          <TabsContent value="scanner">
-            <BarcodeScanner onScan={handleScannedItem} />
-          </TabsContent>
-        </Tabs>
+
 
         
 
