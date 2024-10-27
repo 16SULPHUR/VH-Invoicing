@@ -290,7 +290,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchRecentInvoices();
     fetchDailySales();
 
-    // Set up real-time listener for scanned products
     const scannedProductsSubscription = supabase
       .channel('scanned_products')
       .on('INSERT', handleScannedProduct)
@@ -301,18 +300,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     };
   }, []);
 
-  const handleScannedProduct = (payload) => {
-    const scannedProduct = payload.new;
-    setProducts(prevProducts => [
-      ...prevProducts,
-      {
-        name: scannedProduct.name,
-        quantity: scannedProduct.quantity,
-        price: scannedProduct.price,
-        amount: scannedProduct.quantity * scannedProduct.price
-      }
-    ]);
-  };
+  
 
   const fetchDailySales = async () => {
     const today = new Date();
@@ -568,33 +556,17 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   };
 
 
-  const handleScannedItem = async (scannedItem) => {
-    // Fetch product details from your database using the scanned barcode
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('barcode', scannedItem.barcode)
-      .single();
-
-    if (error) {
-      console.error('Error fetching product:', error);
-      return;
-    }
-
-    if (data) {
-      // Add the scanned product to the invoice
-      const newProduct = {
-        name: data.name,
-        price: data.price,
-        quantity: 1,
-        amount: data.price
-      };
-
-      setProducts(prevProducts => [...prevProducts, newProduct]);
-    } else {
-      console.log('Product not found for barcode:', scannedItem.barcode);
-      // Optionally, you can add logic here to handle unknown barcodes
-    }
+  const handleScannedProduct = (payload) => {
+    const scannedProduct = payload.new;
+    setProducts(prevProducts => [
+      ...prevProducts,
+      {
+        name: scannedProduct.name,
+        quantity: scannedProduct.quantity || 1,
+        price: scannedProduct.price || 0,
+        amount: (scannedProduct.quantity || 1) * (scannedProduct.price || 0)
+      }
+    ]);
   };
 
   return (
@@ -640,7 +612,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           )}
         </div>
 
-        <MainContent
+        {/* <MainContent
           customerName={customerName}
           setCustomerName={setCustomerName}
           customerNumber={customerNumber}
@@ -672,7 +644,52 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           isEditing={isEditing}
           handleUpdateInvoice={handleUpdateInvoice}
           handlePrint={handlePrint}
-        />
+        /> */}
+
+
+<Tabs defaultValue="invoice" className="flex-1">
+          <TabsList>
+            <TabsTrigger value="invoice">Invoice</TabsTrigger>
+            <TabsTrigger value="scanner">Barcode Scanner</TabsTrigger>
+          </TabsList>
+          <TabsContent value="invoice">
+            <MainContent
+              customerName={customerName}
+              setCustomerName={setCustomerName}
+              customerNumber={customerNumber}
+              setCustomerNumber={setCustomerNumber}
+              currentInvoiceId={currentInvoiceId}
+              getCurrentFormattedDate={getCurrentFormattedDate}
+              setCurrentDate={setCurrentDate}
+              handleSubmit={handleSubmit}
+              productName={productName}
+              setProductName={setProductName}
+              productQuantity={productQuantity}
+              setProductQuantity={setProductQuantity}
+              productPrice={productPrice}
+              setProductPrice={setProductPrice}
+              editingProduct={editingProduct}
+              products={products}
+              startEditing={startEditing}
+              deleteProduct={deleteProduct}
+              cash={cash}
+              setCash={setCash}
+              upi={upi}
+              setUpi={setUpi}
+              credit={credit}
+              setCredit={setCredit}
+              note={note}
+              setNote={setNote}
+              calculateTotal={calculateTotal}
+              isEditing={isEditing}
+              handleUpdateInvoice={handleUpdateInvoice}
+              handlePrint={handlePrint}
+            />
+          </TabsContent>
+          <TabsContent value="scanner">
+            <BarcodeScanner />
+          </TabsContent>
+        </Tabs>
 
 
         
