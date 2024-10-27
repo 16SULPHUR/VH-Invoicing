@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import JsBarcode from 'jsbarcode';
-import ReactDOMServer from "react-dom/server";
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +10,56 @@ import { Printer } from "lucide-react";
 
 const PrintableSticker = ({ sku, price, barcodeUrl }) => {
   return (
-    <div style={{width:"2in", height:"1in"}} className="sticker rounded-md text-center bg-white text-black p-2">
-      <p className='font-mono font-semibold text-xs'>MRP: ₹{price}</p>
-      {barcodeUrl && <img src={barcodeUrl} alt="Barcode" className="leading-3 h-16 mx-auto" />}
+    <div
+      id="sticker"
+      style={{
+        width: "55mm",
+        height: "22mm",
+        border: "0.5px solid black",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "monospace",
+        fontSize: "8px",
+        textAlign: "center",
+        backgroundColor: "white",
+        color: "black",
+        padding: "0", // Remove padding
+      }}
+    >
+      <div style={{
+        display: "flex",
+        justifyContent: "space-around",
+        width: "100%",
+        fontSize: "13px",
+        margin: "0"
+      }}>
+        <p style={{ fontWeight: "bold", margin: "0" }}>VARIETY HEAVEN</p>
+        <p style={{ fontWeight: "bold", margin: "0" }}>MRP: ₹{price}</p>
+      </div>
+      {barcodeUrl && (
+        <div style={{
+          overflow: "hidden",
+          width: "50mm",
+          height: "16mm",
+        }
+        }>
+          <img
+            src={barcodeUrl}
+            alt="Barcode"
+            style={{
+
+              margin: "2px 0", // Minimal margin for spacing
+            }}
+          />
+
+        </div>
+      )}
     </div>
   );
 };
+
 
 const ProductSticker = () => {
   const [sku, setSku] = useState('SAMPLE SKU');
@@ -30,32 +75,31 @@ const ProductSticker = () => {
     }
   }, [sku]);
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!sku || !price || !quantity) {
       alert("Please fill in all fields before printing the sticker.");
       return;
     }
 
-    const printContent = (<PrintableSticker sku={sku} barcodeUrl={barcodeUrl} price={price}/>)
+    const stickerElement = document.getElementById('sticker');
+    const canvas = await html2canvas(stickerElement, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
 
-    const printWindow = window.open('', '', 'width=1000,height=1000');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Print Product Sticker</title>
-        </head>
-        <body>
-          ${ReactDOMServer.renderToString(printContent)}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
+    const w = 53;
+    const h = 22;
 
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: [w, h],
+    });
+
+    pdf.addImage(imgData, 'PNG', 0, 0, w, h);
+
+    // Convert PDF to Blob and open in a new tab
+    const pdfBlob = pdf.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl);
   };
 
   return (
@@ -66,7 +110,7 @@ const ProductSticker = () => {
         </CardHeader>
         <CardContent>
           <div className="mb-6 bg-white p-4 rounded-md">
-            <PrintableSticker sku={sku} barcodeUrl={barcodeUrl} price={price}/>
+            <PrintableSticker sku={sku} barcodeUrl={barcodeUrl} price={price} />
           </div>
           <form className="space-y-4">
             <div className="space-y-2">
@@ -102,7 +146,7 @@ const ProductSticker = () => {
                 required
               />
             </div>
-            <Button 
+            <Button
               type="button"
               className="w-full bg-sky-500 hover:bg-sky-600 text-white"
               onClick={handlePrint}
