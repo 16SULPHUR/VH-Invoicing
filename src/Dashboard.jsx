@@ -388,7 +388,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   };
 
   const calculateTotal = () => {
-    console.log(products);
     return products
       .reduce((sum, product) => sum + product.amount, 0)
       .toFixed(2);

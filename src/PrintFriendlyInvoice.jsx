@@ -20,7 +20,6 @@ export const UpdatedVarietyHeavenInvoice = ({
     return `${day}/${month}/${year}`;
   }
 
-  console.log(cash);
 
   const total = calculateTotal();
   const subTotal = total;
