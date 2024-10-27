@@ -11,7 +11,8 @@ import SalesChart from "./SalesChart";
 import Sidebar from "./Sidebar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
+import BarcodeScanner from "./BarcodeScanner";
 
 const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [products, setProducts] = useState([]);
@@ -543,6 +544,36 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }
   };
 
+
+  const handleScannedItem = async (scannedItem) => {
+    // Fetch product details from your database using the scanned barcode
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('barcode', scannedItem.barcode)
+      .single();
+
+    if (error) {
+      console.error('Error fetching product:', error);
+      return;
+    }
+
+    if (data) {
+      // Add the scanned product to the invoice
+      const newProduct = {
+        name: data.name,
+        price: data.price,
+        quantity: 1,
+        amount: data.price
+      };
+
+      setProducts(prevProducts => [...prevProducts, newProduct]);
+    } else {
+      console.log('Product not found for barcode:', scannedItem.barcode);
+      // Optionally, you can add logic here to handle unknown barcodes
+    }
+  };
+
   return (
     <div
       id="dashboard"
@@ -586,7 +617,13 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           )}
         </div>
 
-        <MainContent
+        <Tabs defaultValue="invoice" className="flex-1">
+          <TabsList>
+            <TabsTrigger value="invoice">Invoice</TabsTrigger>
+            <TabsTrigger value="scanner">Barcode Scanner</TabsTrigger>
+          </TabsList>
+          <TabsContent value="invoice">
+          <MainContent
           customerName={customerName}
           setCustomerName={setCustomerName}
           customerNumber={customerNumber}
@@ -619,6 +656,13 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           handleUpdateInvoice={handleUpdateInvoice}
           handlePrint={handlePrint}
         />
+          </TabsContent>
+          <TabsContent value="scanner">
+            <BarcodeScanner onScan={handleScannedItem} />
+          </TabsContent>
+        </Tabs>
+
+        
 
         <div
           className={`transition-all duration-300 ${
