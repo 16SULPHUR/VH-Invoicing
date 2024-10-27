@@ -117,10 +117,10 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
             <Button variant="destructive" onClick={onClose}>
               ❌ Close
             </Button>
-            <Button variant="secondary" onClick={handlePrint}>
+            <Button className="bg-blue-400 hover:bg-blue-500 text-black rounded-md transition-colors" variant="secondary" onClick={handlePrint}>
               🖨️ Print
             </Button>
-            <Button variant="default" onClick={handleEdit}>
+            <Button className="bg-[#FFDD00] hover:bg-[#FFE033] text-black rounded-md transition-colors" variant="default" onClick={handleEdit}>
               🖊️ Edit
             </Button>
             <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
