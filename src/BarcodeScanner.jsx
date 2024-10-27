@@ -87,13 +87,10 @@ const BarcodeScanner = () => {
 
             // Check for duplicates
             setScannedItems(prev => {
-              const exists = prev.some(item => item.barcode === newScan.barcode);
-              if (!exists) {
                 // Play success sound
-                new Audio('data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAFAAAGUACFhYWFhYWFhYWFhYWFhYWFhYWFvb29vb29vb29vb29vb29vb29vb3r6+vr6+vr6+vr6+vr6+vr6+vr6/////////////////////////////////8AAAA5TEFNRTMuOTlyAm4AAAAALgsAABRGJAKBTQAARgAABlBCPlQhAAAAAAAAAAAAAAAAAAAA//uwxAAABLQ9YdT0AAh2kDG/MYAAAAAH/f7sEQANAfB8H4IQQBA5/B8/g+CAIAgcHwfBAEDn/B8HwQwBAEDg+D4IAgCAIHB8HwQBAEAQOfwfB8EAQBA4Pg+D4IAg9DeX4IAADnABzgA5wHABzgA5wAc4DgA5wHABzgA5wAc4ACu4NjjHGxhiYHGxwbHGONjjEwONjg2OMcbHGJgcbHBscY42OMf/AABwAHAA').play().catch(() => {});
+                new Audio('/beep.wav').play().catch((e) => { console.log("cant play", e); });
+
                 return [...prev, newScan];
-              }
-              return prev;
             });
           } else if (err && !(err instanceof NotFoundException)) {
             // Log error but don't stop scanning
