@@ -300,7 +300,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     };
   }, []);
 
-  
+
 
   const fetchDailySales = async () => {
     const today = new Date();
@@ -346,6 +346,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     if (error) console.error("Error fetching recent invoices:", error);
     else setRecentInvoices(data || []);
   };
+
 
   const fetchInvoices = async () => {
     const { data, error } = await supabase
@@ -576,9 +577,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     >
       <div className="flex flex-1">
         <div
-          className={`transition-all duration-300 ${
-            isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
-          }`}
+          className={`transition-all duration-300 ${isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
+            }`}
         >
           <div
             className="h-screen w-1 fixed"
@@ -647,7 +647,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         /> */}
 
 
-<Tabs defaultValue="invoice" className="flex-1">
+        <Tabs defaultValue="invoice" className="flex-1">
           <TabsList>
             <TabsTrigger value="invoice">Invoice</TabsTrigger>
             <TabsTrigger value="scanner">Barcode Scanner</TabsTrigger>
@@ -684,6 +684,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
               isEditing={isEditing}
               handleUpdateInvoice={handleUpdateInvoice}
               handlePrint={handlePrint}
+              handleDoubleClick={handleDoubleClick}
             />
           </TabsContent>
           <TabsContent value="scanner">
@@ -692,12 +693,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         </Tabs>
 
 
-        
+
 
         <div
-          className={`transition-all duration-300 ${
-            isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
-          }`}
+          className={`transition-all duration-300 ${isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
+            }`}
         >
           <div
             className="h-screen w-1 fixed right-0"
