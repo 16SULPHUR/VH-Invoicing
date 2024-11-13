@@ -392,6 +392,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     else setRecentInvoices(data || []);
   };
 
+
   const fetchInvoices = async () => {
     const { data, error } = await supabase
       .from("invoices")
@@ -607,9 +608,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     >
       <div className="flex flex-1">
         <div
-          className={`transition-all duration-300 ${
-            isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
-          }`}
+          className={`transition-all duration-300 ${isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
+            }`}
         >
           <div className="h-screen w-1 fixed" onClick={toggleLeftSidebar}></div>
           <button
@@ -708,9 +708,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         />
 
         <div
-          className={`transition-all duration-300 ${
-            isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
-          }`}
+          className={`transition-all duration-300 ${isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
+            }`}
         >
           <div
             className="h-screen w-1 fixed right-0"
