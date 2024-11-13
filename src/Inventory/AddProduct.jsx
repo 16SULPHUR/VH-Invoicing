@@ -59,7 +59,8 @@ const AddProduct = () => {
     }
 
     const lastBarcode = data[0]?.barcode || '00000000';
-    const lastProductCode = lastBarcode.slice(-5);
+    console.log(lastBarcode)
+    const lastProductCode = lastBarcode.toString().slice(-5);
     const nextProductCode = (parseInt(lastProductCode, 10) + 1).toString().padStart(5, '0');
     return nextProductCode;
   };
