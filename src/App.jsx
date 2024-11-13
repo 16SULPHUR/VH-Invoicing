@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 import Dashboard from "./Dashboard";
 import Login from "./Login";
-import ProductSticker from "./ProductSticker";
 import Sidebar from "./Sidebar";
 import BarcodeScanner from "./BarcodeScanner";
+import ProductManagement from "./ProductManagement";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -83,7 +83,7 @@ const App = () => {
             ) : currentView == "barcodeScanner" ? (
               <BarcodeScanner />
             ) : (
-              <ProductSticker
+              <ProductManagement
                 setCurrentView={setCurrentView}
                 setIsAuthenticated={setIsAuthenticated}
               />

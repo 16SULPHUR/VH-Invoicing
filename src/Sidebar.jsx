@@ -25,7 +25,7 @@ const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
     {
       name: "Inventory",
       icon: PackageSearch,
-      onClick: () => setCurrentView("productSticker"),
+      onClick: () => setCurrentView("productManagement"),
     },
     {
       name: "Logout",
