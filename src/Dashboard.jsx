@@ -289,10 +289,17 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchInvoices();
     fetchRecentInvoices();
     fetchDailySales();
+    // fetchScannedProducts();
 
     const scannedProductsSubscription = supabase
-      .channel('scanned_products')
-      .on('INSERT', handleScannedProduct)
+      .channel("custom-all-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scanned_products" },
+        (payload) => {
+          handleScannedProduct(payload);
+        }
+      )
       .subscribe();
 
     return () => {
@@ -300,7 +307,45 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     };
   }, []);
 
-  
+  const fetchScannedProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("scanned_products")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const formattedProducts = data.map((product) => ({
+        name: product.name,
+        quantity: product.quantity || 1,
+        price: product.price || 0,
+        amount: (product.quantity || 1) * (product.price || 0),
+      }));
+
+      setProducts(formattedProducts);
+    } catch (error) {
+      console.error("Error fetching scanned products:", error);
+      setError("Failed to fetch scanned products. Please try again.");
+    }
+  };
+
+  const handleScannedProduct = (payload) => {
+    const scannedProduct = payload.new;
+    const newProduct = {
+      name: scannedProduct.name,
+      quantity: scannedProduct.quantity || 1,
+      price: scannedProduct.price || 0,
+      amount: (scannedProduct.quantity || 1) * (scannedProduct.price || 0),
+    };
+
+    setProducts((prevProducts) => [newProduct, ...prevProducts]);
+
+    toast({
+      title: "Product Scanned",
+      description: `${newProduct.name} has been added to the invoice.`,
+    });
+  };
 
   const fetchDailySales = async () => {
     const today = new Date();
@@ -555,20 +600,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }
   };
 
-
-  const handleScannedProduct = (payload) => {
-    const scannedProduct = payload.new;
-    setProducts(prevProducts => [
-      ...prevProducts,
-      {
-        name: scannedProduct.name,
-        quantity: scannedProduct.quantity || 1,
-        price: scannedProduct.price || 0,
-        amount: (scannedProduct.quantity || 1) * (scannedProduct.price || 0)
-      }
-    ]);
-  };
-
   return (
     <div
       id="dashboard"
@@ -580,10 +611,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
           }`}
         >
-          <div
-            className="h-screen w-1 fixed"
-            onClick={toggleLeftSidebar}
-          ></div>
+          <div className="h-screen w-1 fixed" onClick={toggleLeftSidebar}></div>
           <button
             onClick={toggleLeftSidebar}
             className="absolute bottom-4 left-4 z-10 bg-sky-500 text-white p-1 rounded-full"
@@ -646,53 +674,38 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           handlePrint={handlePrint}
         /> */}
 
-
-<Tabs defaultValue="invoice" className="flex-1">
-          <TabsList>
-            <TabsTrigger value="invoice">Invoice</TabsTrigger>
-            <TabsTrigger value="scanner">Barcode Scanner</TabsTrigger>
-          </TabsList>
-          <TabsContent value="invoice">
-            <MainContent
-              customerName={customerName}
-              setCustomerName={setCustomerName}
-              customerNumber={customerNumber}
-              setCustomerNumber={setCustomerNumber}
-              currentInvoiceId={currentInvoiceId}
-              getCurrentFormattedDate={getCurrentFormattedDate}
-              setCurrentDate={setCurrentDate}
-              handleSubmit={handleSubmit}
-              productName={productName}
-              setProductName={setProductName}
-              productQuantity={productQuantity}
-              setProductQuantity={setProductQuantity}
-              productPrice={productPrice}
-              setProductPrice={setProductPrice}
-              editingProduct={editingProduct}
-              products={products}
-              startEditing={startEditing}
-              deleteProduct={deleteProduct}
-              cash={cash}
-              setCash={setCash}
-              upi={upi}
-              setUpi={setUpi}
-              credit={credit}
-              setCredit={setCredit}
-              note={note}
-              setNote={setNote}
-              calculateTotal={calculateTotal}
-              isEditing={isEditing}
-              handleUpdateInvoice={handleUpdateInvoice}
-              handlePrint={handlePrint}
-            />
-          </TabsContent>
-          <TabsContent value="scanner">
-            <BarcodeScanner />
-          </TabsContent>
-        </Tabs>
-
-
-        
+        <MainContent
+          customerName={customerName}
+          setCustomerName={setCustomerName}
+          customerNumber={customerNumber}
+          setCustomerNumber={setCustomerNumber}
+          currentInvoiceId={currentInvoiceId}
+          getCurrentFormattedDate={getCurrentFormattedDate}
+          setCurrentDate={setCurrentDate}
+          handleSubmit={handleSubmit}
+          productName={productName}
+          setProductName={setProductName}
+          productQuantity={productQuantity}
+          setProductQuantity={setProductQuantity}
+          productPrice={productPrice}
+          setProductPrice={setProductPrice}
+          editingProduct={editingProduct}
+          products={products}
+          startEditing={startEditing}
+          deleteProduct={deleteProduct}
+          cash={cash}
+          setCash={setCash}
+          upi={upi}
+          setUpi={setUpi}
+          credit={credit}
+          setCredit={setCredit}
+          note={note}
+          setNote={setNote}
+          calculateTotal={calculateTotal}
+          isEditing={isEditing}
+          handleUpdateInvoice={handleUpdateInvoice}
+          handlePrint={handlePrint}
+        />
 
         <div
           className={`transition-all duration-300 ${
@@ -732,6 +745,22 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           onEdit={handleEditInvoice}
           onDelete={handleDeleteInvoice}
         />
+      )}
+
+      {error && (
+        <Alert variant="destructive" className="fixed bottom-4 right-4 w-96">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setError(null)}
+            className="mt-2"
+          >
+            Dismiss
+          </Button>
+        </Alert>
       )}
     </div>
   );

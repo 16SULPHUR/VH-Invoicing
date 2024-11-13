@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { QRCodeSVG } from 'qrcode.react';
 
 export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -74,6 +75,8 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
     }, 1500);
   };
 
+  const upiLink = `upi://pay?pa=pixelminecraft1603@okaxis&pn=Variety heaven&am=${invoice.total}&cu=INR`;
+
   return (
     <>
       <div 
@@ -85,33 +88,39 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
         className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
       >
         <div className="flex space-x-4">
-        <div className="flex flex-col space-y-1">
-  <div className="bg-gray-800 text-sky-400 rounded p-2">
-    <p className="text-sm font-medium">🧾 Total ₹{invoice.total}</p>
-  </div>
-  <div className="bg-gray-800 text-green-400 rounded p-2">
-    <p className="text-sm font-medium">💸 Cash ₹{invoice.cash}</p>
-  </div>
-  <div className="bg-gray-800 text-blue-400 rounded p-2">
-    <p className="text-sm font-medium">🏛️ UPI ₹{invoice.upi}</p>
-  </div>
-  <div className="bg-gray-800 text-red-400 rounded p-2">
-    <p className="text-sm font-medium">❌ Credit ₹{invoice.credit}</p>
-  </div>
-</div>
+          <div className="flex flex-col space-y-1">
+            <div className="bg-gray-800 text-sky-400 rounded p-2">
+              <p className="text-sm font-medium">🧾 Total ₹{invoice.total}</p>
+            </div>
+            <div className="bg-gray-800 text-green-400 rounded p-2">
+              <p className="text-sm font-medium">💸 Cash ₹{invoice.cash}</p>
+            </div>
+            <div className="bg-gray-800 text-blue-400 rounded p-2">
+              <p className="text-sm font-medium">🏛️ UPI ₹{invoice.upi}</p>
+            </div>
+            <div className="bg-gray-800 text-red-400 rounded p-2">
+              <p className="text-sm font-medium">❌ Credit ₹{invoice.credit}</p>
+            </div>
+            <Card className="bg-white p-4">
+              <CardContent className="flex flex-col items-center">
+                <QRCodeSVG value={upiLink} size={128} />
+                <p className="text-sm mt-2 text-center">Scan to pay via UPI</p>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="bg-white p-2 rounded-lg max-w-4xl max-h-[90vh] overflow-auto relative">
-        <UpdatedVarietyHeavenInvoice
-          invoiceId={invoice.id}
-          invoiceDate={new Date(invoice.date).toLocaleDateString()}
-          customerName={invoice.customerName}
-          customerContact={invoice.customerNumber}
-          products={JSON.parse(invoice.products)}
-          calculateTotal={() => invoice.total}
-          note={invoice.note}
-          cash={invoice.cash}
-        />
-      </div>
+            <UpdatedVarietyHeavenInvoice
+              invoiceId={invoice.id}
+              invoiceDate={new Date(invoice.date).toLocaleDateString()}
+              customerName={invoice.customerName}
+              customerContact={invoice.customerNumber}
+              products={JSON.parse(invoice.products)}
+              calculateTotal={() => invoice.total}
+              note={invoice.note}
+              cash={invoice.cash}
+            />
+          </div>
 
           <div className="flex flex-col space-y-2">
             <Button variant="destructive" onClick={onClose}>

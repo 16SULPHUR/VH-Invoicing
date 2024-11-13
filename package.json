@@ -43,6 +43,7 @@
     "lucide-react": "^0.441.0",
     "mongodb": "^6.9.0",
     "next-themes": "^0.3.0",
+    "qrcode.react": "^4.1.0",
     "react-barcode": "^1.5.3",
     "recharts": "^2.13.0",
     "tailwind-merge": "^2.5.4",

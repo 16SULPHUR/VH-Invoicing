@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Home, Sticker, LogOut, Menu, Barcode } from "lucide-react";
+import { Home, PackageSearch , LogOut, Menu, Barcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,8 +23,8 @@ const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
       },
     },
     {
-      name: "Sticker Printer",
-      icon: Sticker,
+      name: "Inventory",
+      icon: PackageSearch,
       onClick: () => setCurrentView("productSticker"),
     },
     {
