@@ -11,7 +11,7 @@ const ProductManagement = () => {
       <Card className="mx-auto bg-gray-800 border-gray-700">
         <CardContent className="p-6">
           <Tabs defaultValue="add" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 bg-zinc-300 text-black">
               <TabsTrigger value="add">Add Product</TabsTrigger>
               <TabsTrigger value="manage">Manage Products</TabsTrigger>
               <TabsTrigger value="stickers">Generate Stickers</TabsTrigger>

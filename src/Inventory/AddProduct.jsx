@@ -159,40 +159,44 @@ const AddProduct = () => {
           required
         />
       </div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="add-supplier"
-          checked={isAddingNewSupplier}
-          onCheckedChange={setIsAddingNewSupplier}
-        />
-        <Label htmlFor="add-supplier" className="text-sky-400">Add New Supplier</Label>
-      </div>
-      {isAddingNewSupplier ? (
-        <div className="space-y-2">
-          <Label htmlFor="newSupplierName" className="text-sky-400">New Supplier Name:</Label>
-          <Input
-            id="newSupplierName"
-            value={newSupplierName}
-            onChange={(e) => setNewSupplierName(e.target.value)}
-            className="bg-gray-700 border-gray-600 text-gray-100"
-            required
+      <div className='flex w-full gap-2 items-center'>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="add-supplier"
+            className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
+            checked={isAddingNewSupplier}
+            onCheckedChange={setIsAddingNewSupplier}
           />
+          <Label htmlFor="add-supplier" className="text-sky-400">Add New Supplier</Label>
         </div>
-      ) : (
-        <div className="space-y-2">
-          <Label htmlFor="supplier" className="text-sky-400">Supplier:</Label>
-          <Select onValueChange={setSupplier} value={supplier}>
-            <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
-              <SelectValue placeholder="Select a supplier" />
-            </SelectTrigger>
-            <SelectContent>
-              {suppliers.map((s) => (
-                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+        {isAddingNewSupplier ? (
+          <div className="space-y-2 w-full">
+            {/* <Label htmlFor="newSupplierName" className="text-sky-400">New Supplier Name:</Label> */}
+            <Input
+              id="newSupplierName"
+              value={newSupplierName}
+              onChange={(e) => setNewSupplierName(e.target.value)}
+              className="bg-gray-700 border-gray-600 text-gray-100"
+              required
+              placeholder="New Supplier Name"
+            />
+          </div>
+        ) : (
+          <div className="space-y-2 w-full">
+            {/* <Label htmlFor="supplier" className="text-sky-400">Supplier:</Label> */}
+            <Select onValueChange={setSupplier} value={supplier}>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
+                <SelectValue placeholder="Select a supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
       <Button type="submit" className="w-full bg-sky-500 hover:bg-sky-600 text-white">
         Add Product
       </Button>
