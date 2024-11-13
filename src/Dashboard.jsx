@@ -705,6 +705,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           isEditing={isEditing}
           handleUpdateInvoice={handleUpdateInvoice}
           handlePrint={handlePrint}
+          handleDoubleClick={handleDoubleClick}
         />
 
         <div
