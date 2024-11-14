@@ -17,10 +17,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "../supabaseClient";
+import { useToast } from "@/hooks/use-toast"
 
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
@@ -30,9 +32,10 @@ const ManageProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [isProductEditDialogOpen, setIsProductEditDialogOpen] = useState(false);
-  const [isSupplierEditDialogOpen, setIsSupplierEditDialogOpen] =
-    useState(false);
+  const [isSupplierEditDialogOpen, setIsSupplierEditDialogOpen] = useState(false);
   const [showCostColumn, setShowCostColumn] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState("all");
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchProducts();
@@ -46,7 +49,11 @@ const ManageProducts = () => {
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Error fetching products:", error);
-      alert("Failed to fetch products. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch products. Please try again.",
+      });
     } else {
       setProducts(data);
     }
@@ -59,7 +66,11 @@ const ManageProducts = () => {
       .order("name", { ascending: true });
     if (error) {
       console.error("Error fetching suppliers:", error);
-      alert("Failed to fetch suppliers. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch suppliers. Please try again.",
+      });
     } else {
       setSuppliers(data);
     }
@@ -69,10 +80,17 @@ const ManageProducts = () => {
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) {
       console.error("Error deleting product:", error);
-      alert("Failed to delete product. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete product. Please try again.",
+      });
     } else {
       fetchProducts();
-      alert("Product deleted successfully.");
+      toast({
+        title: "Success",
+        description: "Product deleted successfully.",
+      });
     }
   };
 
@@ -80,11 +98,18 @@ const ManageProducts = () => {
     const { error } = await supabase.from("suppliers").delete().eq("id", id);
     if (error) {
       console.error("Error deleting supplier:", error);
-      alert("Failed to delete supplier. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete supplier. Please try again.",
+      });
     } else {
       fetchSuppliers();
-      fetchProducts(); // Refresh products as well, in case any were linked to this supplier
-      alert("Supplier deleted successfully.");
+      fetchProducts();
+      toast({
+        title: "Success",
+        description: "Supplier deleted successfully.",
+      });
     }
   };
 
@@ -106,16 +131,24 @@ const ManageProducts = () => {
         name: editingProduct.name,
         cost: editingProduct.cost,
         sellingPrice: editingProduct.sellingPrice,
+        quantity: editingProduct.quantity,
       })
       .eq("id", editingProduct.id);
 
     if (error) {
       console.error("Error updating product:", error);
-      alert("Failed to update product. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update product. Please try again.",
+      });
     } else {
       fetchProducts();
       setIsProductEditDialogOpen(false);
-      alert("Product updated successfully.");
+      toast({
+        title: "Success",
+        description: "Product updated successfully.",
+      });
     }
   };
 
@@ -131,24 +164,35 @@ const ManageProducts = () => {
 
     if (error) {
       console.error("Error updating supplier:", error);
-      alert("Failed to update supplier. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update supplier. Please try again.",
+      });
     } else {
       fetchSuppliers();
-      fetchProducts(); // Refresh products as well, in case any supplier names changed
+      fetchProducts();
       setIsSupplierEditDialogOpen(false);
-      alert("Supplier updated successfully.");
+      toast({
+        title: "Success",
+        description: "Supplier updated successfully.",
+      });
     }
   };
 
-  const getSupplier = (id)=>suppliers.find(s=>s.id==id)
+  const getSupplier = (id) => suppliers.find((s) => s.id == id);
 
   const filteredProducts = products.filter((product) => {
-    return (
+    const matchesSearch = 
       product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      product.barcode.toString().includes(productSearchTerm) || (
-      getSupplier(product.supplier).name.toLowerCase().includes(productSearchTerm.toLowerCase())
-      )
-    );
+      product.barcode.toString().includes(productSearchTerm) ||
+      getSupplier(product.supplier)?.name
+        .toLowerCase()
+        .includes(productSearchTerm.toLowerCase());
+    
+    const matchesSupplier = selectedSupplier === "all" || product.supplier === selectedSupplier;
+
+    return matchesSearch && matchesSupplier;
   });
 
   const filteredSuppliers = suppliers.filter(
@@ -188,11 +232,26 @@ const ManageProducts = () => {
               <TableRow>
                 <TableHead className="text-sky-400">Name</TableHead>
                 <TableHead className="text-sky-400">Barcode</TableHead>
+                <TableHead className="text-sky-400">Quantity</TableHead>
                 {showCostColumn && (
                   <TableHead className="text-sky-400">Cost</TableHead>
                 )}
                 <TableHead className="text-sky-400">Selling Price</TableHead>
-                <TableHead className="text-sky-400">Supplier</TableHead>
+                <TableHead className="text-sky-400">
+                  <Select onValueChange={setSelectedSupplier} defaultValue="all">
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select a supplier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Suppliers</SelectItem>
+                      {suppliers.map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableHead>
                 <TableHead className="text-sky-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -201,11 +260,12 @@ const ManageProducts = () => {
                 <TableRow key={product.id} className="text-white">
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{product.barcode}</TableCell>
-                  {showCostColumn && (
-                    <TableCell>₹{product.cost}</TableCell>
-                  )}
+                  <TableCell>{product.quantity}</TableCell>
+                  {showCostColumn && <TableCell>₹{product.cost}</TableCell>}
                   <TableCell>₹{product.sellingPrice}</TableCell>
-                  <TableCell>{getSupplier(product.supplier)?.name ?? "Loading..."}</TableCell>
+                  <TableCell>
+                    {getSupplier(product.supplier)?.name ?? "Loading..."}
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button
@@ -302,6 +362,24 @@ const ManageProducts = () => {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="quantity" className="text-sky-400">
+                  Quantity:
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={editingProduct.quantity}
+                  onChange={(e) =>
+                    setEditingProduct({
+                      ...editingProduct,
+                      quantity: parseInt(e.target.value),
+                    })
+                  }
+                  className="bg-gray-700 border-gray-600 text-gray-100"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="cost" className="text-sky-400">
                   Cost:
                 </Label>
@@ -312,7 +390,7 @@ const ManageProducts = () => {
                   onChange={(e) =>
                     setEditingProduct({
                       ...editingProduct,
-                      cost: e.target.value,
+                      cost: parseFloat(e.target.value),
                     })
                   }
                   className="bg-gray-700 border-gray-600 text-gray-100"
@@ -330,7 +408,7 @@ const ManageProducts = () => {
                   onChange={(e) =>
                     setEditingProduct({
                       ...editingProduct,
-                      sellingPrice: e.target.value,
+                      sellingPrice: parseFloat(e.target.value),
                     })
                   }
                   className="bg-gray-700 border-gray-600 text-gray-100"

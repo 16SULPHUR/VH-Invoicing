@@ -5,6 +5,8 @@ import Login from "./Login";
 import Sidebar from "./Sidebar";
 import BarcodeScanner from "./BarcodeScanner";
 import ProductManagement from "./ProductManagement";
+import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from "next-themes"
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -64,6 +66,7 @@ const App = () => {
   }
 
   return (
+    
     <div>
       {!isAuthenticated ? (
         <Login setIsAuthenticated={setIsAuthenticated} />
@@ -94,6 +97,8 @@ const App = () => {
             setIsAuthenticated={setIsAuthenticated}
             setCurrentView={setCurrentView}
           />
+
+<Toaster />
         </div>
       )}
     </div>

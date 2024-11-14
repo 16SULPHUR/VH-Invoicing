@@ -10,6 +10,7 @@ const AddProduct = () => {
   const [name, setName] = useState('');
   const [cost, setCost] = useState('');
   const [sellingPrice, setSellingPrice] = useState('');
+  const [quantity, setQuantity] = useState(''); // New state for quantity
   const [supplier, setSupplier] = useState('');
   const [suppliers, setSuppliers] = useState([]);
   const [isAddingNewSupplier, setIsAddingNewSupplier] = useState(false);
@@ -106,7 +107,7 @@ const AddProduct = () => {
     const { data, error } = await supabase
       .from('products')
       .insert([
-        { name, cost, sellingPrice, supplier: currentSupplier, barcode }
+        { name, cost, sellingPrice, supplier: currentSupplier, barcode, quantity: parseInt(quantity, 10) }
       ]);
 
     if (error) {
@@ -119,6 +120,7 @@ const AddProduct = () => {
       setName('');
       setCost('');
       setSellingPrice('');
+      setQuantity('');
       setSupplier('');
       setNewSupplierName('');
       setIsAddingNewSupplier(false);
@@ -127,6 +129,42 @@ const AddProduct = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className='flex w-full gap-5 items-center'>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="add-supplier"
+            className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
+            checked={isAddingNewSupplier}
+            onCheckedChange={setIsAddingNewSupplier}
+          />
+          <Label htmlFor="add-supplier" className="text-sky-400 text-nowrap">New Supplier</Label>
+        </div>
+        {isAddingNewSupplier ? (
+          <div className="space-y-2 w-full">
+            <Input
+              id="newSupplierName"
+              value={newSupplierName}
+              onChange={(e) => setNewSupplierName(e.target.value)}
+              className="bg-gray-700 border-gray-600 text-gray-100"
+              required
+              placeholder="New Supplier Name"
+            />
+          </div>
+        ) : (
+          <div className="space-y-2 w-full">
+            <Select onValueChange={setSupplier} value={supplier}>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
+                <SelectValue placeholder="Select a supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
       <div className="space-y-2">
         <Label htmlFor="name" className="text-sky-400">Product Name:</Label>
         <Input
@@ -137,6 +175,7 @@ const AddProduct = () => {
           required
         />
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="cost" className="text-sky-400">Cost:</Label>
         <Input
@@ -159,44 +198,18 @@ const AddProduct = () => {
           required
         />
       </div>
-      <div className='flex w-full gap-2 items-center'>
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="add-supplier"
-            className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
-            checked={isAddingNewSupplier}
-            onCheckedChange={setIsAddingNewSupplier}
-          />
-          <Label htmlFor="add-supplier" className="text-sky-400">Add New Supplier</Label>
-        </div>
-        {isAddingNewSupplier ? (
-          <div className="space-y-2 w-full">
-            {/* <Label htmlFor="newSupplierName" className="text-sky-400">New Supplier Name:</Label> */}
-            <Input
-              id="newSupplierName"
-              value={newSupplierName}
-              onChange={(e) => setNewSupplierName(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-gray-100"
-              required
-              placeholder="New Supplier Name"
-            />
-          </div>
-        ) : (
-          <div className="space-y-2 w-full">
-            {/* <Label htmlFor="supplier" className="text-sky-400">Supplier:</Label> */}
-            <Select onValueChange={setSupplier} value={supplier}>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
-                <SelectValue placeholder="Select a supplier" />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+      <div className="space-y-2">
+        <Label htmlFor="quantity" className="text-sky-400">Quantity:</Label>
+        <Input
+          id="quantity"
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          className="bg-gray-700 border-gray-600 text-gray-100"
+          required
+        />
       </div>
+      
       <Button type="submit" className="w-full bg-sky-500 hover:bg-sky-600 text-white">
         Add Product
       </Button>

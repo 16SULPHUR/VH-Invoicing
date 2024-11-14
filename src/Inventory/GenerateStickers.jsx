@@ -1,252 +1,151 @@
-// import React, { useState, useEffect } from 'react';
-// import JsBarcode from 'jsbarcode';
-// import html2canvas from 'html2canvas';
-// import { jsPDF } from 'jspdf';
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Button } from "@/components/ui/button";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { Printer } from 'lucide-react';
-// import { supabase } from '../supabaseClient';
-
-// const PrintableSticker = ({ sku, price, barcodeUrl }) => {
-//   return (
-//     <div
-//       id="sticker"
-//       style={{
-//         width: "55mm",
-//         height: "22mm",
-//         display: "flex",
-//         flexDirection: "column",
-//         justifyContent: "center",
-//         alignItems: "center",
-//         fontFamily: "monospace",
-//         fontSize: "8px",
-//         textAlign: "center",
-//         backgroundColor: "white",
-//         color: "black",
-//         padding: "0",
-//         marginTop: "0"
-//       }}
-//     >
-//       <div style={{
-//         display: "flex",
-//         justifyContent: "space-around",
-//         width: "100%",
-//         padding: "0 4px",
-//         fontSize: "13px",
-//         margin: "0"
-//       }}>
-//         <p style={{ fontWeight: "bold", margin: "0" }}>VARIETY HEAVEN</p>
-//         <p style={{ fontWeight: "bold", margin: "0" }}>₹{price}</p>
-//       </div>
-//       {barcodeUrl && (
-//         <div style={{
-//           overflow: "hidden",
-//           width: "50mm",
-//           height: "10mm",
-//           marginTop: "3px",
-//           marginBottom: "0px"
-//         }}>
-//           <img
-//             src={barcodeUrl}
-//             alt="Barcode"
-//             style={{
-//               margin: "0",
-//             }}
-//           />
-//         </div>
-//       )}
-//       <p style={{ fontWeight: "bold", margin: "0", fontSize: "13px" }}>{sku}</p>
-//     </div>
-//   );
-// };
-
-// const GenerateStickers = () => {
-//   const [selectedProduct, setSelectedProduct] = useState('');
-//   const [quantity, setQuantity] = useState('1');
-//   const [products, setProducts] = useState([]);
-//   const [barcodeUrl, setBarcodeUrl] = useState('');
-
-//   useEffect(() => {
-//     fetchProducts();
-//   }, []);
-
-//   const fetchProducts = async () => {
-//     const { data, error } = await supabase.from('products').select('*');
-//     if (error) console.error('Error fetching products:', error);
-//     else setProducts(data);
-//   };
-
-//   useEffect(() => {
-//     if (selectedProduct) {
-//       const product = products.find(p => p.id === selectedProduct);
-//       if (product) {
-//         const canvas = document.createElement('canvas');
-//         JsBarcode(canvas, product.barcode, { format: 'CODE128' });
-//         setBarcodeUrl(canvas.toDataURL('image/png'));
-//       }
-//     }
-//   }, [selectedProduct, products]);
-
-//   const handlePrint = async () => {
-//     if (!selectedProduct || !quantity) {
-//       alert("Please select a product and specify quantity before printing the sticker.");
-//       return;
-//     }
-
-//     const product = products.find(p => p.id === selectedProduct);
-//     const stickerElement = document.getElementById('sticker');
-//     const canvas = await html2canvas(stickerElement, { scale: 2 });
-//     const imgData = canvas.toDataURL('image/png');
-
-//     const w = 53;
-//     const h = 22;
-
-//     const pdf = new jsPDF({
-//       orientation: 'landscape',
-//       unit: 'mm',
-//       format: [w, h],
-//     });
-
-//     for (let i = 0; i < parseInt(quantity); i++) {
-//       if (i > 0) pdf.addPage();
-//       pdf.addImage(imgData, 'PNG', 0, 0, w, h);
-//     }
-
-//     const pdfBlob = pdf.output('blob');
-//     const pdfUrl = URL.createObjectURL(pdfBlob);
-//     window.open(pdfUrl);
-//   };
-
-//   return (
-//     <div className="space-y-4">
-//       <div className="mb-6 bg-white p-4 rounded-md">
-//         <PrintableSticker
-//           sku={products.find(p => p.id === selectedProduct)?.barcode || 'SAMPLE SKU'}
-//           barcodeUrl={barcodeUrl}
-//           price={products.find(p => p.id === selectedProduct)?.sellingPrice || '0'}
-//         />
-//       </div>
-//       <div className="space-y-2">
-//         <Label htmlFor="product" className="text-sky-400">Select Product:</Label>
-//         <Select onValueChange={setSelectedProduct} value={selectedProduct}>
-//           <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
-//             <SelectValue placeholder="Select a product" />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {products.map((p) => (
-//               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-//       </div>
-//       <div className="space-y-2">
-//         <Label htmlFor="quantity" className="text-sky-400">Quantity:</Label>
-//         <Input
-//           id="quantity"
-//           type="number"
-//           value={quantity}
-//           onChange={(e) => setQuantity(e.target.value)}
-//           className="bg-gray-700 border-gray-600 text-gray-100"
-//           required
-//         />
-//       </div>
-//       <Button
-//         type="button"
-//         className="w-full bg-sky-500 hover:bg-sky-600 text-white"
-//         onClick={handlePrint}
-//       >
-//         <Printer className="mr-2 h-4 w-4" /> Generate Stickers
-//       </Button>
-//     </div>
-//   );
-// };
-
-// export default GenerateStickers;
-
-
-
-import React, { useState, useEffect } from 'react';
-import JsBarcode from 'jsbarcode';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import React, { useState, useEffect } from "react";
+import JsBarcode from "jsbarcode";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer } from 'lucide-react';
-import { supabase } from '../supabaseClient';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Printer } from "lucide-react";
+import { supabase } from "../supabaseClient";
+import generatePDF, { Resolution, Margin, usePDF } from "react-to-pdf";
 
 const PrintableSticker = ({ sku, price, barcodeUrl }) => {
   return (
     <div
       id="sticker"
       style={{
-        width: "55mm",
-        height: "22mm",
+        width: "50.8mm",
+        height: "25.4mm",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
+        justifyContent: "space-between",
         fontFamily: "monospace",
-        fontSize: "8px",
-        textAlign: "center",
         backgroundColor: "white",
         color: "black",
-        padding: "0",
-        marginTop: "0",
-        border:"0.5px solid black"
+        padding: "0mm",
+        margin: "0mm",
+        border: "0.5px solid black",
+        boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
-      <div style={{
-        display: "flex",
-        justifyContent: "space-around",
-        width: "100%",
-        padding: "0 4px",
-        fontSize: "13px",
-        margin: "0",
-      }}>
-        <p style={{ fontWeight: "bold", margin: "0" }}>VARIETY HEAVEN</p>
-        <p style={{ fontWeight: "bold", margin: "0" }}>₹{price}</p>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          padding: "2px 4px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "12px",
+            fontWeight: "bold",
+            margin: 0,
+          }}
+        >
+          VARIETY HEAVEN
+        </span>
+        <span
+          style={{
+            fontSize: "14px",
+            fontWeight: "bold",
+            margin: "0mm",
+          }}
+        >
+          ₹{price}
+        </span>
       </div>
+
       {barcodeUrl && (
-        <div style={{
-          overflow: "hidden",
-          width: "50mm",
-          height: "10mm",
-          marginTop: "3px",
-          marginBottom: "0px",
-        }}>
+        <div
+          style={{
+            width: "100%",
+            height: "12mm",
+            margin: "0mm",
+            overflow: "hidden",
+          }}
+        >
           <img
             src={barcodeUrl}
             alt="Barcode"
             style={{
-              margin: "0",
+              margin: "0mm",
+              marginTop: "-2mm",
+              padding: "0mm",
             }}
           />
         </div>
       )}
-      <p style={{ fontWeight: "bold", margin: "0px", fontSize: "13px" }}>{sku}</p>
+
+      <div
+        style={{
+          width: "100%",
+          padding: "2px 4px",
+          textAlign: "center",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "12px",
+            fontWeight: "bold",
+            margin: "0mm",
+          }}
+        >
+          {sku}
+        </span>
+      </div>
     </div>
   );
 };
 
 const GenerateStickers = () => {
-  const [selectedSupplier, setSelectedSupplier] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [quantity, setQuantity] = useState('1');
+  const [selectedSupplier, setSelectedSupplier] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [quantity, setQuantity] = useState("1");
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [barcodeUrl, setBarcodeUrl] = useState('');
+  const [barcodeUrl, setBarcodeUrl] = useState("");
+
+  const options = {
+    method: "open",
+    resolution: Resolution.HIGH,
+    page: {
+      margin: Margin.NONE,
+      format: [50.8, 25.4],
+      orientation: "landscape",
+    },
+    canvas: {
+      mimeType: "image/png",
+      qualityRatio: 1,
+    },
+    overrides: {
+      pdf: {
+        compress: true,
+      },
+      canvas: {
+        useCORS: true,
+      },
+    },
+  };
+
+  const getTargetElement = () => document.getElementById("sticker");
+
+  const { toPDF, targetRef } = usePDF(options);
 
   useEffect(() => {
     fetchSuppliers();
   }, []);
 
   const fetchSuppliers = async () => {
-    const { data, error } = await supabase.from('suppliers').select('*');
-    if (error) console.error('Error fetching suppliers:', error);
+    const { data, error } = await supabase.from("suppliers").select("*");
+    if (error) console.error("Error fetching suppliers:", error);
     else setSuppliers(data);
   };
 
@@ -258,98 +157,108 @@ const GenerateStickers = () => {
 
   const fetchProducts = async (supplierId) => {
     const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('supplier', supplierId);
-    if (error) console.error('Error fetching products:', error);
+      .from("products")
+      .select("*")
+      .eq("supplier", supplierId);
+    if (error) console.error("Error fetching products:", error);
     else setProducts(data);
   };
 
   useEffect(() => {
     if (selectedProduct) {
-      const product = products.find(p => p.id === selectedProduct);
+      const product = products.find((p) => p.id === selectedProduct);
       if (product) {
-        const canvas = document.createElement('canvas');
-        JsBarcode(canvas, product.barcode, { format: 'CODE128' });
-        setBarcodeUrl(canvas.toDataURL('image/png'));
+        const canvas = document.createElement("canvas");
+        JsBarcode(canvas, product.barcode, { format: "CODE128" });
+        setBarcodeUrl(canvas.toDataURL("image/png"));
+        // Set quantity to product's quantity
+        setQuantity(product.quantity.toString());
       }
     }
   }, [selectedProduct, products]);
 
   const handlePrint = async () => {
     if (!selectedProduct || !quantity) {
-      alert("Please select a product and specify quantity before printing the sticker.");
+      alert(
+        "Please select a product and specify quantity before printing the sticker."
+      );
       return;
     }
 
-    const product = products.find(p => p.id === selectedProduct);
-    const stickerElement = document.getElementById('sticker');
-    const canvas = await html2canvas(stickerElement, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-
-    const w = 53;
-    const h = 22;
-
-    const pdf = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: [w, h],
-    });
-
-    for (let i = 0; i < parseInt(quantity); i++) {
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, 0, w, h);
-    }
-
-    const pdfBlob = pdf.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    window.open(pdfUrl);
+    generatePDF(getTargetElement, options);
   };
+
+  // Create an array based on the quantity
+  const stickers = Array.from(
+    { length: parseInt(quantity) },
+    (_, index) => index
+  );
 
   return (
     <div className="space-y-4">
-      <div className="mb-6 bg-white p-4 rounded-md">
-        <PrintableSticker
-          sku={products.find(p => p.id === selectedProduct)?.name || 'SAMPLE SKU'}
-          barcodeUrl={barcodeUrl}
-          price={products.find(p => p.id === selectedProduct)?.sellingPrice || '0'}
-        />
+      <div
+        className="mb-6 bg-white p-4 rounded-md h-40 overflow-scroll"
+        ref={targetRef}
+      >
+        {stickers.map((index) => (
+          <PrintableSticker
+            key={index}
+            sku={
+              products.find((p) => p.id === selectedProduct)?.name ||
+              "SAMPLE SKU"
+            }
+            barcodeUrl={barcodeUrl}
+            price={
+              products.find((p) => p.id === selectedProduct)?.sellingPrice ||
+              "0"
+            }
+          />
+        ))}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="supplier" className="text-sky-400">Select Supplier:</Label>
+        <Label htmlFor="supplier" className="text-sky-400">
+          Select Supplier:
+        </Label>
         <Select onValueChange={setSelectedSupplier} value={selectedSupplier}>
           <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
             <SelectValue placeholder="Select a supplier" />
           </SelectTrigger>
           <SelectContent>
             {suppliers.map((s) => (
-              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="product" className="text-sky-400">Select Product:</Label>
+        <Label htmlFor="product" className="text-sky-400">
+          Select Product:
+        </Label>
         <Select onValueChange={setSelectedProduct} value={selectedProduct}>
           <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
             <SelectValue placeholder="Select a product" />
           </SelectTrigger>
           <SelectContent>
             {products.map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="quantity" className="text-sky-400">Quantity:</Label>
+        <Label htmlFor="quantity" className="text-sky-400">
+          Quantity:
+        </Label>
         <Input
           id="quantity"
           type="number"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           className="bg-gray-700 border-gray-600 text-gray-100"
-          required
         />
       </div>
       <Button
