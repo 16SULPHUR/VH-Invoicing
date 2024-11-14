@@ -140,7 +140,7 @@ const AddProduct = () => {
       setCost('');
       setSellingPrice('');
       setQuantity('');
-      setSupplier('');
+      // setSupplier('');
       setNewSupplierName('');
       setIsAddingNewSupplier(false);
     }
