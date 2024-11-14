@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from '../supabaseClient';
 
+import { useToast } from "@/hooks/use-toast"
+
 const AddProduct = () => {
   const [name, setName] = useState('');
   const [cost, setCost] = useState('');
@@ -16,6 +18,8 @@ const AddProduct = () => {
   const [isAddingNewSupplier, setIsAddingNewSupplier] = useState(false);
   const [newSupplierName, setNewSupplierName] = useState('');
 
+  const { toast } = useToast()
+
   useEffect(() => {
     fetchSuppliers();
   }, []);
@@ -24,7 +28,11 @@ const AddProduct = () => {
     const { data, error } = await supabase.from('suppliers').select('*');
     if (error) {
       console.error('Error fetching suppliers:', error);
-      alert("Failed to fetch suppliers. Please try again.")
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch suppliers. Please try again.",
+      });
     } else {
       setSuppliers(data);
     }
@@ -75,7 +83,11 @@ const AddProduct = () => {
 
     if (error) {
       console.error('Error adding new supplier:', error);
-      alert("Failed to add new supplier. Please try again.")
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add new supplier. Please try again.",
+      });
       return null;
     } else {
       console.log('New supplier added successfully:', data);
@@ -112,10 +124,17 @@ const AddProduct = () => {
 
     if (error) {
       console.error('Error adding product:', error);
-      alert("Failed to add product. Please try again.")
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add product. Please try again.",
+      });
     } else {
       console.log('Product added successfully:', data);
-      alert("Product added successfully.")
+      toast({
+        title: "Success",
+        description: "Product added successfully.",
+      });
       // Reset form
       setName('');
       setCost('');
