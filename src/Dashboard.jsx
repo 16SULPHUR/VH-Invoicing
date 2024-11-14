@@ -614,7 +614,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           <div className="h-screen w-1 fixed" onClick={toggleLeftSidebar}></div>
           <button
             onClick={toggleLeftSidebar}
-            className="absolute bottom-4 left-4 z-10 bg-sky-500 text-white p-1 rounded-full"
+            className="absolute top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
           >
             {isLeftSidebarExpanded ? (
               <ChevronLeft size={24} />
@@ -718,7 +718,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           ></div>
           <button
             onClick={toggleRecentInvoices}
-            className="absolute bottom-4 right-4 z-10 bg-sky-500 text-white p-1 rounded-full"
+            className="absolute top-4 right-6 z-10 bg-purple-500 text-white p-1 rounded-full"
           >
             {isRecentInvoicesExpanded ? (
               <ChevronRight size={24} />

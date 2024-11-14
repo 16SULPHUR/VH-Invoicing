@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Home, PackageSearch , LogOut, Menu, Barcode } from "lucide-react";
+import { Home, PackageSearch , LogOut, Menu, ScanBarcode  } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,7 +17,7 @@ const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
     },
     {
       name: "Scan Products",
-      icon: Barcode,
+      icon: ScanBarcode ,
       onClick: () => {
         setCurrentView("barcodeScanner")
       },

@@ -198,7 +198,7 @@ const ManageProducts = () => {
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
       supplier.name.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
-      supplier.code.includes(supplierSearchTerm)
+      supplier.code.toString().includes(supplierSearchTerm)
   );
 
   return (
