@@ -194,6 +194,18 @@ const AddProduct = () => {
           required
         />
       </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="quantity" className="text-sky-400">Quantity:</Label>
+        <Input
+          id="quantity"
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          className="bg-gray-700 border-gray-600 text-gray-100"
+          required
+        />
+      </div>
       
       <div className="space-y-2">
         <Label htmlFor="cost" className="text-sky-400">Cost:</Label>
@@ -217,17 +229,7 @@ const AddProduct = () => {
           required
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="quantity" className="text-sky-400">Quantity:</Label>
-        <Input
-          id="quantity"
-          type="number"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          className="bg-gray-700 border-gray-600 text-gray-100"
-          required
-        />
-      </div>
+      
       
       <Button type="submit" className="w-full bg-sky-500 hover:bg-sky-600 text-white">
         Add Product
