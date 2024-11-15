@@ -62,27 +62,6 @@ const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
           ₹{price}
         </span>
       </div>
-
-      {/* {barcodeUrl && (
-        <div
-          style={{
-            width: "100%",
-            height: "12mm",
-            margin: "0mm",
-            overflow: "hidden",
-          }}
-        >
-          <img
-            src={barcodeUrl}
-            alt="Barcode"
-            style={{
-              margin: "0mm",
-              marginTop: "-2mm",
-              padding: "0mm",
-            }}
-          />
-        </div>
-      )} */}
       <div className=" overflow-hidden">
         <Barcode value={barcode} height={19} width={1.2} fontSize={10} textMargin={0} margin={0} marginLeft={5}/>
       </div>
@@ -90,7 +69,7 @@ const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
       <div
         style={{
           width: "100%",
-          padding: "2px 4px",
+          padding: "0px 0px",
           textAlign: "center",
         }}
       >
