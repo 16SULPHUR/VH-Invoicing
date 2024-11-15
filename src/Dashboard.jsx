@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sheet";
 
 const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
+  const [allproducts, setAllProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -78,6 +79,20 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   // const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);
   // const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] =
   //   useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("id, name, quantity, sellingPrice, supplier, barcode");
+
+      if (productsError)
+        console.error("Error fetching products:", productsError);
+      else setAllProducts(productsData);
+    };
+
+    fetchData();
+  }, []);
 
   const [isLeftSidebarExpanded, setLeftSidebarExpanded] = useState(false);
   const [isRecentInvoicesExpanded, setRecentInvoicesExpanded] = useState(false);
@@ -313,6 +328,9 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchInvoices();
     fetchRecentInvoices();
     fetchDailySales();
+  }, []);
+
+  useEffect(() => {
     fetchScannedProducts();
 
     const scannedProductsSubscription = supabase
@@ -329,46 +347,109 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     return () => {
       scannedProductsSubscription.unsubscribe();
     };
-  }, []);
+  }, [allproducts]);
+
+  // const fetchScannedProducts = async () => {
+  //   try {
+  //     const { data, error } = await supabase
+  //       .from("scanned_products")
+  //       .select("*")
+  //       .order("created_at", { ascending: false });
+
+  //     if (error) throw error;
+
+  //     console.log(data);
+
+  //     const formattedProducts = data.map((product) => ({
+  //       name: product.name,
+  //       quantity: product.quantity || 1,
+  //       price: product.price || 0,
+  //       amount: (product.quantity || 1) * (product.price || 0),
+  //     }));
+
+  //     // setProducts(formattedProducts);
+  //   } catch (error) {
+  //     console.error("Error fetching scanned products:", error);
+  //     setError("Failed to fetch scanned products. Please try again.");
+  //   }
+  // };
 
   const fetchScannedProducts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: scannedData, error } = await supabase
         .from("scanned_products")
         .select("*")
         .order("created_at", { ascending: false });
-
+  
       if (error) throw error;
-
-      console.log(data)
-
-      const formattedProducts = data.map((product) => ({
-        name: product.name,
-        quantity: product.quantity || 1,
-        price: product.price || 0,
-        amount: (product.quantity || 1) * (product.price || 0),
-      }));
-
-
-      // setProducts(formattedProducts);
+  
+      const formattedProducts = scannedData.map(scannedProduct => {
+        const barcode = scannedProduct.name;
+        const existingProduct = allproducts?.find(p => p?.barcode?.toString() === barcode.toString());
+        
+        if (!existingProduct) {
+          console.warn(`Product with barcode ${barcode} not found in catalog`);
+          return null;
+        }
+  
+        return {
+          name: existingProduct.name,
+          barcode: barcode,
+          quantity: scannedProduct.quantity || 1,
+          price: existingProduct.price || 0,
+          amount: (scannedProduct.quantity || 1) * (existingProduct.price || 0),
+        };
+      })
+      .filter(product => product !== null); // Remove any products that weren't found in catalog
+  
+      setProducts(formattedProducts);
+  
+      if (formattedProducts.length !== scannedData.length) {
+        toast({
+          title: "Warning",
+          description: "Some scanned products were not found in the catalog",
+          variant: "warning"
+        });
+      }
+  
     } catch (error) {
       console.error("Error fetching scanned products:", error);
-      setError("Failed to fetch scanned products. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to fetch scanned products. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleScannedProduct = (payload) => {
     const scannedProduct = payload.new;
+    const barcode = scannedProduct.name; // Assuming this is actually the barcode
+    
+    // Find the product in the catalog by barcode
+    const existingProduct = allproducts?.find(p => p.barcode.toString() === barcode);
+    
+    if (!existingProduct) {
+      toast({
+        title: "Error",
+        description: "Product not found in catalog",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create new product entry with data from catalog
     const newProduct = {
-      name: scannedProduct.name,
+      name: existingProduct.name,
+      barcode: barcode,
       quantity: scannedProduct.quantity || 1,
-      price: scannedProduct.price || 0,
-      amount: (scannedProduct.quantity || 1) * (scannedProduct.price || 0),
+      price: existingProduct.price || 0,
+      amount: (scannedProduct.quantity || 1) * (existingProduct.price || 0),
     };
-
-    console.log(newProduct)
-    // setProducts((prevProducts) => [newProduct, ...prevProducts]);
-
+  
+    // Update products state
+    setProducts(prevProducts => [newProduct, ...prevProducts]);
+  
     toast({
       title: "Product Scanned",
       description: `${newProduct.name} has been added to the invoice.`,
@@ -405,8 +486,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             formattedDate: String(d.getDate()).padStart(2, "0"),
           };
         })
-        .reverse(); 
-        
+        .reverse();
 
       setDailySales(salesArray);
     }
@@ -640,7 +720,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
           }`}
         >
-          
           <button
             // onClick={toggleLeftSidebar}
             className="absolute top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
@@ -659,7 +738,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                   <SheetContent className="bg-gray-900 p-0" side={"left"}>
                     <SheetHeader>
                       <SheetTitle className="text-white">
-                      Sales Information
+                        Sales Information
                       </SheetTitle>
                     </SheetHeader>
                     <LeftSidebar
@@ -769,6 +848,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           handleUpdateInvoice={handleUpdateInvoice}
           handlePrint={handlePrint}
           handleDoubleClick={handleDoubleClick}
+          allProducts={allproducts}
         />
 
         <div

@@ -80,34 +80,35 @@ const ProductForm = ({
   productPrice,
   setProductPrice,
   editingProduct,
+  products
 }) => {
-  const [products, setProducts] = useState([]);
+  // const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const [isAddingNewProduct, setIsAddingNewProduct] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: productsData, error: productsError } = await supabase
-        .from("products")
-        .select("id, name, quantity, sellingPrice, supplier");
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const { data: productsData, error: productsError } = await supabase
+  //       .from("products")
+  //       .select("id, name, quantity, sellingPrice, supplier");
 
-      const { data: suppliersData, error: suppliersError } = await supabase
-        .from("suppliers")
-        .select("id, name");
+  //     const { data: suppliersData, error: suppliersError } = await supabase
+  //       .from("suppliers")
+  //       .select("id, name");
 
-      if (productsError)
-        console.error("Error fetching products:", productsError);
-      else setProducts(productsData);
+  //     if (productsError)
+  //       console.error("Error fetching products:", productsError);
+  //     else setProducts(productsData);
 
-      if (suppliersError)
-        console.error("Error fetching suppliers:", suppliersError);
-      else setSuppliers(suppliersData);
-    };
+  //     if (suppliersError)
+  //       console.error("Error fetching suppliers:", suppliersError);
+  //     else setSuppliers(suppliersData);
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   useEffect(() => {
     if (editingProduct) {

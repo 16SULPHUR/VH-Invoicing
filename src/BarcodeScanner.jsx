@@ -149,7 +149,7 @@ const BarcodeScanner = () => {
   };
 
   const clearScannedItems = async () => {
-    const response = await supabase.from("scanned_products").delete();
+    const response = await supabase.from("scanned_products").delete().neq("id", 0);
     setScannedItems([]);
   };
 
