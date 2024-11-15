@@ -46,7 +46,6 @@ const App = () => {
         if (event === "SIGNED_IN" && session) {
           setIsAuthenticated(true);
         } else if (event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
-          // Check if the session is still valid after a token refresh
           const {
             data: { session: currentSession },
           } = await supabase.auth.getSession();
@@ -69,7 +68,7 @@ const App = () => {
         localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
         setIsAuthenticated(false);
       }
-    }, 60000); // Check every minute
+    }, 60000);
 
     return () => clearInterval(checkSessionExpiration);
   }, []);
@@ -77,6 +76,17 @@ const App = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
+  const handleTabClick = (tabView) => {
+    if (tabView === "logout") {
+      if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
+        setIsAuthenticated(false);
+      }
+      return;
+    }
+    setCurrentView(tabView);
+  };
 
   return (
     <div>
@@ -88,63 +98,33 @@ const App = () => {
             id="bg"
             className="absolute inset-0 w-full h-full z-10 bg-cover bg-center bg-gray-900 bg-blend-soft-light"
           ></div>
-          {/* <div className="relative z-20">
-            {currentView === "dashboard" ? (
-              <Dashboard
-                setCurrentView={setCurrentView}
-                setIsAuthenticated={setIsAuthenticated}
-              />
-            ) : currentView == "barcodeScanner" ? (
-              <BarcodeScanner />
-            ) : (
-              <ProductManagement
-                setCurrentView={setCurrentView}
-                setIsAuthenticated={setIsAuthenticated}
-              />
-            )}
-          </div> */}
-
+          
           <div className="relative z-20">
-            {/* Tab buttons */}
             <TooltipProvider>
               <div className="flex space-x-4 border-b border-gray-300 mb-2 justify-center">
                 {tabs.map((tab) => (
-                  <Tooltip>
-                    <button
-                      key={tab.view}
-                      onClick={() => {
-                        if (tab.view == "logout") {
-                          if (confirm("sure?")) {
-                            localStorage.removeItem(
-                              "sb-basihmnebvsflzkaivds-auth-token"
-                            );
-                            setIsAuthenticated(false);
-                          }
-                          return;
-                        }
-                        setCurrentView(tab.view);
-                      }}
-                      className={`px-4 py-2 flex items-center ${
-                        currentView === tab.view
-                          ? "border-b-2 border-sky-500 text-sky-500 font-semibold"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`}
-                    >
-                      <TooltipTrigger>
+                  <Tooltip key={tab.view}>
+                    <TooltipTrigger asChild>
+                      <div
+                        onClick={() => handleTabClick(tab.view)}
+                        className={`px-4 py-2 flex items-center cursor-pointer ${
+                          currentView === tab.view
+                            ? "border-b-2 border-sky-500 text-sky-500 font-semibold"
+                            : "text-gray-400 hover:text-gray-600"
+                        }`}
+                      >
                         <tab.icon size={25} />
-                        {/* {tab.name} */}
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-yellow-500 text-black font-semibold">
-                        {tab.name}
-                      </TooltipContent>
-                    </button>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-yellow-500 text-black font-semibold">
+                      {tab.name}
+                    </TooltipContent>
                   </Tooltip>
                 ))}
               </div>
             </TooltipProvider>
 
-            {/* Render the appropriate component based on the current view */}
-            <div className=" overflow-scroll">
+            <div className="overflow-scroll">
               {currentView === "dashboard" && (
                 <Dashboard
                   setCurrentView={setCurrentView}
@@ -160,11 +140,6 @@ const App = () => {
               )}
             </div>
           </div>
-
-          {/* <Sidebar
-            setIsAuthenticated={setIsAuthenticated}
-            setCurrentView={setCurrentView}
-          /> */}
 
           <Toaster />
         </div>

@@ -9,10 +9,26 @@ import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
 import InvoiceForm from "./InvoiceForm";
 import SalesChart from "./SalesChart";
 import Sidebar from "./Sidebar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ReceiptText,
+  ChartNoAxesCombined,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import BarcodeScanner from "./BarcodeScanner";
+
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [products, setProducts] = useState([]);
@@ -50,6 +66,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
   const [invoices, setInvoices] = useState([]);
   const printAreaRef = useRef(null);
+
+  const [SheetCloseWrapper, shetCloseWrapperProps] = [
+    SheetClose,
+    { asChild: true },
+  ];
 
   // const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);
   // const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] =
@@ -392,7 +413,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     else setRecentInvoices(data || []);
   };
 
-
   const fetchInvoices = async () => {
     const { data, error } = await supabase
       .from("invoices")
@@ -608,21 +628,56 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     >
       <div className="flex flex-1">
         <div
-          className={`transition-all duration-300 ${isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
-            }`}
+          className={`transition-all duration-300 ${
+            isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
+          }`}
         >
-          <div className="h-screen w-1 fixed" onClick={toggleLeftSidebar}></div>
+          
           <button
-            onClick={toggleLeftSidebar}
+            // onClick={toggleLeftSidebar}
             className="absolute top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
           >
             {isLeftSidebarExpanded ? (
               <ChevronLeft size={24} />
             ) : (
-              <ChevronRight size={24} />
+              <div>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <div>
+                      <ChartNoAxesCombined size={24} />
+                      <div className="h-screen w-1 fixed left-0"></div>
+                    </div>
+                  </SheetTrigger>
+                  <SheetContent className="bg-gray-900 p-0" side={"left"}>
+                    <SheetHeader>
+                      <SheetTitle className="text-white">
+                      Sales Information
+                      </SheetTitle>
+                    </SheetHeader>
+                    <LeftSidebar
+                      dailySales={dailySales}
+                      salesType={salesType}
+                      salesData={salesData}
+                      cashSales={cashSales}
+                      upiSales={upiSales}
+                      creditSales={creditSales}
+                      handleSalesTypeChange={handleSalesTypeChange}
+                      customDateRange={customDateRange}
+                      handleCustomDateChange={handleCustomDateChange}
+                      fetchSales={fetchSales}
+                    />
+                    {/* <SheetFooter>
+                      <SheetClose asChild>
+                        <Button type="submit">Save changes</Button>
+                      </SheetClose>
+                    </SheetFooter> */}
+                  </SheetContent>
+                </Sheet>
+                {/* <ChevronLeft size={24} /> */}
+              </div>
             )}
           </button>
-          {isLeftSidebarExpanded && (
+          {/* {isLeftSidebarExpanded && (
             <div>
               <LeftSidebar
                 dailySales={dailySales}
@@ -637,7 +692,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                 fetchSales={fetchSales}
               />
             </div>
-          )}
+          )} */}
         </div>
 
         {/* <MainContent
@@ -709,21 +764,48 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         />
 
         <div
-          className={`transition-all duration-300 ${isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
-            }`}
+          className={`transition-all duration-300 ${
+            isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
+          }`}
         >
-          <div
-            className="h-screen w-1 fixed right-0"
-            onClick={toggleRecentInvoices}
-          ></div>
           <button
-            onClick={toggleRecentInvoices}
+            // onClick={toggleRecentInvoices}
             className="absolute top-4 right-6 z-10 bg-purple-500 text-white p-1 rounded-full"
           >
             {isRecentInvoicesExpanded ? (
               <ChevronRight size={24} />
             ) : (
-              <ChevronLeft size={24} />
+              <div>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <div>
+                      <ReceiptText size={24} />
+                      <div
+                        className="h-screen w-1 fixed right-0"
+                        // onClick={toggleRecentInvoices}
+                      ></div>
+                    </div>
+                  </SheetTrigger>
+                  <SheetContent className="bg-gray-900 p-0">
+                    <SheetHeader>
+                      <SheetTitle className="text-white">
+                        Recent Invoices
+                      </SheetTitle>
+                    </SheetHeader>
+                    <RecentInvoices
+                      recentInvoices={recentInvoices}
+                      handleInvoiceClick={handleInvoiceClick}
+                      formatDate={formatDate}
+                    />
+                    {/* <SheetFooter>
+                      <SheetClose asChild>
+                        <Button type="submit">Save changes</Button>
+                      </SheetClose>
+                    </SheetFooter> */}
+                  </SheetContent>
+                </Sheet>
+                {/* <ChevronLeft size={24} /> */}
+              </div>
             )}
           </button>
           {isRecentInvoicesExpanded && (

@@ -1,9 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SheetClose } from "@/components/ui/sheet";
 
 const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
   const [hoveredInvoiceId, setHoveredInvoiceId] = useState(null);
+  const [SheetCloseWrapper, shetCloseWrapperProps] = [
+    SheetClose,
+    { asChild: true },
+  ];
 
   const groupedInvoices = useMemo(() => {
     const groups = {};
@@ -28,14 +33,14 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
   };
 
   return (
-    <Card className="w-[300px] h-[90vh] bg-gray-900 border-0">
+    <Card className="w-full h-full bg-gray-900 border-0">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-sky-500">
+        {/* <CardTitle className="text-lg font-bold text-sky-500">
           Recent Invoices
-        </CardTitle>
+        </CardTitle> */}
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[calc(90vh-4rem)] px-2 me-1">
+        <ScrollArea className="h-[calc(90vh-4rem)] px-2 me-">
           {Object.entries(groupedInvoices).map(
             ([date, { invoices, totalSale }]) => (
               <div key={date} className="mb-4">
@@ -52,9 +57,13 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                     paymentMethods.push("credit");
 
                   return (
-                    <div
+                    <SheetCloseWrapper
+                      {...shetCloseWrapperProps}
                       key={invoice.id}
-                      className={`
+                    >
+                      <div
+                        key={invoice.id}
+                        className={`
                       ${
                         invoice.credit != 0
                           ? "bg-red-900/50 hover:bg-red-800"
@@ -63,42 +72,44 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                       mb-2 rounded-md shadow-md cursor-pointer px-2 py-1 text-md
                        transition-colors duration-200
                     `}
-                      onClick={() => handleInvoiceClick(invoice.id)}
-                      onMouseEnter={() => setHoveredInvoiceId(invoice.id)}
-                      onMouseLeave={() => setHoveredInvoiceId(null)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <h6 className="font-bold text-gray-300">
-                          #{invoice.id}
-                        </h6>
-                        <h6 className="font-bold text-gray-300">
-                          {invoice.customerName.split(" ")[0]}
-                        </h6>
-                        <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
-                          {renderPaymentIcons(paymentMethods)} ₹ {invoice.total}
-                        </p>
+                        onClick={() => handleInvoiceClick(invoice.id)}
+                        onMouseEnter={() => setHoveredInvoiceId(invoice.id)}
+                        onMouseLeave={() => setHoveredInvoiceId(null)}
+                      >
+                        <div className="flex justify-between items-center">
+                          <h6 className="font-bold text-gray-300">
+                            #{invoice.id}
+                          </h6>
+                          <h6 className="font-bold text-gray-300">
+                            {invoice.customerName.split(" ")[0]}
+                          </h6>
+                          <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
+                            {renderPaymentIcons(paymentMethods)} ₹{" "}
+                            {invoice.total}
+                          </p>
+                        </div>
+                        {paymentMethods.length > 1 &&
+                          hoveredInvoiceId === invoice.id && (
+                            <div className="flex gap-3 mt-2 transition-opacity duration-300 h-full">
+                              {paymentMethods.map((paymentMethod) => (
+                                <div
+                                  key={paymentMethod}
+                                  className="text-sm text-gray-300"
+                                >
+                                  <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
+                                    {paymentMethod === "cash"
+                                      ? "💸"
+                                      : paymentMethod === "upi"
+                                      ? "🏛️"
+                                      : "❌"}{" "}
+                                    ₹ {invoice[paymentMethod]}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                       </div>
-                      {paymentMethods.length > 1 &&
-                        hoveredInvoiceId === invoice.id && (
-                          <div className="flex gap-3 mt-2 transition-opacity duration-300 h-full">
-                            {paymentMethods.map((paymentMethod) => (
-                              <div
-                                key={paymentMethod}
-                                className="text-sm text-gray-300"
-                              >
-                                <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
-                                  {paymentMethod === "cash"
-                                    ? "💸"
-                                    : paymentMethod === "upi"
-                                    ? "🏛️"
-                                    : "❌"}{" "}
-                                  ₹ {invoice[paymentMethod]}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                    </div>
+                    </SheetCloseWrapper>
                   );
                 })}
                 <div className="mt-2 text-right">
@@ -116,6 +127,3 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
 };
 
 export default RecentInvoices;
-
-
-
