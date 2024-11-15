@@ -63,7 +63,7 @@ const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
         </span>
       </div>
       <div className=" overflow-hidden">
-        <Barcode value={barcode} height={19} width={1.2} fontSize={10} textMargin={0} margin={0} marginLeft={5}/>
+        <Barcode value={barcode.toString()} height={19} width={1} fontSize={10} textMargin={0} margin={0} marginLeft={5}/>
       </div>
 
       <div
