@@ -7,9 +7,9 @@ import GenerateStickers from './Inventory/GenerateStickers';
 
 const ProductManagement = () => {
   return (
-    <div className="h-screen bg-gray-900 text-gray-100">
-      <Card className="bg-gray-800">
-        <CardContent className="">
+    <div className="h-screen bg-gray-190 text-gray-100 px-2">
+      {/* <Card className="bg-gray-900">
+        <CardContent className=""> */}
           <Tabs defaultValue="manage" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3 bg-zinc-300 text-black">
               <TabsTrigger value="manage">Manage Products</TabsTrigger>
@@ -26,8 +26,8 @@ const ProductManagement = () => {
               <GenerateStickers />
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+        {/* </CardContent>
+      </Card> */}
     </div>
   );
 };

@@ -13,6 +13,7 @@ import {
 import { Printer } from 'lucide-react';
 import { supabase } from "../supabaseClient";
 import generatePDF, { Resolution, Margin, usePDF } from "react-to-pdf";
+import { printPDF } from "jspdf-product-label";
 
 const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
   return (
@@ -23,13 +24,14 @@ const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
         height: "25.4mm",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "center",
+        gap:"2mm",
         fontFamily: "monospace",
         backgroundColor: "white",
         color: "black",
         padding: "0mm",
         margin: "0mm",
-        border: "0.5px solid black",
+        border: "0.1mm solid black",
         boxSizing: "border-box",
         overflow: "hidden",
       }}
@@ -40,7 +42,7 @@ const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
           justifyContent: "space-between",
           alignItems: "center",
           width: "100%",
-          padding: "2px 4px",
+          padding: "0mm 3mm",
         }}
       >
         <span
@@ -54,19 +56,29 @@ const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
         </span>
         <span
           style={{
-            fontSize: "14px",
+            fontSize: "12px",
             fontWeight: "bold",
             margin: "0mm",
+          }}
+        >
+          {sku}
+        </span>
+      </div>
+      <div className="flex w-full justify-between">
+        <Barcode value={barcode.toString()} height={50} width={1.2} fontSize={10} textMargin={0} margin={0} marginLeft={5}/>
+        <span
+          style={{
+            fontSize: "20px",
+            fontWeight: "bolder",
+            margin: "0mm",
+            transform:"rotate(270deg)"
           }}
         >
           ₹{price}
         </span>
       </div>
-      <div className=" overflow-hidden">
-        <Barcode value={barcode.toString()} height={19} width={1} fontSize={10} textMargin={0} margin={0} marginLeft={5}/>
-      </div>
 
-      <div
+      {/* <div
         style={{
           width: "100%",
           padding: "0px 0px",
@@ -82,7 +94,7 @@ const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
         >
           {sku}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -137,6 +149,13 @@ const GenerateStickers = () => {
     }
   }, [selectedSupplier]);
 
+  useEffect(() => {
+    if (selectedProduct) {
+      const product = products.find((p) => p.id === selectedProduct);
+      setQuantity(product.quantity)
+    }
+  }, [selectedProduct]);
+
   const fetchProducts = async (supplierId) => {
     const { data, error } = await supabase
       .from("products")
@@ -189,14 +208,75 @@ const GenerateStickers = () => {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex w-full justify-between gap-10">
+      
+      <div className="w-3/5">
+        <div className="space-y-2">
+          <Label htmlFor="supplier" className="text-sky-400">
+            Select Supplier:
+          </Label>
+          <Select onValueChange={setSelectedSupplier} value={selectedSupplier}>
+            <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
+              <SelectValue placeholder="Select a supplier" />
+            </SelectTrigger>
+            <SelectContent>
+              {suppliers.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="product" className="text-sky-400">
+            Select Product:
+          </Label>
+          <Select onValueChange={setSelectedProduct} value={selectedProduct}>
+            <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
+              <SelectValue placeholder="Select a product" />
+            </SelectTrigger>
+            <SelectContent>
+              {products.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <div className="flex gap-2">
+                    <span>{p.name}</span>
+                    <span>₹ {p.sellingPrice}</span>
+                  </div>
+                  
+                  
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="quantity" className="text-sky-400">
+            Quantity:
+          </Label>
+          <Input
+            id="quantity"
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            className="bg-gray-700 border-gray-600 text-gray-100"
+          />
+        </div>
+        <Button
+          type="button"
+          className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+          onClick={handlePrint}
+        >
+          <Printer className="mr-2 h-4 w-4" /> Generate Stickers
+        </Button>
+      </div>
+
       <div
         className="mb-6 bg-white p-4 rounded-md h-40 overflow-scroll"
         ref={targetRef}
       >
-        {stickers.map((index) => (
           <PrintableSticker
-            key={index}
+            // key={index}
             sku={
               products.find((p) => p.id === selectedProduct)?.name ||
               "SAMPLE SKU"
@@ -209,61 +289,7 @@ const GenerateStickers = () => {
             barcode={products.find((p) => p.id === selectedProduct)?.barcode ||
               "00000000"}
           />
-        ))}
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="supplier" className="text-sky-400">
-          Select Supplier:
-        </Label>
-        <Select onValueChange={setSelectedSupplier} value={selectedSupplier}>
-          <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
-            <SelectValue placeholder="Select a supplier" />
-          </SelectTrigger>
-          <SelectContent>
-            {suppliers.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="product" className="text-sky-400">
-          Select Product:
-        </Label>
-        <Select onValueChange={setSelectedProduct} value={selectedProduct}>
-          <SelectTrigger className="bg-gray-700 border-gray-600 text-gray-100">
-            <SelectValue placeholder="Select a product" />
-          </SelectTrigger>
-          <SelectContent>
-            {products.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="quantity" className="text-sky-400">
-          Quantity:
-        </Label>
-        <Input
-          id="quantity"
-          type="number"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          className="bg-gray-700 border-gray-600 text-gray-100"
-        />
-      </div>
-      <Button
-        type="button"
-        className="w-full bg-sky-500 hover:bg-sky-600 text-white"
-        onClick={handlePrint}
-      >
-        <Printer className="mr-2 h-4 w-4" /> Generate Stickers
-      </Button>
     </div>
   );
 };

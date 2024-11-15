@@ -17,12 +17,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "../supabaseClient";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
@@ -32,10 +38,11 @@ const ManageProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [isProductEditDialogOpen, setIsProductEditDialogOpen] = useState(false);
-  const [isSupplierEditDialogOpen, setIsSupplierEditDialogOpen] = useState(false);
+  const [isSupplierEditDialogOpen, setIsSupplierEditDialogOpen] =
+    useState(false);
   const [showCostColumn, setShowCostColumn] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState("all");
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
@@ -183,14 +190,15 @@ const ManageProducts = () => {
   const getSupplier = (id) => suppliers.find((s) => s.id == id);
 
   const filteredProducts = products.filter((product) => {
-    const matchesSearch = 
+    const matchesSearch =
       product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
       product.barcode.toString().includes(productSearchTerm) ||
-      getSupplier(product.supplier)?.name
-        .toLowerCase()
+      getSupplier(product.supplier)
+        ?.name.toLowerCase()
         .includes(productSearchTerm.toLowerCase());
-    
-    const matchesSupplier = selectedSupplier === "all" || product.supplier === selectedSupplier;
+
+    const matchesSupplier =
+      selectedSupplier === "all" || product.supplier === selectedSupplier;
 
     return matchesSearch && matchesSupplier;
   });
@@ -209,7 +217,13 @@ const ManageProducts = () => {
           <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
         </TabsList>
         <TabsContent value="products">
-          <div className="flex justify-between items-center mb-4 gap-5">
+          <Input
+            placeholder="Search products, supplier, barcode..."
+            value={productSearchTerm}
+            onChange={(e) => setProductSearchTerm(e.target.value)}
+            className="bg-gray-700 border-gray-600 text-gray-100"
+          />
+          <div className="flex justify-around items-center mb-4 gap-5 w-full mt-2">
             <div className="flex items-center space-x-2">
               <Label htmlFor="showCost" className="text-sky-400">
                 Cost
@@ -220,52 +234,60 @@ const ManageProducts = () => {
                 onCheckedChange={setShowCostColumn}
               />
             </div>
-            <Input
-              placeholder="Search products, supplier, barcode..."
-              value={productSearchTerm}
-              onChange={(e) => setProductSearchTerm(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-gray-100"
-            />
+              <Select
+                className="text-sky-400"
+                onValueChange={setSelectedSupplier}
+                defaultValue="all"
+              >
+                <SelectTrigger className="w-[200px] text-sky-400">
+                  <SelectValue placeholder="Select a supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Suppliers</SelectItem>
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
           </div>
+
           <Table className="bg-[#09090b] rounded-md">
             <TableHeader>
               <TableRow>
                 <TableHead className="text-sky-400">Name</TableHead>
-                <TableHead className="text-sky-400">Barcode</TableHead>
-                <TableHead className="text-sky-400">Quantity</TableHead>
                 {showCostColumn && (
                   <TableHead className="text-sky-400">Cost</TableHead>
                 )}
                 <TableHead className="text-sky-400">Selling Price</TableHead>
-                <TableHead className="text-sky-400">
-                  <Select onValueChange={setSelectedSupplier} defaultValue="all">
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select a supplier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Suppliers</SelectItem>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TableHead>
+                <TableHead className="text-sky-400">Barcode</TableHead>
+                <TableHead className="text-sky-400">Quantity</TableHead>
+
                 <TableHead className="text-sky-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProducts.map((product) => (
                 <TableRow key={product.id} className="text-white">
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.barcode}</TableCell>
-                  <TableCell>{product.quantity}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span>{product.name}</span>
+                      <span
+                        style={{ fontSize: "13px" }}
+                        className="text-sky-500"
+                      >
+                        {getSupplier(product.supplier)?.name ?? "Loading..."}
+                      </span>
+                    </div>
+                  </TableCell>
+                  {/* <TableCell>
+                    {getSupplier(product.supplier)?.name ?? "Loading..."}
+                  </TableCell> */}
                   {showCostColumn && <TableCell>₹{product.cost}</TableCell>}
                   <TableCell>₹{product.sellingPrice}</TableCell>
-                  <TableCell>
-                    {getSupplier(product.supplier)?.name ?? "Loading..."}
-                  </TableCell>
+                  <TableCell>{product.barcode}</TableCell>
+                  <TableCell>{product.quantity}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button

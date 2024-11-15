@@ -311,6 +311,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       fetchInvoices();
       fetchRecentInvoices();
       fetchDailySales();
+      fetchSales(salesType);
 
       // Clear the form after updating
       setProducts([]);
@@ -328,6 +329,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchInvoices();
     fetchRecentInvoices();
     fetchDailySales();
+    fetchSales(salesType);
   }, []);
 
   useEffect(() => {
@@ -657,6 +659,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       fetchInvoices();
       fetchRecentInvoices();
       fetchDailySales();
+      fetchSales(salesType);
     }
 
     // Clear the form after saving
@@ -722,7 +725,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         >
           <button
             // onClick={toggleLeftSidebar}
-            className="absolute top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
+            className="fixed top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
           >
             {isLeftSidebarExpanded ? (
               <ChevronLeft size={24} />

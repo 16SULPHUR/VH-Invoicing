@@ -13,6 +13,7 @@ const CustomerDetails = ({ customerName, setCustomerName, customerNumber, setCus
         placeholder="Customer Name"
         value={customerName}
         onChange={(e) => setCustomerName(e.target.value)}
+        autoFocus
       />
     </div>
     <div className="w-[48%]">

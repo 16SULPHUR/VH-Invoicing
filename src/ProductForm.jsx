@@ -21,7 +21,7 @@ import { supabase } from "./supabaseClient";
 import { Switch } from "@/components/ui/switch";
 
 const ProductName = ({ items, placeholder, onSelect, value }) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
