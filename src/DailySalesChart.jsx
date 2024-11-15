@@ -66,7 +66,7 @@ const DailySalesChart = ({ dailySales }) => {
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value) => `₹${value}`}
+                  tickFormatter={(value) => `₹${value/1000}k`}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area
@@ -89,7 +89,7 @@ const DailySalesChart = ({ dailySales }) => {
                   fontSize={12}
                   tickLine={true}
                   axisLine={false}
-                  tickFormatter={(value) => `₹${value}`}
+                  tickFormatter={(value) => `₹${value/1000}k`}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar

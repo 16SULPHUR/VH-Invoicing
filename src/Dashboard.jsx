@@ -398,7 +398,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             formattedDate: String(d.getDate()).padStart(2, "0"),
           };
         })
-        .reverse(); // Reverse to show oldest date first in the graph
+        .reverse(); 
+        
 
       setDailySales(salesArray);
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import JsBarcode from "jsbarcode";
+import Barcode from 'react-barcode';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Printer } from "lucide-react";
+import { Printer } from 'lucide-react';
 import { supabase } from "../supabaseClient";
 import generatePDF, { Resolution, Margin, usePDF } from "react-to-pdf";
 
-const PrintableSticker = ({ sku, price, barcodeUrl }) => {
+const PrintableSticker = ({ sku, price, barcodeUrl,barcode }) => {
   return (
     <div
       id="sticker"
@@ -63,7 +63,7 @@ const PrintableSticker = ({ sku, price, barcodeUrl }) => {
         </span>
       </div>
 
-      {barcodeUrl && (
+      {/* {barcodeUrl && (
         <div
           style={{
             width: "100%",
@@ -82,7 +82,10 @@ const PrintableSticker = ({ sku, price, barcodeUrl }) => {
             }}
           />
         </div>
-      )}
+      )} */}
+      <div className=" overflow-hidden">
+        <Barcode value={barcode} height={19} width={2} fontSize={10}/>
+      </div>
 
       <div
         style={{
@@ -164,18 +167,31 @@ const GenerateStickers = () => {
     else setProducts(data);
   };
 
-  useEffect(() => {
-    if (selectedProduct) {
-      const product = products.find((p) => p.id === selectedProduct);
-      if (product) {
-        const canvas = document.createElement("canvas");
-        JsBarcode(canvas, product.barcode, { format: "CODE128" });
-        setBarcodeUrl(canvas.toDataURL("image/png"));
-        // Set quantity to product's quantity
-        setQuantity(product.quantity.toString());
-      }
-    }
-  }, [selectedProduct, products]);
+  // useEffect(() => {
+  //   if (selectedProduct) {
+  //     const product = products.find((p) => p.id === selectedProduct);
+  //     if (product) {
+  //       const code128 = barcode('code128', {
+  //         data: product.barcode,
+  //         width: 200,
+  //         height: 50,
+  //       });
+
+  //       const canvas = document.createElement('canvas');
+  //       const ctx = canvas.getContext('2d');
+  //       const img = new Image();
+  //       img.onload = () => {
+  //         canvas.width = img.width;
+  //         canvas.height = img.height;
+  //         ctx.drawImage(img, 0, 0);
+  //         setBarcodeUrl(canvas.toDataURL("image/png"));
+  //       };
+  //       img.src = 'data:image/svg+xml;base64,' + btoa(code128);
+
+  //       setQuantity(product.quantity.toString());
+  //     }
+  //   }
+  // }, [selectedProduct, products]);
 
   const handlePrint = async () => {
     if (!selectedProduct || !quantity) {
@@ -188,7 +204,6 @@ const GenerateStickers = () => {
     generatePDF(getTargetElement, options);
   };
 
-  // Create an array based on the quantity
   const stickers = Array.from(
     { length: parseInt(quantity) },
     (_, index) => index
@@ -212,6 +227,8 @@ const GenerateStickers = () => {
               products.find((p) => p.id === selectedProduct)?.sellingPrice ||
               "0"
             }
+            barcode={products.find((p) => p.id === selectedProduct)?.barcode ||
+              "00000000"}
           />
         ))}
       </div>
