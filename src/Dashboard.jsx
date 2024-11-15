@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import BarcodeScanner from "./BarcodeScanner";
+import { useToast } from "@/hooks/use-toast";
 
 import {
   Sheet,
@@ -71,6 +72,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     SheetClose,
     { asChild: true },
   ];
+
+  const { toast } = useToast();
 
   // const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);
   // const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] =
@@ -310,7 +313,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchInvoices();
     fetchRecentInvoices();
     fetchDailySales();
-    // fetchScannedProducts();
+    fetchScannedProducts();
 
     const scannedProductsSubscription = supabase
       .channel("custom-all-channel")
@@ -337,6 +340,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
       if (error) throw error;
 
+      console.log(data)
+
       const formattedProducts = data.map((product) => ({
         name: product.name,
         quantity: product.quantity || 1,
@@ -344,7 +349,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         amount: (product.quantity || 1) * (product.price || 0),
       }));
 
-      setProducts(formattedProducts);
+
+      // setProducts(formattedProducts);
     } catch (error) {
       console.error("Error fetching scanned products:", error);
       setError("Failed to fetch scanned products. Please try again.");
@@ -360,7 +366,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       amount: (scannedProduct.quantity || 1) * (scannedProduct.price || 0),
     };
 
-    setProducts((prevProducts) => [newProduct, ...prevProducts]);
+    console.log(newProduct)
+    // setProducts((prevProducts) => [newProduct, ...prevProducts]);
 
     toast({
       title: "Product Scanned",
