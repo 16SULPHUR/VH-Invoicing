@@ -88,9 +88,9 @@ export default function Component() {
           if (result && canScan) {
             stopScanning();
             setTimeout(()=>{
-              console.log("stopped for 1 sec")
+              // console.log("stopped for 0.5 sec")
               startScanning()
-            }, 1000);
+            }, 500);
 
             const newScan = {
               barcode: result.getText(),
