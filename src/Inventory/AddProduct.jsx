@@ -68,7 +68,7 @@ const AddProduct = () => {
     const { data, error } = await supabase
       .from("products")
       .select("barcode")
-      .order("barcode", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(1);
 
     if (error) {
@@ -80,8 +80,9 @@ const AddProduct = () => {
     console.log(lastBarcode);
     const lastProductCode = lastBarcode.toString().slice(-5);
     const nextProductCode = (parseInt(lastProductCode, 10) + 1)
-      .toString()
-      .padStart(5, "0");
+    .toString()
+    .padStart(5, "0");
+    console.log((parseInt(lastProductCode, 10)+1).toString())
     return nextProductCode;
   };
 
