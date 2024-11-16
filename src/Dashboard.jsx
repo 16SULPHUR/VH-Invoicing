@@ -6,6 +6,7 @@ import MainContent from "./MainContent";
 import RecentInvoices from "./RecentInvoices";
 import { InvoiceModal } from "./InvoiceModal";
 import { UpdatedVarietyHeavenInvoice } from "./PrintFriendlyInvoice";
+import { Button } from "@/components/ui/button";
 import InvoiceForm from "./InvoiceForm";
 import SalesChart from "./SalesChart";
 import Sidebar from "./Sidebar";
@@ -14,6 +15,7 @@ import {
   ChevronRight,
   ReceiptText,
   ChartNoAxesCombined,
+  Menu
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
@@ -65,6 +67,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showRightSidebar, setShowRightSidebar ] = useState(false);
 
   const [invoices, setInvoices] = useState([]);
   const printAreaRef = useRef(null);
@@ -715,16 +719,15 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   return (
     <div
       id="dashboard"
-      className="flex font-sans w-full h-full mx-auto bg-zinc-80 backdrop-blur-sm"
+      className="flex font-sans w-full h-full bg-zinc-80 backdrop-blur-sm"
     >
       <div className="flex flex-1">
         <div
           className={`transition-all duration-300 ${
-            isLeftSidebarExpanded ? "w-[400px]" : "w-[40px]"
+            isLeftSidebarExpanded ? "w-[400px]" : "w-[4px]"
           }`}
         >
           <button
-            // onClick={toggleLeftSidebar}
             className="fixed top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
           >
             {isLeftSidebarExpanded ? (
@@ -756,68 +759,12 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                       handleCustomDateChange={handleCustomDateChange}
                       fetchSales={fetchSales}
                     />
-                    {/* <SheetFooter>
-                      <SheetClose asChild>
-                        <Button type="submit">Save changes</Button>
-                      </SheetClose>
-                    </SheetFooter> */}
                   </SheetContent>
                 </Sheet>
-                {/* <ChevronLeft size={24} /> */}
               </div>
             )}
           </button>
-          {/* {isLeftSidebarExpanded && (
-            <div>
-              <LeftSidebar
-                dailySales={dailySales}
-                salesType={salesType}
-                salesData={salesData}
-                cashSales={cashSales}
-                upiSales={upiSales}
-                creditSales={creditSales}
-                handleSalesTypeChange={handleSalesTypeChange}
-                customDateRange={customDateRange}
-                handleCustomDateChange={handleCustomDateChange}
-                fetchSales={fetchSales}
-              />
-            </div>
-          )} */}
         </div>
-
-        {/* <MainContent
-          customerName={customerName}
-          setCustomerName={setCustomerName}
-          customerNumber={customerNumber}
-          setCustomerNumber={setCustomerNumber}
-          currentInvoiceId={currentInvoiceId}
-          getCurrentFormattedDate={getCurrentFormattedDate}
-          setCurrentDate={setCurrentDate}
-          handleSubmit={handleSubmit}
-          productName={productName}
-          setProductName={setProductName}
-          productQuantity={productQuantity}
-          setProductQuantity={setProductQuantity}
-          productPrice={productPrice}
-          setProductPrice={setProductPrice}
-          editingProduct={editingProduct}
-          products={products}
-          startEditing={startEditing}
-          deleteProduct={deleteProduct}
-          cash={cash}
-          setCash={setCash}
-          upi={upi}
-          setUpi={setUpi}
-          credit={credit}
-          setCredit={setCredit}
-          handleDoubleClick={handleDoubleClick}
-          note={note}
-          setNote={setNote}
-          calculateTotal={calculateTotal}
-          isEditing={isEditing}
-          handleUpdateInvoice={handleUpdateInvoice}
-          handlePrint={handlePrint}
-        /> */}
 
         <MainContent
           customerName={customerName}
@@ -856,12 +803,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
         <div
           className={`transition-all duration-300 ${
-            isRecentInvoicesExpanded ? "w-[300px]" : "w-[40px]"
+            isRecentInvoicesExpanded ? "w-[300px]" : "w-[4px]"
           }`}
         >
           <button
-            // onClick={toggleRecentInvoices}
-            className="absolute top-4 right-6 z-10 bg-purple-500 text-white p-1 rounded-full"
+            className="fixed top-4 right-4 z-10 bg-purple-500 text-white p-1 rounded-full"
           >
             {isRecentInvoicesExpanded ? (
               <ChevronRight size={24} />
@@ -873,7 +819,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                       <ReceiptText size={24} />
                       <div
                         className="h-screen w-1 fixed right-0"
-                        // onClick={toggleRecentInvoices}
                       ></div>
                     </div>
                   </SheetTrigger>
@@ -888,14 +833,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                       handleInvoiceClick={handleInvoiceClick}
                       formatDate={formatDate}
                     />
-                    {/* <SheetFooter>
-                      <SheetClose asChild>
-                        <Button type="submit">Save changes</Button>
-                      </SheetClose>
-                    </SheetFooter> */}
                   </SheetContent>
                 </Sheet>
-                {/* <ChevronLeft size={24} /> */}
               </div>
             )}
           </button>
@@ -937,6 +876,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       )}
     </div>
   );
+
+
+
+  
+
 };
 
 export default Dashboard;

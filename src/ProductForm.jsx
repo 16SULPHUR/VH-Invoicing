@@ -80,7 +80,7 @@ const ProductForm = ({
   productPrice,
   setProductPrice,
   editingProduct,
-  products
+  products,
 }) => {
   // const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -129,22 +129,24 @@ const ProductForm = ({
   }, [selectedProduct, products]);
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4">
-      <div className="flex justify-between mb-4">
-        <div className="w-[48%]">
-          <label
-            className="block mb-1 font-bold text-sky-500 text-sm"
-            htmlFor="productName"
-          >
-            Product Name:
-          </label>
-          <Switch
-            id="add-supplier"
-            className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
-            checked={isAddingNewProduct}
-            onCheckedChange={setIsAddingNewProduct}
-          />
-
+    <form onSubmit={handleSubmit} className="mb-2 p-">
+      <div className="space-y-4 md:space-y-0 md:flex md:flex-wra md:gap-4">
+        {/* Product Name Section */}
+        <div className="w-full md:w-[48%]">
+          <div className="flex items-center justify-between mb-2">
+            <label
+              className="font-bold text-sky-500 text-sm"
+              htmlFor="productName"
+            >
+              Product Name:
+            </label>
+            <Switch
+              id="add-supplier"
+              className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
+              checked={isAddingNewProduct}
+              onCheckedChange={setIsAddingNewProduct}
+            />
+          </div>
           {isAddingNewProduct ? (
             <input
               className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
@@ -154,18 +156,17 @@ const ProductForm = ({
               onChange={(e) => setProductName(e.target.value)}
             />
           ) : (
-            <div className="w-[48%]">
-              <ProductName
-                items={products}
-                placeholder="Select product..."
-                onSelect={setSelectedProduct}
-                value={selectedProduct}
-              />
-            </div>
+            <ProductName
+              items={products}
+              placeholder="Select product..."
+              onSelect={setSelectedProduct}
+              value={selectedProduct}
+            />
           )}
         </div>
-
-        <div className="w-[24%]">
+  
+        {/* Quantity Section */}
+        <div className="w-full md:w-[24%]">
           <label
             className="block mb-1 font-bold text-sky-500 text-sm"
             htmlFor="productQuantity"
@@ -181,7 +182,9 @@ const ProductForm = ({
             required
           />
         </div>
-        <div className="w-[24%]">
+  
+        {/* Price Section */}
+        <div className="w-full md:w-[24%]">
           <label
             className="block mb-1 font-bold text-sky-500 text-sm"
             htmlFor="productPrice"
@@ -196,14 +199,16 @@ const ProductForm = ({
             onChange={(e) => setProductPrice(e.target.value)}
           />
         </div>
-      </div>
-      <div className="text-right">
-        <button
-          type="submit"
-          className="bg-sky-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-sky-600 transition-colors"
-        >
-          {editingProduct !== null ? "Update Product" : "Add Product"}
-        </button>
+  
+        {/* Submit Button */}
+        <div className="w-full md:w-auto md:self-end">
+          <button
+            type="submit"
+            className="w-full md:w-auto bg-sky-500 text-white px-6 py-2 rounded-md cursor-pointer hover:bg-sky-600 transition-colors"
+          >
+            {editingProduct !== null ? "Update Product" : "Add Product"}
+          </button>
+        </div>
       </div>
     </form>
   );

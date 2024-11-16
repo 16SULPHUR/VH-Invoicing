@@ -93,38 +93,15 @@ const App = () => {
       {!isAuthenticated ? (
         <Login setIsAuthenticated={setIsAuthenticated} />
       ) : (
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-screen flex flex-col">
           <div
             id="bg"
             className="absolute inset-0 w-full h-full z-10 bg-cover bg-center bg-gray-900 bg-blend-soft-light"
           ></div>
-          
-          <div className="relative z-20">
-            <TooltipProvider>
-              <div className="flex space-x-4 border-b border-gray-300 mb-2 justify-center">
-                {tabs.map((tab) => (
-                  <Tooltip key={tab.view}>
-                    <TooltipTrigger asChild>
-                      <div
-                        onClick={() => handleTabClick(tab.view)}
-                        className={`px-4 py-2 flex items-center cursor-pointer ${
-                          currentView === tab.view
-                            ? "border-b-2 border-sky-500 text-sky-500 font-semibold"
-                            : "text-gray-400 hover:text-gray-600"
-                        }`}
-                      >
-                        <tab.icon size={25} />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-yellow-500 text-black font-semibold">
-                      {tab.name}
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-            </TooltipProvider>
 
-            <div className="overflow-scroll">
+          <div className="relative z-20 flex flex-col h-full">
+            {/* Main content area */}
+            <div className="flex-grow overflow-auto md:mt-10">
               {currentView === "dashboard" && (
                 <Dashboard
                   setCurrentView={setCurrentView}
@@ -139,6 +116,35 @@ const App = () => {
                 />
               )}
             </div>
+
+            {/* Navigation tabs */}
+            <TooltipProvider>
+              <div className="md:fixed md:top-0 fixed bottom-0 w-full bg-black h-fit border-t md:border-b border-gray-400">
+                <nav className="max-w-screen-xl mx-auto">
+                  <div className="flex justify-center space-x-4">
+                    {tabs.map((tab) => (
+                      <Tooltip key={tab.view}>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={() => handleTabClick(tab.view)}
+                            className={`px-4 py-2 flex items-center cursor-pointer transition-colors ${
+                              currentView === tab.view
+                                ? "border-b-2 md:border-b-2 border-sky-500 text-sky-500 font-semibold"
+                                : "text-gray-400 hover:text-gray-300"
+                            }`}
+                          >
+                            <tab.icon size={25} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-yellow-500 text-black font-semibold">
+                          {tab.name}
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </nav>
+              </div>
+            </TooltipProvider>
           </div>
 
           <Toaster />
