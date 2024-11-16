@@ -17,7 +17,11 @@ import {
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState("dashboard");
+  const [currentView, setCurrentView] = useState(() => {
+    // Set initial view based on screen width - runs once during initialization
+    return window.innerWidth < 768 ? "barcodeScanner" : "dashboard";
+  });
+  const [isMobile, setIsMobile] = useState(false);
 
   const tabs = [
     { name: "Dashboard", view: "dashboard", icon: Home },
@@ -25,6 +29,7 @@ const App = () => {
     { name: "Inventory", view: "productManagement", icon: PackageSearch },
     { name: "Logout", view: "logout", icon: LogOut },
   ];
+
 
   const checkSession = async () => {
     const {
@@ -153,6 +158,7 @@ const App = () => {
       )}
     </div>
   );
+
 };
 
 export default App;

@@ -18,7 +18,7 @@ import {
 } from "@zxing/library";
 import { supabase } from "./supabaseClient";
 
-const BarcodeScanner = () => {
+export default function Component() {
   const [scannedItems, setScannedItems] = useState([]);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState(null);
@@ -86,6 +86,12 @@ const BarcodeScanner = () => {
         videoRef.current,
         async (result, err) => {
           if (result && canScan) {
+            stopScanning();
+            setTimeout(()=>{
+              console.log("stopped for 1 sec")
+              startScanning()
+            }, 1000);
+
             const newScan = {
               barcode: result.getText(),
               format: result.getBarcodeFormat().toString(),
@@ -149,7 +155,10 @@ const BarcodeScanner = () => {
   };
 
   const clearScannedItems = async () => {
-    const response = await supabase.from("scanned_products").delete().neq("id", 0);
+    const response = await supabase
+      .from("scanned_products")
+      .delete()
+      .neq("id", 0);
     setScannedItems([]);
   };
 
@@ -283,6 +292,4 @@ const BarcodeScanner = () => {
       </Card>
     </div>
   );
-};
-
-export default BarcodeScanner;
+}

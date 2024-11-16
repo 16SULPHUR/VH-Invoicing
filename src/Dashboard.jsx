@@ -389,24 +389,36 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   
       if (error) throw error;
   
-      const formattedProducts = scannedData.map(scannedProduct => {
+      const productMap = new Map();
+
+      scannedData.forEach(scannedProduct => {
         const barcode = scannedProduct.name;
         const existingProduct = allproducts?.find(p => p?.barcode?.toString() === barcode.toString());
         
         if (!existingProduct) {
           console.warn(`Product with barcode ${barcode} not found in catalog`);
-          return null;
+          return;
         }
   
-        return {
-          name: existingProduct.name,
-          barcode: barcode,
-          quantity: scannedProduct.quantity || 1,
-          price: existingProduct.price || 0,
-          amount: (scannedProduct.quantity || 1) * (existingProduct.price || 0),
-        };
-      })
-      .filter(product => product !== null); // Remove any products that weren't found in catalog
+        const quantity = scannedProduct.quantity || 1;
+        const price = existingProduct.sellingPrice || 0;
+
+        if (productMap.has(barcode)) {
+          const product = productMap.get(barcode);
+          product.quantity += quantity;
+          product.amount = product.quantity * price;
+        } else {
+          productMap.set(barcode, {
+            name: existingProduct.name,
+            barcode: barcode,
+            quantity: quantity,
+            price: price,
+            amount: quantity * price,
+          });
+        }
+      });
+
+      const formattedProducts = Array.from(productMap.values());
   
       setProducts(formattedProducts);
   
@@ -444,24 +456,38 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       return;
     }
     
-    // Create new product entry with data from catalog
-    const newProduct = {
-      name: existingProduct.name,
-      barcode: barcode,
-      quantity: scannedProduct.quantity || 1,
-      price: existingProduct.price || 0,
-      amount: (scannedProduct.quantity || 1) * (existingProduct.price || 0),
-    };
-  
-    // Update products state
-    setProducts(prevProducts => [newProduct, ...prevProducts]);
+    const quantity = scannedProduct.quantity || 1;
+    const price = existingProduct.sellingPrice || 0;
+
+    setProducts(prevProducts => {
+      const existingIndex = prevProducts.findIndex(p => p.barcode === barcode);
+
+      if (existingIndex !== -1) {
+        // Product already exists, update quantity and amount
+        const updatedProducts = [...prevProducts];
+        updatedProducts[existingIndex] = {
+          ...updatedProducts[existingIndex],
+          quantity: updatedProducts[existingIndex].quantity + quantity,
+          amount: (updatedProducts[existingIndex].quantity + quantity) * price,
+        };
+        return updatedProducts;
+      } else {
+        // New product, add to the list
+        return [{
+          name: existingProduct.name,
+          barcode: barcode,
+          quantity: quantity,
+          price: price,
+          amount: quantity * price,
+        }, ...prevProducts];
+      }
+    });
   
     toast({
       title: "Product Scanned",
-      description: `${newProduct.name} has been added to the invoice.`,
+      description: `${existingProduct.name} has been in the invoice.`,
     });
   };
-
   const fetchDailySales = async () => {
     const today = new Date();
     const last7Days = new Date(today);
@@ -719,7 +745,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   return (
     <div
       id="dashboard"
-      className="flex font-sans w-full h-full bg-zinc-80 backdrop-blur-sm"
+      className="flex font-sans w-full h-svh bg-zinc-80 backdrop-blur-sm"
     >
       <div className="flex flex-1">
         <div
@@ -738,7 +764,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                   <SheetTrigger asChild>
                     <div>
                       <ChartNoAxesCombined size={24} />
-                      <div className="h-screen w-1 fixed left-0"></div>
+                      <div className=" h-svh w-1 fixed left-0"></div>
                     </div>
                   </SheetTrigger>
                   <SheetContent className="bg-gray-900 p-0" side={"left"}>
@@ -818,7 +844,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                     <div>
                       <ReceiptText size={24} />
                       <div
-                        className="h-screen w-1 fixed right-0"
+                        className="h-svh w-1 fixed right-0"
                       ></div>
                     </div>
                   </SheetTrigger>
