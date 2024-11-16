@@ -26,18 +26,18 @@ const App = () => {
     { name: "Logout", view: "logout", icon: LogOut },
   ];
 
+  const checkSession = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+    setIsLoading(false);
+  };
   useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-      setIsLoading(false);
-    };
 
     checkSession();
 
@@ -74,6 +74,7 @@ const App = () => {
   }, []);
 
   if (isLoading) {
+    checkSession()
     return <div>Loading...</div>;
   }
 
