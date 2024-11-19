@@ -33,6 +33,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
+
 const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [allproducts, setAllProducts] = useState([]);
   const [products, setProducts] = useState([]);
@@ -68,7 +74,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showLeftSidebar, setShowLeftSidebar] = useState(false);
-  const [showRightSidebar, setShowRightSidebar ] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
 
   const [invoices, setInvoices] = useState([]);
   const printAreaRef = useRef(null);
@@ -386,20 +392,20 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         .from("scanned_products")
         .select("*")
         .order("created_at", { ascending: false });
-  
+
       if (error) throw error;
-  
+
       const productMap = new Map();
 
       scannedData.forEach(scannedProduct => {
         const barcode = scannedProduct.name;
         const existingProduct = allproducts?.find(p => p?.barcode?.toString() === barcode.toString());
-        
+
         if (!existingProduct) {
           console.warn(`Product with barcode ${barcode} not found in catalog`);
           return;
         }
-  
+
         const quantity = scannedProduct.quantity || 1;
         const price = existingProduct.sellingPrice || 0;
 
@@ -419,9 +425,9 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       });
 
       const formattedProducts = Array.from(productMap.values());
-  
+
       setProducts(formattedProducts);
-  
+
       if (formattedProducts.length !== scannedData.length) {
         toast({
           title: "Warning",
@@ -429,7 +435,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           variant: "warning"
         });
       }
-  
+
     } catch (error) {
       console.error("Error fetching scanned products:", error);
       toast({
@@ -443,10 +449,10 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const handleScannedProduct = (payload) => {
     const scannedProduct = payload.new;
     const barcode = scannedProduct.name; // Assuming this is actually the barcode
-    
+
     // Find the product in the catalog by barcode
     const existingProduct = allproducts?.find(p => p.barcode.toString() === barcode);
-    
+
     if (!existingProduct) {
       toast({
         title: "Error",
@@ -455,7 +461,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       });
       return;
     }
-    
+
     const quantity = scannedProduct.quantity || 1;
     const price = existingProduct.sellingPrice || 0;
 
@@ -482,7 +488,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         }, ...prevProducts];
       }
     });
-  
+
     toast({
       title: "Product Scanned",
       description: `${existingProduct.name} has been in the invoice.`,
@@ -747,87 +753,90 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       id="dashboard"
       className="flex font-sans w-full h-svh bg-zinc-80 backdrop-blur-sm"
     >
-      <div className="flex flex-1">
-        <div
-          className={`transition-all duration-300 ${
-            isLeftSidebarExpanded ? "w-[400px]" : "w-[4px]"
-          }`}
-        >
-          <button
-            className="fixed top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
-          >
-            {isLeftSidebarExpanded ? (
-              <ChevronLeft size={24} />
-            ) : (
-              <div>
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <div>
-                      <ChartNoAxesCombined size={24} />
-                      <div className=" h-svh w-1 fixed left-0"></div>
-                    </div>
-                  </SheetTrigger>
-                  <SheetContent className="bg-gray-900 p-0" side={"left"}>
-                    <SheetHeader>
-                      <SheetTitle className="text-white">
-                        Sales Information
-                      </SheetTitle>
-                    </SheetHeader>
-                    <LeftSidebar
-                      dailySales={dailySales}
-                      salesType={salesType}
-                      salesData={salesData}
-                      cashSales={cashSales}
-                      upiSales={upiSales}
-                      creditSales={creditSales}
-                      handleSalesTypeChange={handleSalesTypeChange}
-                      customDateRange={customDateRange}
-                      handleCustomDateChange={handleCustomDateChange}
-                      fetchSales={fetchSales}
-                    />
-                  </SheetContent>
-                </Sheet>
-              </div>
-            )}
-          </button>
-        </div>
+      <ResizablePanelGroup
+        direction="horizontal"
+      >
+        <ResizablePanel defaultSize={80}>
+          <div className="flex flex-1">
+            <div
+              className={`transition-all duration-300 ${isLeftSidebarExpanded ? "w-[400px]" : "w-[4px]"
+                }`}
+            >
+              <button
+                className="fixed top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
+              >
+                {isLeftSidebarExpanded ? (
+                  <ChevronLeft size={24} />
+                ) : (
+                  <div>
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <div>
+                          <ChartNoAxesCombined size={24} />
+                          <div className=" h-svh w-1 fixed left-0"></div>
+                        </div>
+                      </SheetTrigger>
+                      <SheetContent className="bg-gray-900 p-0" side={"left"}>
+                        <SheetHeader>
+                          <SheetTitle className="text-white">
+                            Sales Information
+                          </SheetTitle>
+                        </SheetHeader>
+                        <LeftSidebar
+                          dailySales={dailySales}
+                          salesType={salesType}
+                          salesData={salesData}
+                          cashSales={cashSales}
+                          upiSales={upiSales}
+                          creditSales={creditSales}
+                          handleSalesTypeChange={handleSalesTypeChange}
+                          customDateRange={customDateRange}
+                          handleCustomDateChange={handleCustomDateChange}
+                          fetchSales={fetchSales}
+                        />
+                      </SheetContent>
+                    </Sheet>
+                  </div>
+                )}
+              </button>
+            </div>
 
-        <MainContent
-          customerName={customerName}
-          setCustomerName={setCustomerName}
-          customerNumber={customerNumber}
-          setCustomerNumber={setCustomerNumber}
-          currentInvoiceId={currentInvoiceId}
-          getCurrentFormattedDate={getCurrentFormattedDate}
-          setCurrentDate={setCurrentDate}
-          handleSubmit={handleSubmit}
-          productName={productName}
-          setProductName={setProductName}
-          productQuantity={productQuantity}
-          setProductQuantity={setProductQuantity}
-          productPrice={productPrice}
-          setProductPrice={setProductPrice}
-          editingProduct={editingProduct}
-          products={products}
-          startEditing={startEditing}
-          deleteProduct={deleteProduct}
-          cash={cash}
-          setCash={setCash}
-          upi={upi}
-          setUpi={setUpi}
-          credit={credit}
-          setCredit={setCredit}
-          note={note}
-          setNote={setNote}
-          calculateTotal={calculateTotal}
-          isEditing={isEditing}
-          handleUpdateInvoice={handleUpdateInvoice}
-          handlePrint={handlePrint}
-          handleDoubleClick={handleDoubleClick}
-          allProducts={allproducts}
-        />
+            <MainContent
+              customerName={customerName}
+              setCustomerName={setCustomerName}
+              customerNumber={customerNumber}
+              setCustomerNumber={setCustomerNumber}
+              currentInvoiceId={currentInvoiceId}
+              getCurrentFormattedDate={getCurrentFormattedDate}
+              setCurrentDate={setCurrentDate}
+              handleSubmit={handleSubmit}
+              productName={productName}
+              setProductName={setProductName}
+              productQuantity={productQuantity}
+              setProductQuantity={setProductQuantity}
+              productPrice={productPrice}
+              setProductPrice={setProductPrice}
+              editingProduct={editingProduct}
+              products={products}
+              startEditing={startEditing}
+              deleteProduct={deleteProduct}
+              cash={cash}
+              setCash={setCash}
+              upi={upi}
+              setUpi={setUpi}
+              credit={credit}
+              setCredit={setCredit}
+              note={note}
+              setNote={setNote}
+              calculateTotal={calculateTotal}
+              isEditing={isEditing}
+              handleUpdateInvoice={handleUpdateInvoice}
+              handlePrint={handlePrint}
+              handleDoubleClick={handleDoubleClick}
+              allProducts={allproducts}
+            />
 
-        <div
+            {/* <div
           className={`transition-all duration-300 ${
             isRecentInvoicesExpanded ? "w-[300px]" : "w-[4px]"
           }`}
@@ -873,8 +882,19 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
               />
             </div>
           )}
-        </div>
-      </div>
+        </div> */}
+
+          </div>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={20}>
+        <RecentInvoices
+                recentInvoices={recentInvoices}
+                handleInvoiceClick={handleInvoiceClick}
+                formatDate={formatDate}
+              />
+          </ResizablePanel>
+      </ResizablePanelGroup>
 
       {showInvoiceModal && selectedInvoice && (
         <InvoiceModal
@@ -905,7 +925,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
 
 
-  
+
 
 };
 

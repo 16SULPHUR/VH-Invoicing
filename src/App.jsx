@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import MobileDashboard from "./MobileDashboard";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -21,7 +22,7 @@ const App = () => {
     // Set initial view based on screen width - runs once during initialization
     return window.innerWidth < 768 ? "barcodeScanner" : "dashboard";
   });
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const tabs = [
     { name: "Dashboard", view: "dashboard", icon: Home },
@@ -108,11 +109,18 @@ const App = () => {
           <div className="relative z-20 flex flex-col h-full">
             {/* Main content area */}
             <div className="flex-grow overflow-auto md:mt-10">
-              {currentView === "dashboard" && (
-                <Dashboard
-                  setCurrentView={setCurrentView}
-                  setIsAuthenticated={setIsAuthenticated}
-                />
+            {currentView === "dashboard" && (
+                isMobile ? (
+                  <MobileDashboard
+                    setCurrentView={setCurrentView}
+                    setIsAuthenticated={setIsAuthenticated}
+                  />
+                ) : (
+                  <Dashboard
+                    setCurrentView={setCurrentView}
+                    setIsAuthenticated={setIsAuthenticated}
+                  />
+                )
               )}
               {currentView === "barcodeScanner" && <BarcodeScanner />}
               {currentView === "productManagement" && (

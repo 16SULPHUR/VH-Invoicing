@@ -5,10 +5,10 @@ import { SheetClose } from "@/components/ui/sheet";
 
 const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
   const [hoveredInvoiceId, setHoveredInvoiceId] = useState(null);
-  const [SheetCloseWrapper, shetCloseWrapperProps] = [
-    SheetClose,
-    { asChild: true },
-  ];
+  // const [SheetCloseWrapper, shetCloseWrapperProps] = [
+  //   SheetClose,
+  //   { asChild: true },
+  // ];
 
   const groupedInvoices = useMemo(() => {
     const groups = {};
@@ -57,10 +57,10 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                     paymentMethods.push("credit");
 
                   return (
-                    <SheetCloseWrapper
-                      {...shetCloseWrapperProps}
-                      key={invoice.id}
-                    >
+                    // <SheetCloseWrapper
+                    //   {...shetCloseWrapperProps}
+                    //   key={invoice.id}
+                    // >
                       <div
                         key={invoice.id}
                         className={`
@@ -109,7 +109,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                             </div>
                           )}
                       </div>
-                    </SheetCloseWrapper>
+                    // </SheetCloseWrapper>
                   );
                 })}
                 <div className="mt-2 text-right">

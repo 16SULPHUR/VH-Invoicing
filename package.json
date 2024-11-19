@@ -62,6 +62,7 @@
     "print-react-component": "^1.0.1",
     "qrcode.react": "^4.1.0",
     "react-barcode": "^1.5.3",
+    "react-resizable-panels": "^2.1.7",
     "react-to-pdf": "^1.0.1",
     "react-to-print": "^3.0.2",
     "recharts": "^2.13.0",
