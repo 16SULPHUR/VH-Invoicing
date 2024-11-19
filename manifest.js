@@ -2,9 +2,9 @@ export const manifestForPlugIn = {
     registerType:'prompt',
     includeAssests:['favicon.ico', "apple-touc-icon.png", "masked-icon.svg"],
     manifest:{
-      name:"React-vite-app",
-      short_name:"react-vite-app",
-      description:"I am a simple vite app",
+      name:"VARIETY HEAVEN",
+      short_name:"variety heaven",
+      description:"Billing and Inventory Application For Variety Heaven",
       icons:[{
         src: '/android-chrome-192x192.png',
         sizes:'192x192',
