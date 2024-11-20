@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/resizable"
 
 const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
+  const [customers, setCustomers] = useState([]);
   const [allproducts, setAllProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [productName, setProductName] = useState("");
@@ -85,6 +86,20 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   ];
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: customersData, error: customersError } = await supabase
+        .from("customers")
+        .select();
+
+      if (customersError)
+        console.error("Error fetching customers:", customersError);
+      else setCustomers(customersData);
+    };
+
+    fetchData();
+  }, []);
 
   // const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);
   // const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] =
@@ -811,6 +826,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             <MainContent
               customerName={customerName}
               setCustomerName={setCustomerName}
+              // customers={customers}
+              // setCustomers={setCustomers}
               customerNumber={customerNumber}
               setCustomerNumber={setCustomerNumber}
               currentInvoiceId={currentInvoiceId}

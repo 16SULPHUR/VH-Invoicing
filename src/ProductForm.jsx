@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  BetweenHorizontalEnd,
+  PencilLine,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -164,7 +169,7 @@ const ProductForm = ({
             />
           )}
         </div>
-  
+
         {/* Quantity Section */}
         <div className="w-full md:w-[24%]">
           <label
@@ -182,7 +187,7 @@ const ProductForm = ({
             required
           />
         </div>
-  
+
         {/* Price Section */}
         <div className="w-full md:w-[24%]">
           <label
@@ -199,14 +204,24 @@ const ProductForm = ({
             onChange={(e) => setProductPrice(e.target.value)}
           />
         </div>
-  
+
         {/* Submit Button */}
         <div className="w-full md:w-auto md:self-end">
           <button
             type="submit"
             className="w-full md:w-auto bg-sky-500 text-white px-6 py-2 rounded-md cursor-pointer hover:bg-sky-600 transition-colors"
           >
-            {editingProduct !== null ? "Update Product" : "Add Product"}
+            {editingProduct !== null ? (
+              <div>
+                <PencilLine size={27} />
+                <span className="md:hidden">Update Product</span>
+              </div>
+            ) : (
+              <div className="flex justify-center gap-3">
+                <BetweenHorizontalEnd size={27} />
+                <span className="md:hidden">Add Product</span>
+              </div>
+            )}
           </button>
         </div>
       </div>

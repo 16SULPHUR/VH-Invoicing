@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 import Dashboard from "./Dashboard";
 import Login from "./Login";
-import Sidebar from "./Sidebar";
 import BarcodeScanner from "./BarcodeScanner";
 import ProductManagement from "./ProductManagement";
 import { Toaster } from "@/components/ui/toaster";
-import { Home, PackageSearch, ScanBarcode, LogOut } from "lucide-react";
+import { Home, PackageSearch, ScanBarcode, LogOut, Users } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -14,86 +13,112 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import MobileDashboard from "./MobileDashboard";
+import CustomerManagement from "./CustomerManagement";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState(() => {
-    // Set initial view based on screen width - runs once during initialization
-    return window.innerWidth < 768 ? "barcodeScanner" : "dashboard";
-  });
+  const [currentView, setCurrentView] = useState(() => 
+    window.innerWidth < 768 ? "barcodeScanner" : "dashboard"
+  );
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const tabs = [
     { name: "Dashboard", view: "dashboard", icon: Home },
     { name: "Scan Products", view: "barcodeScanner", icon: ScanBarcode },
     { name: "Inventory", view: "productManagement", icon: PackageSearch },
+    { name: "Customers", view: "customerManagement", icon: Users },
     { name: "Logout", view: "logout", icon: LogOut },
   ];
 
-
-  const checkSession = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session) {
-      setIsAuthenticated(true);
-    } else {
+  const validateSession = async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+      
+      // Check if session is valid and not expired
+      if (session && session.expires_at > Date.now() / 1000) {
+        setIsAuthenticated(true);
+        return true;
+      }
+      
+      // If session is invalid or expired
       setIsAuthenticated(false);
+      return false;
+    } catch (error) {
+      console.error("Session validation error:", error);
+      setIsAuthenticated(false);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
+
+  
+
   useEffect(() => {
+    // Immediately validate session on app load
+    validateSession();
 
-    checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          setIsAuthenticated(true);
-        } else if (event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
-          const {
-            data: { session: currentSession },
-          } = await supabase.auth.getSession();
-          setIsAuthenticated(!!currentSession);
+        switch(event) {
+          case "SIGNED_IN":
+            setIsAuthenticated(true);
+            setIsLoading(false);
+            break;
+          case "SIGNED_OUT":
+            setIsAuthenticated(false);
+            setIsLoading(false);
+            break;
         }
       }
     );
 
+    // Cleanup listener
     return () => {
-      listener.subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
-  useEffect(() => {
-    const checkSessionExpiration = setInterval(async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
-        setIsAuthenticated(false);
-      }
-    }, 60000);
+  // Periodic session validation
+  // useEffect(() => {
+  //   const sessionCheckInterval = setInterval(() => {
+  //     validateSession();
+  //   }, 60000); // Check every minute
 
-    return () => clearInterval(checkSessionExpiration);
+  //   return () => clearInterval(sessionCheckInterval);
+  // }, []);
+
+  // Fallback loading state
+  useEffect(() => {
+    const loadingTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(loadingTimeout);
   }, []);
 
   if (isLoading) {
-    checkSession()
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen text-lg">
+        Loading authentication...
+      </div>
+    );
   }
 
   const handleTabClick = (tabView) => {
     if (tabView === "logout") {
       if (confirm("Are you sure you want to logout?")) {
-        localStorage.removeItem("sb-basihmnebvsflzkaivds-auth-token");
+        supabase.auth.signOut();
         setIsAuthenticated(false);
       }
       return;
     }
     setCurrentView(tabView);
   };
+
 
   return (
     <div>
@@ -107,9 +132,8 @@ const App = () => {
           ></div>
 
           <div className="relative z-20 flex flex-col h-full">
-            {/* Main content area */}
             <div className="flex-grow overflow-auto md:mt-10">
-            {currentView === "dashboard" && (
+              {currentView === "dashboard" && (
                 isMobile ? (
                   <MobileDashboard
                     setCurrentView={setCurrentView}
@@ -123,6 +147,7 @@ const App = () => {
                 )
               )}
               {currentView === "barcodeScanner" && <BarcodeScanner />}
+              {currentView === "customerManagement" && <CustomerManagement />}
               {currentView === "productManagement" && (
                 <ProductManagement
                   setCurrentView={setCurrentView}
@@ -131,7 +156,6 @@ const App = () => {
               )}
             </div>
 
-            {/* Navigation tabs */}
             <TooltipProvider>
               <div className="md:fixed md:top-0 fixed bottom-0 w-full bg-black h-fit border-t md:border-b border-gray-400">
                 <nav className="max-w-screen-xl mx-auto">
@@ -166,7 +190,6 @@ const App = () => {
       )}
     </div>
   );
-
 };
 
 export default App;
