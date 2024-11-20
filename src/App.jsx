@@ -171,7 +171,7 @@ const App = () => {
                                 : "text-gray-400 hover:text-gray-300"
                             }`}
                           >
-                            <tab.icon size={25} />
+                            <tab.icon size={20} />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent className="bg-yellow-500 text-black font-semibold">
