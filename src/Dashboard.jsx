@@ -407,12 +407,13 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         }
 
         const quantity = scannedProduct.quantity || 1;
-        const price = existingProduct.sellingPrice || 0;
+        const price = scannedProduct.price || existingProduct.sellingPrice;
 
         if (productMap.has(barcode)) {
           const product = productMap.get(barcode);
           product.quantity += quantity;
           product.amount = product.quantity * price;
+          product.price = price
         } else {
           productMap.set(barcode, {
             name: existingProduct.name,
@@ -421,10 +422,13 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             price: price,
             amount: quantity * price,
           });
+
+         
         }
       });
 
       const formattedProducts = Array.from(productMap.values());
+      console.log(formattedProducts)
 
       setProducts(formattedProducts);
 
@@ -462,19 +466,22 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       return;
     }
 
+    console.log(scannedProduct)
+
     const quantity = scannedProduct.quantity || 1;
-    const price = existingProduct.sellingPrice || 0;
+    const price = scannedProduct.price || existingProduct.sellingPrice;
 
     setProducts(prevProducts => {
       const existingIndex = prevProducts.findIndex(p => p.barcode === barcode);
 
       if (existingIndex !== -1) {
-        // Product already exists, update quantity and amount
         const updatedProducts = [...prevProducts];
         updatedProducts[existingIndex] = {
           ...updatedProducts[existingIndex],
-          quantity: updatedProducts[existingIndex].quantity + quantity,
-          amount: (updatedProducts[existingIndex].quantity + quantity) * price,
+          // quantity: updatedProducts[existingIndex].quantity + quantity,
+          // amount: (updatedProducts[existingIndex].quantity + quantity) * price,
+          quantity: scannedProduct.quantity + quantity,
+          amount: (scannedProduct.quantity + quantity) * price,
         };
         return updatedProducts;
       } else {
@@ -756,7 +763,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       <ResizablePanelGroup
         direction="horizontal"
       >
-        <ResizablePanel defaultSize={80}>
+        <ResizablePanel defaultSize={85}>
           <div className="flex flex-1">
             <div
               className={`transition-all duration-300 ${isLeftSidebarExpanded ? "w-[400px]" : "w-[4px]"
@@ -887,7 +894,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={20}>
+        <ResizablePanel defaultSize={15} maxSize={25}>
         <RecentInvoices
                 recentInvoices={recentInvoices}
                 handleInvoiceClick={handleInvoiceClick}

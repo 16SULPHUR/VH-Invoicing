@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Camera, RefreshCw } from "lucide-react";
+import { Camera, RefreshCw, Loader2, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -12,14 +12,26 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   BrowserMultiFormatReader,
   NotFoundException,
   BarcodeFormat,
 } from "@zxing/library";
 import { supabase } from "./supabaseClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Component() {
   const [scannedItems, setScannedItems] = useState([]);
+  const [allproducts, setAllProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState(null);
   const [deviceList, setDeviceList] = useState([]);
@@ -27,10 +39,156 @@ export default function Component() {
   const [videoInitialized, setVideoInitialized] = useState(false);
   const [canScan, setCanScan] = useState(true);
 
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [scannedBarcode, setScannedBarcode] = useState("");
+  const [scannedQuantity, setScannedQuantity] = useState(1);
+  const [scannedPrice, setScannedPrice] = useState(0);
+
+  const { toast } = useToast();
+
   const beep = new Audio("/beep.wav");
 
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("id, name, quantity, sellingPrice, supplier, barcode");
+
+      if (productsError)
+        console.error("Error fetching products:", productsError);
+      else setAllProducts(productsData);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleScannedProduct = (barcode, quantity, price) => {
+    const existingProduct = allproducts?.find(p => p.barcode.toString() === barcode);
+
+    if (!existingProduct) {
+      toast({
+        title: "Error",
+        description: "Product not found in catalog",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setItems(prevProducts => {
+      const existingIndex = prevProducts.findIndex(p => p.barcode === barcode);
+
+      if (existingIndex !== -1) {
+        const updatedProducts = [...prevProducts];
+        updatedProducts[existingIndex] = {
+          ...updatedProducts[existingIndex],
+          quantity: updatedProducts[existingIndex].quantity + quantity,
+          price: price,
+          amount: (updatedProducts[existingIndex].quantity + quantity) * price,
+        };
+        return updatedProducts;
+      } else {
+        return [{
+          name: existingProduct.name,
+          barcode: barcode,
+          quantity: quantity,
+          price: price,
+          amount: quantity * price,
+        }, ...prevProducts];
+      }
+    });
+
+    toast({
+      title: "Product Scanned",
+      description: `${existingProduct.name} has been added to the invoice.`,
+    });
+  };
+
+  useEffect(() => {
+    fetchScannedProducts();
+
+    const scannedProductsSubscription = supabase
+      .channel("custom-all-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scanned_products" },
+        (payload) => {
+          handleScannedProduct(payload.new.name, payload.new.quantity, payload.new.price);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      scannedProductsSubscription.unsubscribe();
+    };
+  }, [allproducts]);
+
+  const fetchScannedProducts = async () => {
+    try {
+      const { data: scannedData, error } = await supabase
+        .from("scanned_products")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const productMap = new Map();
+
+      scannedData.forEach(scannedProduct => {
+        const barcode = scannedProduct.name;
+        const existingProduct = allproducts?.find(p => p?.barcode?.toString() === barcode.toString());
+
+        if (!existingProduct) {
+          console.warn(`Product with barcode ${barcode} not found in catalog`);
+          return;
+        }
+
+        const quantity = scannedProduct.quantity || 1;
+        const price = scannedProduct.price || 0;
+
+        if (productMap.has(barcode)) {
+          const product = productMap.get(barcode);
+          product.quantity += quantity;
+          product.amount = product.quantity * price;
+        } else {
+          productMap.set(barcode, {
+            name: existingProduct.name,
+            barcode: barcode,
+            quantity: quantity,
+            price: price,
+            amount: quantity * price,
+          });
+        }
+      });
+
+      const formattedProducts = Array.from(productMap.values());
+
+      setItems(formattedProducts);
+
+      if (formattedProducts.length !== scannedData.length) {
+        toast({
+          title: "Warning",
+          description: "Some scanned products were not found in the catalog",
+          variant: "warning"
+        });
+      }
+
+    } catch (error) {
+      console.error("Error fetching scanned products:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch scanned products. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const initializeScanner = async () => {
     try {
@@ -86,11 +244,12 @@ export default function Component() {
         videoRef.current,
         async (result, err) => {
           if (result && canScan) {
+            const existingProduct = allproducts?.find(p => p.barcode.toString() === result.getText());
+            if(!existingProduct){
+              return
+            }
             stopScanning();
-            setTimeout(()=>{
-              // console.log("stopped for 0.5 sec")
-              startScanning()
-            }, 500);
+            setIsDialogOpen(true);
 
             const newScan = {
               barcode: result.getText(),
@@ -105,10 +264,8 @@ export default function Component() {
               return [...prev, newScan];
             });
 
-            // Send scanned item to Supabase
-            await sendScannedItemToSupabase(newScan.barcode);
+            setScannedBarcode(newScan.barcode);
 
-            // Pause scanning for 1 second
             setCanScan(false);
             setTimeout(() => setCanScan(true), 1000);
           } else if (err && !(err instanceof NotFoundException)) {
@@ -155,23 +312,70 @@ export default function Component() {
   };
 
   const clearScannedItems = async () => {
-    const response = await supabase
-      .from("scanned_products")
-      .delete()
-      .neq("id", 0);
-    setScannedItems([]);
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from("scanned_products")
+        .delete()
+        .neq("id", 0);
+      
+      if (error) throw error;
+
+      setScannedItems([]);
+      setItems([]);
+      toast({
+        title: "All Items Cleared",
+        description: "All scanned items have been removed from the inventory.",
+      });
+    } catch (error) {
+      console.error("Error clearing scanned items:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear scanned items. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const sendScannedItemToSupabase = async (barcode) => {
+  const sendScannedItemToSupabase = async (barcode, quantity, price) => {
     try {
       const { data, error } = await supabase
         .from("scanned_products")
-        .insert([{ name: barcode, quantity: 0, price: 0 }]);
+        .insert([{ name: barcode, quantity: quantity, price: price }]);
 
       if (error) throw error;
       console.log("Scanned item sent to Supabase:", data);
     } catch (error) {
       console.error("Error sending scanned item to Supabase:", error);
+    }
+  };
+
+  const deleteItem = async (barcode) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from("scanned_products")
+        .delete()
+        .eq("name", barcode);
+
+      if (error) throw error;
+
+      setItems(prevItems => prevItems.filter(item => item.barcode !== barcode));
+      toast({
+        title: "Item Deleted",
+        description: "The item has been removed from the inventory.",
+      });
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the item. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -183,6 +387,15 @@ export default function Component() {
       }
     };
   }, []);
+
+  const handleDialogSubmit = async () => {
+    await sendScannedItemToSupabase(scannedBarcode, scannedQuantity, scannedPrice);
+    handleScannedProduct(scannedBarcode, scannedQuantity, scannedPrice);
+    startScanning();
+    setIsDialogOpen(false);
+    setScannedQuantity(1);
+    setScannedPrice(0);
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
@@ -220,9 +433,6 @@ export default function Component() {
                   Stop Scanning
                 </Button>
               )}
-              <Button onClick={clearScannedItems} variant="outline">
-                Clear All
-              </Button>
             </div>
           </div>
 
@@ -263,33 +473,101 @@ export default function Component() {
         </div>
       </Card>
 
-      <Card className="p-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Barcode</TableHead>
-              <TableHead>Format</TableHead>
-              <TableHead>Timestamp</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {scannedItems.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell className="font-mono">{item.barcode}</TableCell>
-                <TableCell>{item.format}</TableCell>
-                <TableCell>{item.timestamp}</TableCell>
-              </TableRow>
-            ))}
-            {scannedItems.length === 0 && (
+      <Card className="p-4 max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Inventory Items</h2>
+          <div className="flex gap-3">
+            <Button onClick={fetchScannedProducts} disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Refresh'}
+            </Button>
+            <Button className="bg-red-600" onClick={clearScannedItems} disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Clear All'}
+            </Button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-gray-500">
-                  No items scanned yet
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Action</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.barcode}>
+                  <TableCell className="font-mono">{item.name}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>₹{item.price.toFixed(2)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deleteItem(item.barcode)}
+                      disabled={loading}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {items.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-gray-500">
+                    No items found in the inventory
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {loading && (
+          <div className="flex justify-center items-center mt-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enter Product Details</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="quantity" className="text-right">
+                Quantity
+              </Label>
+              <Input
+                id="quantity"
+                type="number"
+                value={scannedQuantity}
+                onChange={(e) => setScannedQuantity(Number(e.target.value))}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="price" className="text-right">
+                Price
+              </Label>
+              <Input
+                id="price"
+                type="number"
+                value={scannedPrice}
+                onChange={(e) => setScannedPrice(Number(e.target.value))}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleDialogSubmit}>
+              Add to Inventory
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

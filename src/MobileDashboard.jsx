@@ -68,7 +68,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showLeftSidebar, setShowLeftSidebar] = useState(false);
-  const [showRightSidebar, setShowRightSidebar ] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
 
   const [invoices, setInvoices] = useState([]);
   const printAreaRef = useRef(null);
@@ -85,7 +85,6 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   //   useState(false);
 
   useEffect(() => {
-    console.log("mobile")
     const fetchData = async () => {
       const { data: productsData, error: productsError } = await supabase
         .from("products")
@@ -387,27 +386,28 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
         .from("scanned_products")
         .select("*")
         .order("created_at", { ascending: false });
-  
+
       if (error) throw error;
-  
+
       const productMap = new Map();
 
       scannedData.forEach(scannedProduct => {
         const barcode = scannedProduct.name;
         const existingProduct = allproducts?.find(p => p?.barcode?.toString() === barcode.toString());
-        
+
         if (!existingProduct) {
           console.warn(`Product with barcode ${barcode} not found in catalog`);
           return;
         }
-  
+
         const quantity = scannedProduct.quantity || 1;
-        const price = existingProduct.sellingPrice || 0;
+        const price = scannedProduct.price || existingProduct.sellingPrice;
 
         if (productMap.has(barcode)) {
           const product = productMap.get(barcode);
           product.quantity += quantity;
           product.amount = product.quantity * price;
+          product.price = price
         } else {
           productMap.set(barcode, {
             name: existingProduct.name,
@@ -416,13 +416,16 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
             price: price,
             amount: quantity * price,
           });
+
+         
         }
       });
 
       const formattedProducts = Array.from(productMap.values());
-  
+      console.log(formattedProducts)
+
       setProducts(formattedProducts);
-  
+
       if (formattedProducts.length !== scannedData.length) {
         toast({
           title: "Warning",
@@ -430,7 +433,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
           variant: "warning"
         });
       }
-  
+
     } catch (error) {
       console.error("Error fetching scanned products:", error);
       toast({
@@ -444,10 +447,10 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const handleScannedProduct = (payload) => {
     const scannedProduct = payload.new;
     const barcode = scannedProduct.name; // Assuming this is actually the barcode
-    
+
     // Find the product in the catalog by barcode
     const existingProduct = allproducts?.find(p => p.barcode.toString() === barcode);
-    
+
     if (!existingProduct) {
       toast({
         title: "Error",
@@ -456,20 +459,23 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
       });
       return;
     }
-    
+
+    console.log(scannedProduct)
+
     const quantity = scannedProduct.quantity || 1;
-    const price = existingProduct.sellingPrice || 0;
+    const price = scannedProduct.price || existingProduct.sellingPrice;
 
     setProducts(prevProducts => {
       const existingIndex = prevProducts.findIndex(p => p.barcode === barcode);
 
       if (existingIndex !== -1) {
-        // Product already exists, update quantity and amount
         const updatedProducts = [...prevProducts];
         updatedProducts[existingIndex] = {
           ...updatedProducts[existingIndex],
-          quantity: updatedProducts[existingIndex].quantity + quantity,
-          amount: (updatedProducts[existingIndex].quantity + quantity) * price,
+          // quantity: updatedProducts[existingIndex].quantity + quantity,
+          // amount: (updatedProducts[existingIndex].quantity + quantity) * price,
+          quantity: scannedProduct.quantity + quantity,
+          amount: (scannedProduct.quantity + quantity) * price,
         };
         return updatedProducts;
       } else {
@@ -483,7 +489,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
         }, ...prevProducts];
       }
     });
-  
+
     toast({
       title: "Product Scanned",
       description: `${existingProduct.name} has been in the invoice.`,
