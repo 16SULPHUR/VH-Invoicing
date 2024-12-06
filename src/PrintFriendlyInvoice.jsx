@@ -1,5 +1,6 @@
-import { Instagram } from "lucide-react";
+import { Instagram } from 'lucide-react';
 import React from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 export const UpdatedVarietyHeavenInvoice = ({
   customerName,
@@ -20,10 +21,11 @@ export const UpdatedVarietyHeavenInvoice = ({
     return `${day}/${month}/${year}`;
   }
 
-
   const total = calculateTotal();
   const subTotal = total;
   const grandTotal = subTotal;
+
+  const upiLink = `upi://pay?pa=gpay-11240439077@okbizaxis&mc=5411&pn=Variety heaven&am=${grandTotal}&tr=1240439077&cu=INR`;
 
   const styles = {
     container: {
@@ -48,7 +50,7 @@ export const UpdatedVarietyHeavenInvoice = ({
     },
     companyDetails: {
       margin: "0",
-      fontSize: "14px",
+      fontSize: "12px",
     },
     invoiceTitle: {
       backgroundColor: "#e8f5e9",
@@ -56,6 +58,7 @@ export const UpdatedVarietyHeavenInvoice = ({
       textAlign: "center",
       marginBottom: "3mm",
       border: "1px solid #000",
+      fontSize:"14px"
     },
     section: {
       marginBottom: "3mm",
@@ -70,12 +73,12 @@ export const UpdatedVarietyHeavenInvoice = ({
       border: "1px solid #000",
       padding: "2mm",
       textAlign: "left",
-      fontSize: "16px",
+      fontSize: "14px",
     },
     td: {
       border: "1px solid #000",
       padding: "2mm",
-      fontSize: "16px",
+      fontSize: "14px",
     },
     footer: {
       display: "flex",
@@ -113,7 +116,19 @@ export const UpdatedVarietyHeavenInvoice = ({
     },
     noteText: {
       fontSize: "0.75rem",
-    }
+    },
+    paymentQRContainer: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      flexDirection: "column",
+      marginTop: "3mm",
+    },
+    paymentQRTitle: {
+      fontSize: "12px",
+      fontWeight: "bold",
+      marginBottom: "2mm",
+    },
   };
 
   return (
@@ -150,10 +165,10 @@ export const UpdatedVarietyHeavenInvoice = ({
         display: "flex",
         justifyContent: "space-between",
       }}>
-        <div style={{ border: "1px solid #000", padding: "2mm", width: "48%" }}>
-          <h3 style={{ margin: "0 0 2mm 0", fontSize: "18px" }}>Bill To:</h3>
+        <div style={{ border: "1px solid #000", padding: "2mm", width: "48%", fontSize:"14px" }}>
+          <h3 style={{ margin: "0 0 2mm 0", fontSize: "14px" }}>Bill To:</h3>
           <p style={{ margin: "1mm 0" }}>Name: {customerName}</p>
-          <p style={{ margin: "1mm 0" }}>Contact No.: {customerContact}</p>
+          { customerContact && <p style={{ margin: "1mm 0" }}>Contact No.: {customerContact}</p>}
         </div>
         <div style={{ border: "1px solid #000", padding: "2mm", width: "48%" }}>
           <p style={{ margin: "1mm 0" }}>
@@ -226,6 +241,11 @@ export const UpdatedVarietyHeavenInvoice = ({
             For Variety Heaven
           </p>
         </div>
+        
+      </div>
+      <div style={styles.paymentQRContainer}>
+        <p style={styles.paymentQRTitle}>Scan to Pay</p>
+        <QRCodeSVG value={upiLink} size={100} />
       </div>
       {note && (
         <div style={{
@@ -237,6 +257,7 @@ export const UpdatedVarietyHeavenInvoice = ({
           <p style={styles.noteText}>{note}</p>
         </div>
       )}
+      
     </div>
   );
 };

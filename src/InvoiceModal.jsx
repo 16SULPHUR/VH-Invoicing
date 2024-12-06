@@ -309,7 +309,7 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
           <style>
             body { font-family: Arial, sans-serif; }
             table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size:12px; }
             th { background-color: #f2f2f2; }
             @media print {
               body { -webkit-print-color-adjust: exact; }
@@ -328,7 +328,8 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
     }, 1500);
   };
 
-  const upiLink = `upi://pay?pa=pixelminecraft1603@okaxis&pn=Variety heaven&am=${invoice.total}&cu=INR`;
+  const upiLink = `upi://pay?pa=gpay-11240439077@okbizaxis&mc=5411&pn=Variety heaven&am=${invoice.total}&tr=1240439077&cu=INR`;
+  // const upiLink = `upi://pay?pa=pixelminecraft1603@okaxis&pn=Variety heaven&am=${invoice.total}&cu=INR`;
 
   return (
     <>
