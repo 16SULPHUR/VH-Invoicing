@@ -14,16 +14,12 @@ const ProductManagement = () => {
             <TabsList className="grid w-full grid-cols-3 bg-zinc-300 text-black">
               <TabsTrigger value="manage">Manage Products</TabsTrigger>
               <TabsTrigger value="add">Add Product</TabsTrigger>
-              <TabsTrigger value="stickers">Generate Stickers</TabsTrigger>
             </TabsList>
             <TabsContent value="add">
               <AddProduct />
             </TabsContent>
             <TabsContent value="manage">
               <ManageProducts />
-            </TabsContent>
-            <TabsContent value="stickers">
-              <GenerateStickers />
             </TabsContent>
           </Tabs>
         {/* </CardContent>

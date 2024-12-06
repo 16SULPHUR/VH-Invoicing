@@ -35,6 +35,9 @@ export const manifestForPlugIn = {
   display:"standalone",
   scope:'/',
   start_url:"/",
-  orientation:'portrait'
+  orientation:'portrait',
+  workbox: {
+    maximumFileSizeToCacheInBytes: 3000000
+  }
   }
 }
