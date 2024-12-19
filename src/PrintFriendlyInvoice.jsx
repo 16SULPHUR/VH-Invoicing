@@ -105,6 +105,11 @@ export const UpdatedVarietyHeavenInvoice = ({
     logoImage: {
       width: "10rem",
     },
+    signImage: {
+      width: "8rem",
+      margin: "0px 3rem",
+      mixBlendMode: 'burn',
+    },
     termsContainer: {
       margin: "0",
       fontSize: "0.75rem",
@@ -232,13 +237,12 @@ export const UpdatedVarietyHeavenInvoice = ({
           border: "1px solid #000",
           padding: "2mm",
         }}>
-          <p style={{
-            marginTop: "15mm",
-            borderTop: "1px solid #000",
-            paddingTop: "2mm",
-            fontSize: "16px",
-          }}>
+          <p style={{ margin: "0", fontSize: "12px" }}>
             For Variety Heaven
+            <div style={{ margin: "0", fontSize: "14px" }}>
+              <img src="sign.svg" alt="logo" style={styles.signImage} />
+            </div>
+            Authorized Signatory
           </p>
         </div>
         
