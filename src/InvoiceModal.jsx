@@ -242,12 +242,12 @@ export const UPIPaymentCard = ({ upiLink, totalAmount, isVisible }) => {
     <Card className="bg-white p-4 w-full max-w-sm mx-auto">
       <CardContent className="flex flex-col items-center space-y-4">
         <img
-          src="https://bill.varietyheaven.in/vh-black.png"
+          src="https://bill.varietyheaven.in/vh-horizontal.png"
           alt="Variety Heaven Logo"
-          className="w-24 h-auto mb-2"
+          className="h-auto mb-2"
         />
         <div className="border-4 border-[#5f259f] rounded-lg p-2">
-          <QRCodeSVG value={upiLink} size={180} />
+          <QRCodeSVG value={upiLink} size={300} />
         </div>
         <p className="text-base md:text-lg font-semibold text-center">
           Scan to pay ₹{totalAmount}

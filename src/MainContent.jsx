@@ -184,8 +184,8 @@ const MainContent = ({
   const [qrUpiLink, setQrUpiLink] = useState("");
 
   const generateUPILink = (amount) => {
-    // Replace with your actual UPI ID
-    const upiId = "your-upi-id@upi";
+
+    const upiId = "gpay-11240439077@okbizaxis";
     return `upi://pay?pa=${upiId}&pn=Your%20Business%20Name&am=${amount}&cu=INR`;
   };
 
@@ -217,7 +217,7 @@ const MainContent = ({
                   setQrUpiLink(upiLink);
                 }}
                 placeholder="Enter amount"
-                className="col-span-3"
+                className="col-span-3 text-3xl font-bold"
               />
               <Button
                 onClick={() => {
