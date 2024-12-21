@@ -128,6 +128,7 @@ const ProductForm = ({
       if (product) {
         setSelectedSupplier(product.supplier || "");
         setProductName(product.name);
+        setProductQuantity(1)
         setProductPrice(product.sellingPrice - product.sellingPrice * 0.1);
       }
     }

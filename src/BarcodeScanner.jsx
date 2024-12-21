@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Camera, RefreshCw, Loader2, Trash2 } from 'lucide-react';
+import { Camera, RefreshCw, Loader2, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -69,19 +69,23 @@ export default function Component() {
   }, []);
 
   const handleScannedProduct = (barcode, quantity, price) => {
-    const existingProduct = allproducts?.find(p => p.barcode.toString() === barcode);
+    const existingProduct = allproducts?.find(
+      (p) => p.barcode.toString() === barcode
+    );
 
     if (!existingProduct) {
       toast({
         title: "Error",
         description: "Product not found in catalog",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
-    setItems(prevProducts => {
-      const existingIndex = prevProducts.findIndex(p => p.barcode === barcode);
+    setItems((prevProducts) => {
+      const existingIndex = prevProducts.findIndex(
+        (p) => p.barcode === barcode
+      );
 
       if (existingIndex !== -1) {
         const updatedProducts = [...prevProducts];
@@ -93,13 +97,16 @@ export default function Component() {
         };
         return updatedProducts;
       } else {
-        return [{
-          name: existingProduct.name,
-          barcode: barcode,
-          quantity: quantity,
-          price: price,
-          amount: quantity * price,
-        }, ...prevProducts];
+        return [
+          {
+            name: existingProduct.name,
+            barcode: barcode,
+            quantity: quantity,
+            price: price,
+            amount: quantity * price,
+          },
+          ...prevProducts,
+        ];
       }
     });
 
@@ -118,7 +125,11 @@ export default function Component() {
         "postgres_changes",
         { event: "*", schema: "public", table: "scanned_products" },
         (payload) => {
-          handleScannedProduct(payload.new.name, payload.new.quantity, payload.new.price);
+          handleScannedProduct(
+            payload.new.name,
+            payload.new.quantity,
+            payload.new.price
+          );
         }
       )
       .subscribe();
@@ -139,9 +150,11 @@ export default function Component() {
 
       const productMap = new Map();
 
-      scannedData.forEach(scannedProduct => {
+      scannedData.forEach((scannedProduct) => {
         const barcode = scannedProduct.name;
-        const existingProduct = allproducts?.find(p => p?.barcode?.toString() === barcode.toString());
+        const existingProduct = allproducts?.find(
+          (p) => p?.barcode?.toString() === barcode.toString()
+        );
 
         if (!existingProduct) {
           console.warn(`Product with barcode ${barcode} not found in catalog`);
@@ -174,16 +187,15 @@ export default function Component() {
         toast({
           title: "Warning",
           description: "Some scanned products were not found in the catalog",
-          variant: "warning"
+          variant: "warning",
         });
       }
-
     } catch (error) {
       console.error("Error fetching scanned products:", error);
       toast({
         title: "Error",
         description: "Failed to fetch scanned products. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -216,6 +228,9 @@ export default function Component() {
 
       setDeviceList(videoDevices);
       if (videoDevices.length > 0 && !selectedDevice) {
+        if (videoDevices.length > 1) {
+          setSelectedDevice(videoDevices[1].deviceId);
+        }
         setSelectedDevice(videoDevices[0].deviceId);
       }
     } catch (err) {
@@ -244,9 +259,11 @@ export default function Component() {
         videoRef.current,
         async (result, err) => {
           if (result && canScan) {
-            const existingProduct = allproducts?.find(p => p.barcode.toString() === result.getText());
-            if(!existingProduct){
-              return
+            const existingProduct = allproducts?.find(
+              (p) => p.barcode.toString() === result.getText()
+            );
+            if (!existingProduct) {
+              return;
             }
             stopScanning();
             setIsDialogOpen(true);
@@ -318,7 +335,7 @@ export default function Component() {
         .from("scanned_products")
         .delete()
         .neq("id", 0);
-      
+
       if (error) throw error;
 
       setScannedItems([]);
@@ -332,7 +349,7 @@ export default function Component() {
       toast({
         title: "Error",
         description: "Failed to clear scanned items. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -362,7 +379,9 @@ export default function Component() {
 
       if (error) throw error;
 
-      setItems(prevItems => prevItems.filter(item => item.barcode !== barcode));
+      setItems((prevItems) =>
+        prevItems.filter((item) => item.barcode !== barcode)
+      );
       toast({
         title: "Item Deleted",
         description: "The item has been removed from the inventory.",
@@ -372,7 +391,7 @@ export default function Component() {
       toast({
         title: "Error",
         description: "Failed to delete the item. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -389,7 +408,11 @@ export default function Component() {
   }, []);
 
   const handleDialogSubmit = async () => {
-    await sendScannedItemToSupabase(scannedBarcode, scannedQuantity, scannedPrice);
+    await sendScannedItemToSupabase(
+      scannedBarcode,
+      scannedQuantity,
+      scannedPrice
+    );
     handleScannedProduct(scannedBarcode, scannedQuantity, scannedPrice);
     startScanning();
     setIsDialogOpen(false);
@@ -478,10 +501,22 @@ export default function Component() {
           <h2 className="text-2xl font-bold">Inventory Items</h2>
           <div className="flex gap-3">
             <Button onClick={fetchScannedProducts} disabled={loading}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Refresh'}
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Refresh"
+              )}
             </Button>
-            <Button className="bg-red-600" onClick={clearScannedItems} disabled={loading}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Clear All'}
+            <Button
+              className="bg-red-600"
+              onClick={clearScannedItems}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Clear All"
+              )}
             </Button>
           </div>
         </div>

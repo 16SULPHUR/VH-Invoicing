@@ -630,6 +630,8 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     return `${day}/${month}/${year} ${weekDay}`;
   }
 
+  
+
   const handlePrint = async () => {
     if (products.length === 0) {
       alert("Please add at least one product before printing the invoice.");
@@ -729,7 +731,52 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     setUpi("");
     setCredit("");
     setNote("");
+    clearScannedItems()
   };
+
+  const clearScannedItems = async () => {
+      try {
+        setLoading(true);
+        const { error } = await supabase
+          .from("scanned_products")
+          .delete()
+          .neq("id", 0);
+        
+        if (error) throw error;
+  
+        setScannedItems([]);
+        setItems([]);
+        toast({
+          title: "All Items Cleared",
+          description: "All scanned items have been removed from the inventory.",
+        });
+      } catch (error) {
+        console.error("Error clearing scanned items:", error);
+        toast({
+          title: "Error",
+          description: "Failed to clear scanned items. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'F1') {
+        event.preventDefault(); // Prevent the default F1 behavior
+        handlePrint();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handlePrint]);
 
   // const toggleLeftSidebar = () =>
   //   setIsLeftSidebarExpanded(!isLeftSidebarExpanded);
