@@ -235,7 +235,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { QRCodeSVG } from "qrcode.react";
 import { QrCode, X, Printer, Edit, Trash2 } from "lucide-react";
 
-const UPIPaymentCard = ({ upiLink, totalAmount, isVisible }) => {
+export const UPIPaymentCard = ({ upiLink, totalAmount, isVisible }) => {
   if (!isVisible) return null;
 
   return (
