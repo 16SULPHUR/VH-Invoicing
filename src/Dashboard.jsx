@@ -361,15 +361,29 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchScannedProducts();
 
     const scannedProductsSubscription = supabase
-      .channel("custom-all-channel")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "scanned_products" },
-        (payload) => {
-          handleScannedProduct(payload);
-        }
-      )
-      .subscribe();
+  .channel("scanned-products-channel")
+  .on(
+    "postgres_changes",
+    { event: "*", schema: "public", table: "scanned_products" },
+    (payload) => {
+      console.log("Payload for scanned_products:", payload);
+      handleScannedProduct(payload);
+    }
+  )
+  .subscribe();
+    // const scannedProductsSubscription = supabase
+    //   .channel("custom-all-channel")
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "*", schema: "public", table: "scanned_products" },
+    //     (payload) => {
+    //       console.log("payload of scanned products")
+    //       handleScannedProduct(payload);
+    //     }
+    //   )
+    //   .subscribe();
+
+      console.log("subscribed to scanned_products")
 
 
     return () => {
