@@ -514,7 +514,7 @@ export default function Component() {
           />
           <Button
             onClick={async () => {
-              if (scannedItems.length != 0) {
+              if (items.length != 0) {
                 const { data, error } = await supabase
                   .from("print_command")
                   .insert([{ customer_name: customerName }]);
