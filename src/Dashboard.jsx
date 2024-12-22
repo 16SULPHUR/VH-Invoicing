@@ -15,7 +15,7 @@ import {
   ChevronRight,
   ReceiptText,
   ChartNoAxesCombined,
-  Menu
+  Menu,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
@@ -37,7 +37,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable"
+} from "@/components/ui/resizable";
 
 const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [customers, setCustomers] = useState([]);
@@ -371,10 +371,38 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       )
       .subscribe();
 
+
     return () => {
       scannedProductsSubscription.unsubscribe();
     };
   }, [allproducts]);
+  
+  
+  useEffect(() => {
+    const printCommandSubscription = supabase
+      .channel("custom-all-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "print_command" },
+        (payload) => {
+          handleRemotePrint(payload)
+        }
+      )
+      .subscribe();
+
+      console.log("subs")
+
+    return () => {
+      printCommandSubscription.unsubscribe();
+    };
+  }, [products]);
+
+  const handleRemotePrint = (payload) => {
+    console.log("payload");
+    console.log(payload.new.customer_name);
+    setCustomerName(payload.new.customer_name);
+    handlePrint();
+  };
 
   // const fetchScannedProducts = async () => {
   //   try {
@@ -412,9 +440,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
       const productMap = new Map();
 
-      scannedData.forEach(scannedProduct => {
+      scannedData.forEach((scannedProduct) => {
         const barcode = scannedProduct.name;
-        const existingProduct = allproducts?.find(p => p?.barcode?.toString() === barcode.toString());
+        const existingProduct = allproducts?.find(
+          (p) => p?.barcode?.toString() === barcode.toString()
+        );
 
         if (!existingProduct) {
           console.warn(`Product with barcode ${barcode} not found in catalog`);
@@ -428,7 +458,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
           const product = productMap.get(barcode);
           product.quantity += quantity;
           product.amount = product.quantity * price;
-          product.price = price
+          product.price = price;
         } else {
           productMap.set(barcode, {
             name: existingProduct.name,
@@ -437,13 +467,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             price: price,
             amount: quantity * price,
           });
-
-         
         }
       });
 
       const formattedProducts = Array.from(productMap.values());
-      console.log(formattedProducts)
+      console.log(formattedProducts);
 
       setProducts(formattedProducts);
 
@@ -451,16 +479,15 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         toast({
           title: "Warning",
           description: "Some scanned products were not found in the catalog",
-          variant: "warning"
+          variant: "warning",
         });
       }
-
     } catch (error) {
       console.error("Error fetching scanned products:", error);
       toast({
         title: "Error",
         description: "Failed to fetch scanned products. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -470,24 +497,28 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     const barcode = scannedProduct.name; // Assuming this is actually the barcode
 
     // Find the product in the catalog by barcode
-    const existingProduct = allproducts?.find(p => p.barcode.toString() === barcode);
+    const existingProduct = allproducts?.find(
+      (p) => p.barcode.toString() === barcode
+    );
 
     if (!existingProduct) {
       toast({
         title: "Error",
         description: "Product not found in catalog",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
-    console.log(scannedProduct)
+    console.log(scannedProduct);
 
     const quantity = scannedProduct.quantity || 1;
     const price = scannedProduct.price || existingProduct.sellingPrice;
 
-    setProducts(prevProducts => {
-      const existingIndex = prevProducts.findIndex(p => p.barcode === barcode);
+    setProducts((prevProducts) => {
+      const existingIndex = prevProducts.findIndex(
+        (p) => p.barcode === barcode
+      );
 
       if (existingIndex !== -1) {
         const updatedProducts = [...prevProducts];
@@ -501,13 +532,16 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         return updatedProducts;
       } else {
         // New product, add to the list
-        return [{
-          name: existingProduct.name,
-          barcode: barcode,
-          quantity: quantity,
-          price: price,
-          amount: quantity * price,
-        }, ...prevProducts];
+        return [
+          {
+            name: existingProduct.name,
+            barcode: barcode,
+            quantity: quantity,
+            price: price,
+            amount: quantity * price,
+          },
+          ...prevProducts,
+        ];
       }
     });
 
@@ -630,8 +664,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     return `${day}/${month}/${year} ${weekDay}`;
   }
 
-  
-
   const handlePrint = async () => {
     if (products.length === 0) {
       alert("Please add at least one product before printing the invoice.");
@@ -731,50 +763,50 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     setUpi("");
     setCredit("");
     setNote("");
-    clearScannedItems()
+    clearScannedItems();
   };
 
   const clearScannedItems = async () => {
-      try {
-        setLoading(true);
-        const { error } = await supabase
-          .from("scanned_products")
-          .delete()
-          .neq("id", 0);
-        
-        if (error) throw error;
-  
-        setScannedItems([]);
-        setItems([]);
-        toast({
-          title: "All Items Cleared",
-          description: "All scanned items have been removed from the inventory.",
-        });
-      } catch (error) {
-        console.error("Error clearing scanned items:", error);
-        toast({
-          title: "Error",
-          description: "Failed to clear scanned items. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from("scanned_products")
+        .delete()
+        .neq("id", 0);
+
+      if (error) throw error;
+
+      setScannedItems([]);
+      setItems([]);
+      toast({
+        title: "All Items Cleared",
+        description: "All scanned items have been removed from the inventory.",
+      });
+    } catch (error) {
+      console.error("Error clearing scanned items:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear scanned items. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'F1') {
+      if (event.key === "F1") {
         event.preventDefault(); // Prevent the default F1 behavior
         handlePrint();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     // Cleanup function to remove the event listener
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handlePrint]);
 
@@ -817,23 +849,40 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }
   };
 
+  // useEffect(() => {
+  //   const printCommandSubscription = supabase
+  //     .channel("custom-all-channel")
+  //     .on(
+  //       "postgres_changes",
+  //       { event: "*", schema: "public", table: "print_command" },
+  //       (payload) => {
+  //         console.log("payload");
+  //         console.log(payload);
+  //         setCustomerName(payload.customer_name);
+  //         handlePrint();
+  //       }
+  //     )
+  //     .subscribe();
+
+  //   return () => {
+  //     printCommandSubscription.unsubscribe();
+  //   };
+  // }, [allproducts]);
+
   return (
     <div
       id="dashboard"
       className="flex font-sans w-full h-svh bg-zinc-80 backdrop-blur-sm"
     >
-      <ResizablePanelGroup
-        direction="horizontal"
-      >
+      <ResizablePanelGroup direction="horizontal">
         <ResizablePanel defaultSize={85}>
           <div className="flex flex-1">
             <div
-              className={`transition-all duration-300 ${isLeftSidebarExpanded ? "w-[400px]" : "w-[4px]"
-                }`}
+              className={`transition-all duration-300 ${
+                isLeftSidebarExpanded ? "w-[400px]" : "w-[4px]"
+              }`}
             >
-              <button
-                className="fixed top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full"
-              >
+              <button className="fixed top-4 left-4 z-10 bg-purple-500 text-white p-1 rounded-full">
                 {isLeftSidebarExpanded ? (
                   <ChevronLeft size={24} />
                 ) : (
@@ -954,17 +1003,16 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
             </div>
           )}
         </div> */}
-
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={15} maxSize={25}>
-        <RecentInvoices
-                recentInvoices={recentInvoices}
-                handleInvoiceClick={handleInvoiceClick}
-                formatDate={formatDate}
-              />
-          </ResizablePanel>
+          <RecentInvoices
+            recentInvoices={recentInvoices}
+            handleInvoiceClick={handleInvoiceClick}
+            formatDate={formatDate}
+          />
+        </ResizablePanel>
       </ResizablePanelGroup>
 
       {showInvoiceModal && selectedInvoice && (
@@ -993,11 +1041,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       )}
     </div>
   );
-
-
-
-
-
 };
 
 export default Dashboard;

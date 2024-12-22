@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Camera, RefreshCw, Loader2, Trash2 } from "lucide-react";
+import {
+  Camera,
+  RefreshCw,
+  Loader2,
+  Trash2,
+  Printer,
+  PrinterIcon,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -44,6 +51,7 @@ export default function Component() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [scannedQuantity, setScannedQuantity] = useState(1);
   const [scannedPrice, setScannedPrice] = useState(0);
 
@@ -74,11 +82,11 @@ export default function Component() {
     );
 
     if (!existingProduct) {
-      toast({
-        title: "Error",
-        description: "Product not found in catalog",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Product not found in catalog",
+      //   variant: "destructive",
+      // });
       return;
     }
 
@@ -184,11 +192,11 @@ export default function Component() {
       setItems(formattedProducts);
 
       if (formattedProducts.length !== scannedData.length) {
-        toast({
-          title: "Warning",
-          description: "Some scanned products were not found in the catalog",
-          variant: "warning",
-        });
+        // toast({
+        //   title: "Warning",
+        //   description: "Some scanned products were not found in the catalog",
+        //   variant: "warning",
+        // });
       }
     } catch (error) {
       console.error("Error fetching scanned products:", error);
@@ -230,8 +238,9 @@ export default function Component() {
       if (videoDevices.length > 0 && !selectedDevice) {
         if (videoDevices.length > 1) {
           setSelectedDevice(videoDevices[1].deviceId);
+        } else {
+          setSelectedDevice(videoDevices[0].deviceId);
         }
-        setSelectedDevice(videoDevices[0].deviceId);
       }
     } catch (err) {
       console.error("Error initializing scanner:", err);
@@ -493,6 +502,46 @@ export default function Component() {
               </div>
             )}
           </div>
+        </div>
+        <div className="flex w-full gap-2">
+          <Input
+            type="text"
+            value={customerName}
+            onChange={(e) => {
+              setCustomerName(e.target.value);
+            }}
+            placeholder="Enter Customer Name"
+          />
+          <Button
+            onClick={async () => {
+              if (scannedItems.length != 0) {
+                const { data, error } = await supabase
+                  .from("print_command")
+                  .insert([{ customer_name: customerName }]);
+
+                if (!error) {
+                  toast({
+                    title: "Print Sent Successfully",
+                    description: "Print Sent",
+                  });
+                } else {
+                  toast({
+                    title: "Error",
+                    description: "Error Sending to Print",
+                    variant: "destructive",
+                  });
+                }
+              } else {
+                toast({
+                  title: "Warning",
+                  description: "Please Add atleast 1 Product to Print",
+                  variant: "warning",
+                });
+              }
+            }}
+          >
+            Print
+          </Button>
         </div>
       </Card>
 

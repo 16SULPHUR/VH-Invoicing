@@ -126,7 +126,7 @@
 // export default MainContent;
 
 import React, { useState } from "react";
-import { FilePen, FilePlus2 } from "lucide-react";
+import { FilePen, FilePlus2, RefreshCw } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import CustomerDetails from "./CustomerDetails";
 import InvoiceDetails from "./InvoiceDetails";
@@ -184,7 +184,6 @@ const MainContent = ({
   const [qrUpiLink, setQrUpiLink] = useState("");
 
   const generateUPILink = (amount) => {
-
     const upiId = "gpay-11240439077@okbizaxis";
     return `upi://pay?pa=${upiId}&pn=Your%20Business%20Name&am=${amount}&cu=INR`;
   };
@@ -198,44 +197,55 @@ const MainContent = ({
         <h5 className="font-bold bg-sky-500 text-white border border-sky-600 p-1.5 rounded text-lg md:text-xl">
           Create Invoice
         </h5>
-        <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="text-black bg-white">
-              Generate QR Code
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            {/* <div className="grid gap-4 py-4"> */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Input
-                id="amount"
-                type="number"
-                value={qrAmount}
-                onChange={(e) => {
-                  setQrAmount(e.target.value);
-                  const upiLink = generateUPILink(e.target.value);
-                  setQrUpiLink(upiLink);
-                }}
-                placeholder="Enter amount"
-                className="col-span-3 text-3xl font-bold"
-              />
-              <Button
-                onClick={() => {
-                  const upiLink = generateUPILink(qrAmount);
-                  setQrUpiLink(upiLink);
-                }}
-              >
+        <div className="flex gap-3">
+          <Button
+            className="hidden lg:block"
+            onClick={() => {
+              window.location.reload();
+            }}
+          >
+            {" "}
+            <RefreshCw />
+          </Button>
+          <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="text-black bg-white">
                 <QRCodeSVG />
               </Button>
-            </div>
-            <UPIPaymentCard
-              upiLink={qrUpiLink}
-              totalAmount={qrAmount}
-              isVisible={!!qrUpiLink}
-            />
-            {/* </div> */}
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              {/* <div className="grid gap-4 py-4"> */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Input
+                  id="amount"
+                  type="number"
+                  value={qrAmount}
+                  onChange={(e) => {
+                    setQrAmount(e.target.value);
+                    const upiLink = generateUPILink(e.target.value);
+                    setQrUpiLink(upiLink);
+                  }}
+                  placeholder="Enter amount"
+                  className="col-span-3 text-3xl font-bold"
+                />
+                <Button
+                  onClick={() => {
+                    const upiLink = generateUPILink(qrAmount);
+                    setQrUpiLink(upiLink);
+                  }}
+                >
+                  <QRCodeSVG />
+                </Button>
+              </div>
+              <UPIPaymentCard
+                upiLink={qrUpiLink}
+                totalAmount={qrAmount}
+                isVisible={!!qrUpiLink}
+              />
+              {/* </div> */}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row w-full justify-between gap-4 md:gap-6">
