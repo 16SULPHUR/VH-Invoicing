@@ -395,7 +395,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     return () => {
       printCommandSubscription.unsubscribe();
     };
-  }, [products]);
+  }, [products, allproducts]);
 
   const handleRemotePrint = (payload) => {
     console.log("payload");
