@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 const CustomerName = ({ customers, placeholder, onSelect, value }) => {
   const [open, setOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -39,6 +40,8 @@ const CustomerName = ({ customers, placeholder, onSelect, value }) => {
         <Command className="w-[300px]">
           <CommandInput
             placeholder={`Search ${placeholder.toLowerCase()}...`}
+            value={searchInput}
+            onValueChange={setSearchInput}
           />
           <CommandEmpty>No customers found.</CommandEmpty>
           <CommandList>
@@ -63,6 +66,14 @@ const CustomerName = ({ customers, placeholder, onSelect, value }) => {
                 </div>
               </CommandItem>
             ))}
+            <CommandItem
+              onSelect={() => {
+                onSelect(searchInput);
+                setOpen(false);
+              }}
+            >
+              {searchInput}
+            </CommandItem>
           </CommandList>
         </Command>
       </PopoverContent>
@@ -103,7 +114,7 @@ const CustomerDetails = ({
           >
             Customer Name:
           </label>
-          
+
           <Switch
             id="add-supplier"
             className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
