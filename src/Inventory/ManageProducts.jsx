@@ -17,7 +17,20 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2 } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  MoreVertical,
+  Image as ImageIcon,
+  Share2,
+  Download,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -27,6 +40,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "../supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,12 +63,91 @@ const ManageProducts = () => {
     useState(false);
   const [showCostColumn, setShowCostColumn] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState("all");
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
     fetchSuppliers();
   }, []);
+
+  const handleImageClick = (images) => {
+    setSelectedImages(images);
+    setIsImageDialogOpen(true);
+  };
+
+  const handleShareImages = async (images, productName) => {
+    try {
+      // First check if the Web Share API is available
+      if (!navigator.share) {
+        throw new Error("Web Share API not supported");
+      }
+
+      // For mobile devices that support image sharing
+      if (navigator.canShare) {
+        const files = await Promise.all(
+          images.map(async (imageUrl) => {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            return new File(
+              [blob],
+              `${productName}-${Math.random().toString(36).substring(7)}.${
+                blob.type.split("/")[1]
+              }`,
+              { type: blob.type }
+            );
+          })
+        );
+
+        const shareData = {
+          files,
+          title: `${productName} Images`,
+          text: `Images of ${productName}`,
+        };
+
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          return;
+        }
+      }
+
+      // Fallback for devices that don't support file sharing
+      await navigator.share({
+        title: `${productName} Images`,
+        text: `Check out these images of ${productName}`,
+        url: images[0], // Share at least the first image URL
+      });
+    } catch (error) {
+      console.error("Sharing failed:", error);
+      // Create a fallback mechanism to copy links to clipboard
+      try {
+        await navigator.clipboard.writeText(images.join("\n"));
+        toast({
+          title: "Links Copied",
+          description: "Image links have been copied to your clipboard",
+        });
+      } catch (clipboardError) {
+        toast({
+          variant: "destructive",
+          title: "Sharing Failed",
+          description:
+            "Could not share images. Please try copying the links manually.",
+        });
+      }
+    }
+  };
+
+  const handleDownloadImages = async (images) => {
+    images.forEach((url, index) => {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `product-image-${index + 1}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  };
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -209,6 +309,47 @@ const ManageProducts = () => {
       supplier.code.toString().includes(supplierSearchTerm)
   );
 
+  const ProductActions = ({ product }) => {
+    const hasImages = product.images && product.images.length > 0;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => handleProductEdit(product)}>
+            <Pencil className="h-4 w-4 mr-2" /> Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleProductDelete(product.id)}>
+            <Trash2 className="h-4 w-4 mr-2" /> Delete
+          </DropdownMenuItem>
+          {hasImages && (
+            <>
+              <DropdownMenuItem
+                onClick={() => handleImageClick(product.images)}
+              >
+                <ImageIcon className="h-4 w-4 mr-2" /> Show Images
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleShareImages(product.images, product.name)}
+              >
+                <Share2 className="h-4 w-4 mr-2" /> Share Images
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleDownloadImages(product.images)}
+              >
+                <Download className="h-4 w-4 mr-2" /> Download Images
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <Tabs defaultValue="products" className="w-full">
@@ -234,28 +375,29 @@ const ManageProducts = () => {
                 onCheckedChange={setShowCostColumn}
               />
             </div>
-              <Select
-                className="text-sky-400"
-                onValueChange={setSelectedSupplier}
-                defaultValue="all"
-              >
-                <SelectTrigger className="w-[200px] text-sky-400">
-                  <SelectValue placeholder="Select a supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Suppliers</SelectItem>
-                  {suppliers.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Select
+              className="text-sky-400"
+              onValueChange={setSelectedSupplier}
+              defaultValue="all"
+            >
+              <SelectTrigger className="w-[200px] text-sky-400">
+                <SelectValue placeholder="Select a supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Suppliers</SelectItem>
+                {suppliers.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Table className="bg-[#09090b] rounded-md">
             <TableHeader>
               <TableRow>
+                <TableHead className="text-sky-400 w-12"></TableHead>
                 <TableHead className="text-sky-400">Name</TableHead>
                 {showCostColumn && (
                   <TableHead className="text-sky-400">Cost</TableHead>
@@ -263,13 +405,28 @@ const ManageProducts = () => {
                 <TableHead className="text-sky-400">Selling Price</TableHead>
                 <TableHead className="text-sky-400">Barcode</TableHead>
                 <TableHead className="text-sky-400">Quantity</TableHead>
-
                 <TableHead className="text-sky-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProducts.map((product) => (
                 <TableRow key={product.id} className="text-white">
+                  <TableCell>
+                    {product.images && product.images.length > 0 && (
+                      <Avatar
+                        className="cursor-pointer"
+                        onClick={() => handleImageClick(product.images)}
+                      >
+                        <AvatarImage
+                          src={product.images[0]}
+                          alt={product.name}
+                        />
+                        <AvatarFallback>
+                          <ImageIcon className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span>{product.name}</span>
@@ -288,7 +445,7 @@ const ManageProducts = () => {
                   <TableCell>₹{product.sellingPrice}</TableCell>
                   <TableCell>{product.barcode}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <div className="flex space-x-2">
                       <Button
                         onClick={() => handleProductEdit(product)}
@@ -305,6 +462,9 @@ const ManageProducts = () => {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+                  </TableCell> */}
+                  <TableCell>
+                    <ProductActions product={product} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -500,6 +660,33 @@ const ManageProducts = () => {
               </Button>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="bg-gray-800 text-gray-100 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Product Images</DialogTitle>
+          </DialogHeader>
+          <div className="w-full max-w-lg mx-auto">
+            <Carousel>
+              <CarouselContent>
+                {selectedImages.map((image, index) => (
+                  <CarouselItem key={index}>
+                    <div className="flex items-center justify-center p-2">
+                      <img
+                        src={image}
+                        alt={`Product image ${index + 1}`}
+                        className="max-h-[60vh] object-contain rounded-lg"
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

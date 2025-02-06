@@ -11,22 +11,24 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "../supabaseClient";
-
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 const AddProduct = () => {
   const [name, setName] = useState("");
   const [cost, setCost] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
-  const [quantity, setQuantity] = useState(""); // New state for quantity
+  const [quantity, setQuantity] = useState("");
   const [supplier, setSupplier] = useState("");
   const [suppliers, setSuppliers] = useState([]);
   const [isAddingNewSupplier, setIsAddingNewSupplier] = useState(false);
   const [newSupplierName, setNewSupplierName] = useState("");
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   const { toast } = useToast();
-
   const nameInput = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchSuppliers();
@@ -77,12 +79,10 @@ const AddProduct = () => {
     }
 
     const lastBarcode = data[0]?.barcode || "00000000";
-    console.log(lastBarcode);
     const lastProductCode = lastBarcode.toString().slice(-5);
     const nextProductCode = (parseInt(lastProductCode, 10) + 1)
-    .toString()
-    .padStart(5, "0");
-    console.log((parseInt(lastProductCode, 10)+1).toString())
+      .toString()
+      .padStart(5, "0");
     return nextProductCode;
   };
 
@@ -108,6 +108,52 @@ const AddProduct = () => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(files);
+
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
+
+  const handleDiscardImage = (index) => {
+    const newImages = [...images];
+    newImages.splice(index, 1);
+    setImages(newImages);
+
+    const newPreviews = [...imagePreviews];
+    newPreviews.splice(index, 1);
+    setImagePreviews(newPreviews);
+  };
+
+  const uploadImages = async () => {
+    const uploadedImageUrls = [];
+    for (const image of images) {
+      const formData = new FormData();
+      formData.append("file", image);
+
+      try {
+        const response = await axios.post(
+          "https://media.varietyheaven.in/upload.php",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        uploadedImageUrls.push(response.data.url);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to upload image. Please try again.",
+        });
+        return null;
+      }
+    }
+    return uploadedImageUrls;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     let currentSupplier = supplier;
@@ -128,6 +174,9 @@ const AddProduct = () => {
     const productCode = await generateProductCode();
     const barcode = `${supplierCode}${productCode}`;
 
+    const uploadedImageUrls = await uploadImages();
+    if (!uploadedImageUrls) return; // Exit if image upload failed
+
     const { data, error } = await supabase
       .from("products")
       .insert([
@@ -138,6 +187,7 @@ const AddProduct = () => {
           supplier: currentSupplier,
           barcode,
           quantity: parseInt(quantity, 10),
+          images: uploadedImageUrls,
         },
       ]);
 
@@ -159,9 +209,10 @@ const AddProduct = () => {
       setCost("");
       setSellingPrice("");
       setQuantity("");
-      // setSupplier('');
       setNewSupplierName("");
       setIsAddingNewSupplier(false);
+      setImages([]);
+      setImagePreviews([]);
 
       nameInput.current.focus();
     }
@@ -263,6 +314,38 @@ const AddProduct = () => {
           className="bg-gray-700 border-gray-600 text-gray-100"
           required
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="images" className="text-sky-400">
+          Product Images:
+        </Label>
+        <Input
+          id="images"
+          type="file"
+          multiple
+          onChange={handleImageChange}
+          className="bg-gray-700 border-gray-600 text-gray-100"
+          ref={fileInputRef}
+        />
+        <div className="flex flex-wrap gap-2">
+          {imagePreviews.map((preview, index) => (
+            <div key={index} className="relative">
+              <img
+                src={preview}
+                alt={`Preview ${index}`}
+                className="w-24 h-24 object-cover rounded"
+              />
+              <button
+                type="button"
+                onClick={() => handleDiscardImage(index)}
+                className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <Button
