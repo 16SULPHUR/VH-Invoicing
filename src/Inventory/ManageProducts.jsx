@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -24,6 +24,7 @@ import {
   Image as ImageIcon,
   Share2,
   Download,
+  Upload,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -50,6 +51,8 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "../supabaseClient";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+import JSZip from "jszip";
 
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
@@ -67,14 +70,197 @@ const ManageProducts = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const { toast } = useToast();
 
+  const [isImageUploadDialogOpen, setIsImageUploadDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [newImages, setNewImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [modifiedExistingImages, setModifiedExistingImages] = useState(null);
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     fetchProducts();
     fetchSuppliers();
+    return () => {
+      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    };
   }, []);
+
+  useEffect(() => {
+    if (!isImageUploadDialogOpen) {
+      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+      setImagePreviews([]);
+      setSelectedFiles([]);
+      setModifiedExistingImages(null);
+    }
+  }, [isImageUploadDialogOpen]);
+
+  useEffect(() => {
+    if (selectedProduct && isImageUploadDialogOpen) {
+      // Initialize previews with existing images when dialog opens
+      const existingPreviews = (selectedProduct.images || []).map((url) => ({
+        url,
+        isNew: false,
+      }));
+      setImagePreviews(existingPreviews);
+    }
+  }, [selectedProduct, isImageUploadDialogOpen]);
+
+  const sanitizeFileName = (name) => {
+    return name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+  };
 
   const handleImageClick = (images) => {
     setSelectedImages(images);
     setIsImageDialogOpen(true);
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles((prev) => [...prev, ...files]);
+
+    const newPreviews = files.map((file) => ({
+      url: URL.createObjectURL(file),
+      isNew: true,
+      file: file,
+    }));
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const handleDiscardImage = (index) => {
+    const preview = imagePreviews[index];
+
+    if (preview.isNew) {
+      // If it's a new image, revoke the object URL
+      URL.revokeObjectURL(preview.url);
+      // Remove the file from selectedFiles
+      setSelectedFiles((prev) =>
+        prev.filter(
+          (_, i) => i !== selectedFiles.findIndex((f) => f === preview.file)
+        )
+      );
+    } else {
+      // If it's an existing image, update modifiedExistingImages
+      const updatedImages = [
+        ...(modifiedExistingImages || selectedProduct.images),
+      ];
+      updatedImages.splice(index, 1);
+      setModifiedExistingImages(updatedImages);
+    }
+
+    // Remove the preview
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateProductImages = async (images) => {
+    const { error } = await supabase
+      .from("products")
+      .update({ images })
+      .eq("id", selectedProduct.id);
+
+    if (error) {
+      console.error("Error updating product images:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update product images. Please try again.",
+      });
+      return false;
+    }
+
+    toast({
+      title: "Success",
+      description: "Images updated successfully.",
+    });
+    await fetchProducts();
+    return true;
+  };
+
+  const handleSaveExistingImages = async () => {
+    if (!selectedProduct || !modifiedExistingImages) return;
+
+    const success = await updateProductImages(modifiedExistingImages);
+    if (success) {
+      setModifiedExistingImages(null);
+    }
+  };
+
+  const uploadImages = async () => {
+    const uploadedImageUrls = [];
+    for (const image of selectedFiles) {
+      const formData = new FormData();
+      formData.append("file", image);
+
+      try {
+        const response = await axios.post(
+          "https://media.varietyheaven.in/upload.php",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        uploadedImageUrls.push(response.data.url);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to upload image. Please try again.",
+        });
+        return null;
+      }
+    }
+    return uploadedImageUrls;
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedProduct) return;
+
+    // Filter new files that need to be uploaded
+    const newFiles = imagePreviews
+      .filter((preview) => preview.isNew)
+      .map((preview) => preview.file);
+
+    if (newFiles.length > 0) {
+      const uploadedImageUrls = await uploadImages(newFiles);
+      if (!uploadedImageUrls) return;
+
+      // Get existing images that weren't removed
+      const remainingExistingImages = imagePreviews
+        .filter((preview) => !preview.isNew)
+        .map((preview) => preview.url);
+
+      // Combine remaining existing images with new uploaded URLs
+      const updatedImages = [...remainingExistingImages, ...uploadedImageUrls];
+
+      const success = await updateProductImages(updatedImages);
+      if (success) {
+        setIsImageUploadDialogOpen(false);
+        setSelectedFiles([]);
+        // Revoke all object URLs
+        imagePreviews
+          .filter((preview) => preview.isNew)
+          .forEach((preview) => URL.revokeObjectURL(preview.url));
+        setImagePreviews([]);
+        setModifiedExistingImages(null);
+      }
+    } else if (modifiedExistingImages) {
+      // If only existing images were modified
+      const success = await updateProductImages(modifiedExistingImages);
+      if (success) {
+        setIsImageUploadDialogOpen(false);
+        setImagePreviews([]);
+        setModifiedExistingImages(null);
+      }
+    }
+  };
+
+  const openImageUploadDialog = (product) => {
+    setSelectedProduct(product);
+    setIsImageUploadDialogOpen(true);
+    setSelectedFiles([]);
+    setImagePreviews([]);
+    setModifiedExistingImages(null);
   };
 
   const handleShareImages = async (images, productName) => {
@@ -138,15 +324,71 @@ const ManageProducts = () => {
     }
   };
 
-  const handleDownloadImages = async (images) => {
-    images.forEach((url, index) => {
+  const handleDownloadImages = async (images, productName, supplierName) => {
+    try {
+      const zip = new JSZip();
+      const folderName = `${sanitizeFileName(productName)}_${sanitizeFileName(
+        supplierName || "unknown"
+      )}`;
+      const folder = zip.folder(folderName);
+
+      // Create loading toast
+      toast({
+        title: "Preparing Download",
+        description: "Creating ZIP file of images...",
+      });
+
+      // Download all images and add to zip
+      const imagePromises = images.map(async (url, index) => {
+        try {
+          const response = await fetch(url);
+          const blob = await response.blob();
+
+          // Get file extension from content type or fallback to jpg
+          const contentType = response.headers.get("content-type");
+          const extension = contentType ? contentType.split("/")[1] : "jpg";
+
+          // Add file to zip
+          folder.file(`${productName}_${index + 1}.${extension}`, blob);
+        } catch (error) {
+          console.error(`Error processing image ${index + 1}:`, error);
+          throw new Error(`Failed to process image ${index + 1}`);
+        }
+      });
+
+      // Wait for all images to be processed
+      await Promise.all(imagePromises);
+
+      // Generate zip file
+      const content = await zip.generateAsync({ type: "blob" });
+
+      // Create download link
+      const blobUrl = window.URL.createObjectURL(content);
       const link = document.createElement("a");
-      link.href = url;
-      link.download = `product-image-${index + 1}`;
+      link.href = blobUrl;
+      link.download = `${folderName}.zip`;
+
+      // Trigger download
       document.body.appendChild(link);
       link.click();
+
+      // Cleanup
       document.body.removeChild(link);
-    });
+      window.URL.revokeObjectURL(blobUrl);
+
+      // Success toast
+      toast({
+        title: "Download Complete",
+        description: "Images have been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error("Error creating zip file:", error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: "Failed to create ZIP file. Please try again.",
+      });
+    }
   };
 
   const fetchProducts = async () => {
@@ -323,8 +565,8 @@ const ManageProducts = () => {
           <DropdownMenuItem onClick={() => handleProductEdit(product)}>
             <Pencil className="h-4 w-4 mr-2" /> Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleProductDelete(product.id)}>
-            <Trash2 className="h-4 w-4 mr-2" /> Delete
+          <DropdownMenuItem onClick={() => openImageUploadDialog(product)}>
+            <Upload className="h-4 w-4 mr-2" /> Upload Images
           </DropdownMenuItem>
           {hasImages && (
             <>
@@ -339,12 +581,21 @@ const ManageProducts = () => {
                 <Share2 className="h-4 w-4 mr-2" /> Share Images
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleDownloadImages(product.images)}
+                onClick={() => {
+                  handleDownloadImages(
+                    product.images,
+                    product.name,
+                    getSupplier(product.supplier)?.name
+                  );
+                }}
               >
-                <Download className="h-4 w-4 mr-2" /> Download Images
+                <Download className="h-4 w-4 mr-2" /> Download ZIP
               </DropdownMenuItem>
             </>
           )}
+          <DropdownMenuItem onClick={() => handleProductDelete(product.id)}>
+            <Trash2 className="h-4 w-4 mr-2" /> Delete
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -686,6 +937,59 @@ const ManageProducts = () => {
               <CarouselPrevious />
               <CarouselNext />
             </Carousel>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isImageUploadDialogOpen}
+        onOpenChange={setIsImageUploadDialogOpen}
+      >
+        <DialogContent className="bg-gray-800 text-gray-100">
+          <DialogHeader>
+            <DialogTitle>Upload Images</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="images" className="text-sky-400">
+                Add New Images:
+              </Label>
+              <Input
+                id="images"
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageChange}
+                className="bg-gray-700 border-gray-600 text-gray-100"
+                ref={fileInputRef}
+                onClick={(e) => (e.target.value = null)}
+              />
+              <div className="flex flex-wrap gap-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={`preview-${index}`} className="relative">
+                    <img
+                      src={preview.url}
+                      alt={`Preview ${index}`}
+                      className="w-24 h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDiscardImage(index)}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Button
+              onClick={handleImageUpload}
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+              disabled={imagePreviews.length === 0}
+            >
+              Save Changes
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

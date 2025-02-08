@@ -339,7 +339,7 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
             onClose();
           }
         }}
-        className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 overflow-y-auto"
+        className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 overflow-y-auto text-black"
       >
         <div className="flex flex-col md:flex-row space-y- md:space-y-0 md:space-x-4 max-w-full md:max-w-6xl w-full">
           <div className="flex flex-col space-y- w-full md:w-auto">

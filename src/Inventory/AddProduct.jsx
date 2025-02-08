@@ -25,6 +25,7 @@ const AddProduct = () => {
   const [newSupplierName, setNewSupplierName] = useState("");
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const { toast } = useToast();
   const nameInput = useRef(null);
@@ -33,6 +34,10 @@ const AddProduct = () => {
   useEffect(() => {
     fetchSuppliers();
     nameInput?.current?.focus();
+
+    return () => {
+      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    };
   }, []);
 
   const fetchSuppliers = async () => {
@@ -110,25 +115,23 @@ const AddProduct = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+    setSelectedFiles((prev) => [...prev, ...files]);
 
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setImagePreviews(previews);
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
   };
 
   const handleDiscardImage = (index) => {
-    const newImages = [...images];
-    newImages.splice(index, 1);
-    setImages(newImages);
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
 
-    const newPreviews = [...imagePreviews];
-    newPreviews.splice(index, 1);
-    setImagePreviews(newPreviews);
+    // Revoke the object URL to avoid memory leaks
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const uploadImages = async () => {
     const uploadedImageUrls = [];
-    for (const image of images) {
+    for (const image of selectedFiles) {
       const formData = new FormData();
       formData.append("file", image);
 
@@ -175,21 +178,19 @@ const AddProduct = () => {
     const barcode = `${supplierCode}${productCode}`;
 
     const uploadedImageUrls = await uploadImages();
-    if (!uploadedImageUrls) return; // Exit if image upload failed
+    if (!uploadedImageUrls) return;
 
-    const { data, error } = await supabase
-      .from("products")
-      .insert([
-        {
-          name,
-          cost,
-          sellingPrice,
-          supplier: currentSupplier,
-          barcode,
-          quantity: parseInt(quantity, 10),
-          images: uploadedImageUrls,
-        },
-      ]);
+    const { data, error } = await supabase.from("products").insert([
+      {
+        name,
+        cost,
+        sellingPrice,
+        supplier: currentSupplier,
+        barcode,
+        quantity: parseInt(quantity, 10),
+        images: uploadedImageUrls,
+      },
+    ]);
 
     if (error) {
       console.error("Error adding product:", error);
@@ -211,8 +212,10 @@ const AddProduct = () => {
       setQuantity("");
       setNewSupplierName("");
       setIsAddingNewSupplier(false);
-      setImages([]);
+      setSelectedFiles([]);
       setImagePreviews([]);
+      // Revoke all object URLs
+      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
 
       nameInput.current.focus();
     }
@@ -242,7 +245,7 @@ const AddProduct = () => {
               required
               placeholder="New Supplier Name"
               ref={nameInput}
-              autoFocus={true}
+              autoFocus
             />
           </div>
         ) : (
