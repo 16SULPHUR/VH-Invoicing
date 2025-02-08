@@ -966,6 +966,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
               handlePrint={handlePrint}
               handleDoubleClick={handleDoubleClick}
               allProducts={allproducts}
+              setCurrentView={setCurrentView}
             />
 
             {/* <div

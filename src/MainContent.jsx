@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FilePen, FilePlus2, RefreshCw } from "lucide-react";
+import { FilePen, FilePlus2, RefreshCw, UserRoundXIcon } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import CustomerDetails from "./CustomerDetails";
 import InvoiceDetails from "./InvoiceDetails";
@@ -51,6 +51,7 @@ const MainContent = ({
   handleUpdateInvoice,
   handlePrint,
   allProducts,
+  setCurrentView
 }) => {
   const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
   const [qrAmount, setQrAmount] = useState("");
@@ -118,6 +119,15 @@ const MainContent = ({
               {/* </div> */}
             </DialogContent>
           </Dialog>
+          <Button
+            className="bg-red-500 hover:bg-red-700"
+            onClick={() => {
+              setCurrentView("customerManagement")
+            }}
+          >
+            <UserRoundXIcon />
+            {"Credit Reports"}
+          </Button>
         </div>
       </div>
 
