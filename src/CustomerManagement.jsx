@@ -8,7 +8,7 @@ const CustomerManagement = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <h1 className="text-2xl font-bold mb-4">Customer Management</h1>
-      <Tabs defaultValue="manage" className="space-y-4">
+      <Tabs defaultValue="reports" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="manage">Manage Customers</TabsTrigger>
           <TabsTrigger value="add">Add Customer</TabsTrigger>
@@ -21,7 +21,7 @@ const CustomerManagement = () => {
           <AddCustomer />
         </TabsContent>
         <TabsContent value="reports">
-          <GenerateReports />
+          <GenerateReports/>
         </TabsContent>
       </Tabs>
     </div>

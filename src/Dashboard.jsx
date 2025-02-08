@@ -361,16 +361,16 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     fetchScannedProducts();
 
     const scannedProductsSubscription = supabase
-  .channel("scanned-products-channel")
-  .on(
-    "postgres_changes",
-    { event: "*", schema: "public", table: "scanned_products" },
-    (payload) => {
-      console.log("Payload for scanned_products:", payload);
-      handleScannedProduct(payload);
-    }
-  )
-  .subscribe();
+      .channel("scanned-products-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scanned_products" },
+        (payload) => {
+          console.log("Payload for scanned_products:", payload);
+          handleScannedProduct(payload);
+        }
+      )
+      .subscribe();
     // const scannedProductsSubscription = supabase
     //   .channel("custom-all-channel")
     //   .on(
@@ -383,15 +383,13 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     //   )
     //   .subscribe();
 
-      console.log("subscribed to scanned_products")
-
+    console.log("subscribed to scanned_products");
 
     return () => {
       scannedProductsSubscription.unsubscribe();
     };
   }, [allproducts]);
-  
-  
+
   useEffect(() => {
     const printCommandSubscription = supabase
       .channel("custom-all-channel")
@@ -399,12 +397,12 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         "postgres_changes",
         { event: "*", schema: "public", table: "print_command" },
         (payload) => {
-          handleRemotePrint(payload)
+          handleRemotePrint(payload);
         }
       )
       .subscribe();
 
-      console.log("subs")
+    console.log("subs");
 
     return () => {
       printCommandSubscription.unsubscribe();

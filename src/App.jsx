@@ -18,7 +18,7 @@ import CustomerManagement from "./CustomerManagement";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState(() => 
+  const [currentView, setCurrentView] = useState(() =>
     window.innerWidth < 768 ? "barcodeScanner" : "dashboard"
   );
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -35,13 +35,13 @@ const App = () => {
     try {
       const { data } = await supabase.auth.getSession();
       const session = data?.session;
-      
+
       // Check if session is valid and not expired
       if (session && session.expires_at > Date.now() / 1000) {
         setIsAuthenticated(true);
         return true;
       }
-      
+
       // If session is invalid or expired
       setIsAuthenticated(false);
       return false;
@@ -54,8 +54,6 @@ const App = () => {
     }
   };
 
-  
-
   useEffect(() => {
     // Immediately validate session on app load
     validateSession();
@@ -63,7 +61,7 @@ const App = () => {
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        switch(event) {
+        switch (event) {
           case "SIGNED_IN":
             setIsAuthenticated(true);
             setIsLoading(false);
@@ -119,7 +117,6 @@ const App = () => {
     setCurrentView(tabView);
   };
 
-
   return (
     <div>
       {!isAuthenticated ? (
@@ -133,8 +130,8 @@ const App = () => {
 
           <div className="relative z-20 flex flex-col h-full">
             <div className="flex-grow overflow-auto md:mt-10">
-              {currentView === "dashboard" && (
-                isMobile ? (
+              {currentView === "dashboard" &&
+                (isMobile ? (
                   <MobileDashboard
                     setCurrentView={setCurrentView}
                     setIsAuthenticated={setIsAuthenticated}
@@ -144,10 +141,11 @@ const App = () => {
                     setCurrentView={setCurrentView}
                     setIsAuthenticated={setIsAuthenticated}
                   />
-                )
-              )}
+                ))}
               {currentView === "barcodeScanner" && <BarcodeScanner />}
-              {currentView === "customerManagement" && <CustomerManagement />}
+              {currentView === "customerManagement" && (
+                <CustomerManagement setCurrentView={setCurrentView} />
+              )}
               {currentView === "productManagement" && (
                 <ProductManagement
                   setCurrentView={setCurrentView}
