@@ -25,6 +25,7 @@ import {
   Share2,
   Download,
   Upload,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -53,6 +54,9 @@ import { supabase } from "../supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import JSZip from "jszip";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import "react-photo-view/dist/react-photo-view.css";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
@@ -113,6 +117,12 @@ const ManageProducts = () => {
   const handleImageClick = (images) => {
     setSelectedImages(images);
     setIsImageDialogOpen(true);
+  };
+
+  const handleOutsideClick = (e) => {
+    if (e.target === e.currentTarget) {
+      setIsImageDialogOpen(false); // Close the dialog when clicking outside
+    }
   };
 
   const handleImageChange = (e) => {
@@ -669,6 +679,7 @@ const ManageProducts = () => {
                         onClick={() => handleImageClick(product.images)}
                       >
                         <AvatarImage
+                          loading="lazy"
                           src={product.images[0]}
                           alt={product.name}
                         />
@@ -914,34 +925,43 @@ const ManageProducts = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
-        <DialogContent className="bg-gray-800 text-gray-100 sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Product Images</DialogTitle>
-          </DialogHeader>
-          <div className="w-full max-w-lg mx-auto">
-            <Carousel>
-              <CarouselContent>
-                {selectedImages.map((image, index) => (
-                  <CarouselItem key={index}>
-                    <div className="flex items-center justify-center p-2">
-                      <img
-                        src={image}
-                        alt={`Product image ${index + 1}`}
-                        className="max-h-[60vh] object-contain rounded-lg"
-                      />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
-            </Carousel>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <div
+        className={`${
+          isImageDialogOpen ? "flex" : "hidden"
+        } fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-75`}
+        onClick={handleOutsideClick} // Handle outside click
+      >
+        <div className="relative bg-slate-800 rounded-lg shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto p-4">
+          {/* Close Icon */}
+          <button
+            onClick={() => {
+              setIsImageDialogOpen(false);
+            }}
+            className="absolute top-2 right-2 p-2 rounded-full bg-red-500 hover:bg-red-700 transition-colors"
+          >
+            <X className="w-5 h-5 text-white font-bold" /> {/* Close icon */}
+          </button>
 
-      <Dialog
+          {/* Image Grid */}
+          <PhotoProvider>
+            <div className="foo grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2">
+              {" "}
+              {/* Responsive grid columns */}
+              {selectedImages.map((item, index) => (
+                <PhotoView key={item} src={item}>
+                  <LazyLoadImage
+                    src={item}
+                    alt=""
+                    className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80" // Responsive images
+                  />
+                </PhotoView>
+              ))}
+            </div>
+          </PhotoProvider>
+        </div>
+      </div>
+
+      {/* <Dialog
         open={isImageUploadDialogOpen}
         onOpenChange={setIsImageUploadDialogOpen}
       >
@@ -967,7 +987,7 @@ const ManageProducts = () => {
               <div className="flex flex-wrap gap-2">
                 {imagePreviews.map((preview, index) => (
                   <div key={`preview-${index}`} className="relative">
-                    <img
+                    <LazyLoadImage
                       src={preview.url}
                       alt={`Preview ${index}`}
                       className="w-24 h-24 object-cover rounded"
@@ -992,7 +1012,7 @@ const ManageProducts = () => {
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 };
