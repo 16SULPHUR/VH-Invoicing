@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -16,17 +16,30 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Pencil,
   Trash2,
   MoreVertical,
-  Image as ImageIcon,
+  ImageIcon,
   Share2,
   Download,
   Upload,
   X,
+  TrendingUp,
+  DollarSign,
+  AlertTriangle,
+  Filter,
+  Check,
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -81,6 +95,21 @@ const ManageProducts = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [modifiedExistingImages, setModifiedExistingImages] = useState(null);
   const fileInputRef = useRef(null);
+
+  const [sortField, setSortField] = useState("name");
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [stockFilter, setStockFilter] = useState("all"); // all, low, out
+  const [profitMarginFilter, setProfitMarginFilter] = useState("all"); // all, low, high
+  const [showAnalytics, setShowAnalytics] = useState(false);
+
+  const [selectedProducts, setSelectedProducts] = useState(new Set());
+  const [isBatchEditDialogOpen, setIsBatchEditDialogOpen] = useState(false);
+  const [batchEditData, setBatchEditData] = useState({
+    sellingPrice: { value: "", type: "fixed" }, // type can be "fixed" or "percentage"
+    cost: { value: "", type: "fixed" },
+    quantity: { value: "", type: "fixed" },
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -561,6 +590,362 @@ const ManageProducts = () => {
       supplier.code.toString().includes(supplierSearchTerm)
   );
 
+  // Business metrics
+  const analytics = useMemo(() => {
+    if (!products.length) return null;
+
+    const totalInventoryValue = products.reduce(
+      (sum, product) => sum + product.cost * product.quantity,
+      0
+    );
+
+    const totalRetailValue = products.reduce(
+      (sum, product) => sum + product.sellingPrice * product.quantity,
+      0
+    );
+
+    const lowStockItems = products.filter((p) => p.quantity <= 5).length;
+    const outOfStockItems = products.filter((p) => p.quantity === 0).length;
+
+    // New analytics focused on inventory
+    const totalUniqueProducts = products.length;
+    const totalItemsInStock = products.reduce((sum, p) => sum + p.quantity, 0);
+
+    return {
+      totalInventoryValue,
+      totalRetailValue,
+      lowStockItems,
+      outOfStockItems,
+      totalUniqueProducts,
+      totalItemsInStock,
+    };
+  }, [products]);
+
+  // Filter states
+  const [filterSettings, setFilterSettings] = useState({
+    sortField: "created_at", // Changed default sort
+    sortDirection: "desc", // Newest first
+    priceRange: { min: "", max: "" },
+    inventoryValue: "all", // New filter
+    productAge: "all", // New filter
+  });
+
+  // Modified applied filters
+  const [appliedFilters, setAppliedFilters] = useState({
+    sortField: "created_at",
+    sortDirection: "desc",
+    priceRange: { min: "", max: "" },
+    inventoryValue: "all",
+    productAge: "all",
+  });
+
+  // Batch operation handlers
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      const allIds = new Set(
+        filteredAndSortedProducts.map((product) => product.id)
+      );
+      setSelectedProducts(allIds);
+    } else {
+      setSelectedProducts(new Set());
+    }
+  };
+
+  const handleSelectProduct = (productId) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const handleBatchEdit = async () => {
+    try {
+      const updates = [];
+      selectedProducts.forEach((productId) => {
+        const product = products.find((p) => p.id === productId);
+        if (!product) return;
+
+        const updateData = {};
+
+        // Handle selling price update
+        if (batchEditData.sellingPrice.value) {
+          if (batchEditData.sellingPrice.type === "fixed") {
+            updateData.sellingPrice = Math.round(Number(batchEditData.sellingPrice.value));
+          } else {
+            const percentage = Number(batchEditData.sellingPrice.value) / 100;
+            updateData.sellingPrice = Math.round(product.sellingPrice * (1 + percentage));
+          }
+        }
+
+        // Handle cost update
+        if (batchEditData.cost.value) {
+          if (batchEditData.cost.type === "fixed") {
+            updateData.cost = Math.round(Number(batchEditData.cost.value));
+          } else {
+            const percentage = Number(batchEditData.cost.value) / 100;
+            updateData.cost = Math.round(product.cost * (1 + percentage));
+          }
+        }
+
+        // Handle quantity update
+        if (batchEditData.quantity.value) {
+          if (batchEditData.quantity.type === "fixed") {
+            updateData.quantity = Math.round(Number(batchEditData.quantity.value));
+          } else {
+            const percentage = Number(batchEditData.quantity.value) / 100;
+            updateData.quantity = Math.round(
+              product.quantity * (1 + percentage)
+            );
+          }
+        }
+
+        console.log(updateData)
+
+        if (Object.keys(updateData).length > 0) {
+          updates.push(
+            supabase.from("products").update(updateData).eq("id", productId)
+          );
+        }
+      });
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+        toast({
+          title: "Success",
+          description: `Updated ${updates.length} products successfully.`,
+        });
+        fetchProducts();
+        setSelectedProducts(new Set());
+        setIsBatchEditDialogOpen(false);
+      }
+    } catch (error) {
+      console.error("Error in batch update:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update products. Please try again.",
+      });
+    }
+  };
+
+  // Apply filters handler
+  const handleApplyFilters = () => {
+    setAppliedFilters({ ...filterSettings });
+  };
+
+  // Modified filteredAndSortedProducts to use appliedFilters
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = [...products];
+
+    filtered = filtered.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+        product.barcode.toString().includes(productSearchTerm) ||
+        getSupplier(product.supplier)
+          ?.name.toLowerCase()
+          .includes(productSearchTerm.toLowerCase());
+
+      const matchesSupplier =
+        selectedSupplier === "all" || product.supplier === selectedSupplier;
+
+      const matchesPriceRange =
+        (!appliedFilters.priceRange.min ||
+          product.sellingPrice >= Number(appliedFilters.priceRange.min)) &&
+        (!appliedFilters.priceRange.max ||
+          product.sellingPrice <= Number(appliedFilters.priceRange.max));
+
+      // New inventory value filter
+      const inventoryValue = product.cost * product.quantity;
+      const matchesInventoryValue =
+        appliedFilters.inventoryValue === "all" ||
+        (appliedFilters.inventoryValue === "high" && inventoryValue > 10000) ||
+        (appliedFilters.inventoryValue === "medium" &&
+          inventoryValue > 5000 &&
+          inventoryValue <= 10000) ||
+        (appliedFilters.inventoryValue === "low" && inventoryValue <= 5000);
+
+      // New product age filter
+      const productAge = new Date() - new Date(product.created_at);
+      const matchesAge =
+        appliedFilters.productAge === "all" ||
+        (appliedFilters.productAge === "new" &&
+          productAge <= 7 * 24 * 60 * 60 * 1000) || // 7 days
+        (appliedFilters.productAge === "recent" &&
+          productAge <= 30 * 24 * 60 * 60 * 1000) || // 30 days
+        (appliedFilters.productAge === "old" &&
+          productAge > 30 * 24 * 60 * 60 * 1000);
+
+      return (
+        matchesSearch &&
+        matchesSupplier &&
+        matchesPriceRange &&
+        matchesInventoryValue &&
+        matchesAge
+      );
+    });
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (appliedFilters.sortField) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "price":
+          comparison = a.sellingPrice - b.sellingPrice;
+          break;
+        case "quantity":
+          comparison = a.quantity - b.quantity;
+          break;
+        case "margin":
+          const marginA = ((a.sellingPrice - a.cost) / a.cost) * 100;
+          const marginB = ((b.sellingPrice - b.cost) / b.cost) * 100;
+          comparison = marginA - marginB;
+          break;
+      }
+      return appliedFilters.sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [products, productSearchTerm, selectedSupplier, appliedFilters]);
+
+  const filterAndSortProducts = (products) => {
+    let filtered = [...products];
+
+    // Apply filters
+    filtered = filtered.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+        product.barcode.toString().includes(productSearchTerm) ||
+        getSupplier(product.supplier)
+          ?.name.toLowerCase()
+          .includes(productSearchTerm.toLowerCase());
+
+      const matchesSupplier =
+        selectedSupplier === "all" || product.supplier === selectedSupplier;
+
+      const matchesPriceRange =
+        (!appliedFilters.priceRange.min ||
+          product.sellingPrice >= Number(appliedFilters.priceRange.min)) &&
+        (!appliedFilters.priceRange.max ||
+          product.sellingPrice <= Number(appliedFilters.priceRange.max));
+
+      // New inventory value filter
+      const inventoryValue = product.cost * product.quantity;
+      const matchesInventoryValue =
+        appliedFilters.inventoryValue === "all" ||
+        (appliedFilters.inventoryValue === "high" && inventoryValue > 10000) ||
+        (appliedFilters.inventoryValue === "medium" &&
+          inventoryValue > 5000 &&
+          inventoryValue <= 10000) ||
+        (appliedFilters.inventoryValue === "low" && inventoryValue <= 5000);
+
+      // New product age filter
+      const productAge = new Date() - new Date(product.created_at);
+      const matchesAge =
+        appliedFilters.productAge === "all" ||
+        (appliedFilters.productAge === "new" &&
+          productAge <= 7 * 24 * 60 * 60 * 1000) || // 7 days
+        (appliedFilters.productAge === "recent" &&
+          productAge <= 30 * 24 * 60 * 60 * 1000) || // 30 days
+        (appliedFilters.productAge === "old" &&
+          productAge > 30 * 24 * 60 * 60 * 1000);
+
+      return (
+        matchesSearch &&
+        matchesSupplier &&
+        matchesPriceRange &&
+        matchesInventoryValue &&
+        matchesAge
+      );
+    });
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (appliedFilters.sortField) {
+        case "created_at":
+          comparison = new Date(b.created_at) - new Date(a.created_at);
+          break;
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "price":
+          comparison = a.sellingPrice - b.sellingPrice;
+          break;
+        case "inventory_value":
+          comparison = b.cost * b.quantity - a.cost * a.quantity;
+          break;
+      }
+      return appliedFilters.sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return filtered;
+  };
+
+  const renderAnalytics = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <Card className={"bg-transparent text-white"}>
+        <CardHeader>
+          <CardTitle className="text-lg">Inventory Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {analytics?.totalUniqueProducts.toLocaleString()}
+          </div>
+          <p className="text-sm text-gray-400">Unique Products</p>
+        </CardContent>
+      </Card>
+
+      <Card className={"bg-transparent text-white"}>
+        <CardHeader>
+          <CardTitle className="text-lg">Total Items</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {analytics?.totalItemsInStock.toLocaleString()}
+          </div>
+          <p className="text-sm text-gray-400">Items in Stock</p>
+        </CardContent>
+      </Card>
+
+      <Card className={"bg-transparent text-white"}>
+        <CardHeader>
+          <CardTitle className="text-lg">Stock Value</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            ₹{analytics?.totalInventoryValue.toLocaleString()}
+          </div>
+          <p className="text-sm text-gray-400">Total inventory value</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderStockAlerts = () => {
+    if (analytics?.lowStockItems || analytics?.outOfStockItems) {
+      return (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Inventory Alert</AlertTitle>
+          <AlertDescription>
+            {analytics.outOfStockItems > 0 && (
+              <div>{analytics.outOfStockItems} items out of stock</div>
+            )}
+            {analytics.lowStockItems > 0 && (
+              <div>{analytics.lowStockItems} items running low</div>
+            )}
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return null;
+  };
+
   const ProductActions = ({ product }) => {
     const hasImages = product.images && product.images.length > 0;
 
@@ -619,6 +1004,143 @@ const ManageProducts = () => {
           <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
         </TabsList>
         <TabsContent value="products">
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowAnalytics(!showAnalytics)}
+              className="flex items-center gap-2 text-black"
+            >
+              <TrendingUp className="h-4 w-4" />
+              {showAnalytics ? "Hide Analytics" : "Show Analytics"}
+            </Button>
+          </div>
+
+          {showAnalytics && renderAnalytics()}
+          {/* {renderStockAlerts()} */}
+
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Select
+                value={filterSettings.sortField}
+                onValueChange={(value) =>
+                  setFilterSettings((prev) => ({ ...prev, sortField: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">Date Added</SelectItem>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="price">Price</SelectItem>
+                  <SelectItem value="inventory_value">
+                    Inventory Value
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filterSettings.inventoryValue}
+                onValueChange={(value) =>
+                  setFilterSettings((prev) => ({
+                    ...prev,
+                    inventoryValue: value,
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Inventory value..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Values</SelectItem>
+                  <SelectItem value="high">
+                    High Value ({">₹10,000"})
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    Medium Value (₹5,000-₹10,000)
+                  </SelectItem>
+                  <SelectItem value="low">Low Value ({"<₹5,000"})</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filterSettings.productAge}
+                onValueChange={(value) =>
+                  setFilterSettings((prev) => ({ ...prev, productAge: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Product age..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products</SelectItem>
+                  <SelectItem value="new">New (Last 7 days)</SelectItem>
+                  <SelectItem value="recent">Recent (Last 30 days)</SelectItem>
+                  <SelectItem value="old">Older ({">30 days"})</SelectItem>
+                </SelectContent>
+              </Select>
+
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+              <div className="flex gap-4">
+              <Input
+                type="number"
+                placeholder="Min Price"
+                value={filterSettings.priceRange.min}
+                onChange={(e) =>
+                  setFilterSettings((prev) => ({
+                    ...prev,
+                    priceRange: { ...prev.priceRange, min: e.target.value },
+                  }))
+                }
+                className="w-32"
+              />
+              <Input
+                type="number"
+                placeholder="Max Price"
+                value={filterSettings.priceRange.max}
+                onChange={(e) =>
+                  setFilterSettings((prev) => ({
+                    ...prev,
+                    priceRange: { ...prev.priceRange, max: e.target.value },
+                  }))
+                }
+                className="w-32"
+              />
+              </div>
+              <Button
+                onClick={handleApplyFilters}
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+
+          {selectedProducts.size > 0 && (
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-sm text-gray-400">
+                {selectedProducts.size} items selected
+              </span>
+              <Button
+                className={"text-black"}
+                variant="outline"
+                onClick={() => setIsBatchEditDialogOpen(true)}
+              >
+                Edit Selected
+              </Button>
+              <Button
+                className={"text-black"}
+                variant="outline"
+                onClick={() => setSelectedProducts(new Set())}
+              >
+                Clear Selection
+              </Button>
+            </div>
+          )}
+
           <Input
             placeholder="Search products, supplier, barcode..."
             value={productSearchTerm}
@@ -658,6 +1180,14 @@ const ManageProducts = () => {
           <Table className="bg-[#09090b] rounded-md">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={
+                      selectedProducts.size === filteredAndSortedProducts.length
+                    }
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 <TableHead className="text-sky-400 w-12"></TableHead>
                 <TableHead className="text-sky-400">Name</TableHead>
                 {showCostColumn && (
@@ -670,8 +1200,15 @@ const ManageProducts = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.map((product) => (
+              {/* {filteredProducts.map((product) => ( */}
+              {filteredAndSortedProducts.map((product) => (
                 <TableRow key={product.id} className="text-white">
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedProducts.has(product.id)}
+                      onCheckedChange={() => handleSelectProduct(product.id)}
+                    />
+                  </TableCell>
                   <TableCell>
                     {product.images && product.images.length > 0 && (
                       <Avatar
@@ -700,31 +1237,10 @@ const ManageProducts = () => {
                       </span>
                     </div>
                   </TableCell>
-                  {/* <TableCell>
-                    {getSupplier(product.supplier)?.name ?? "Loading..."}
-                  </TableCell> */}
                   {showCostColumn && <TableCell>₹{product.cost}</TableCell>}
                   <TableCell>₹{product.sellingPrice}</TableCell>
                   <TableCell>{product.barcode}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
-                  {/* <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => handleProductEdit(product)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Pencil className="h-4 w-4 text-black" />
-                      </Button>
-                      <Button
-                        onClick={() => handleProductDelete(product.id)}
-                        variant="destructive"
-                        size="sm"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell> */}
                   <TableCell>
                     <ProductActions product={product} />
                   </TableCell>
@@ -1011,6 +1527,63 @@ const ManageProducts = () => {
               Save Changes
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isBatchEditDialogOpen}
+        onOpenChange={setIsBatchEditDialogOpen}
+      >
+        <DialogContent className="bg-gray-800 text-gray-100">
+          <DialogHeader>
+            <DialogTitle>Batch Edit Products</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {Object.entries(batchEditData).map(([field, data]) => (
+              <div key={field} className="space-y-2">
+                <Label className="text-sky-400 capitalize">{field}:</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={data.value}
+                    onChange={(e) =>
+                      setBatchEditData((prev) => ({
+                        ...prev,
+                        [field]: { ...prev[field], value: e.target.value },
+                      }))
+                    }
+                    className="bg-gray-700 border-gray-600 text-gray-100"
+                    placeholder={`Enter ${field}`}
+                  />
+                  <Select
+                    value={data.type}
+                    onValueChange={(value) =>
+                      setBatchEditData((prev) => ({
+                        ...prev,
+                        [field]: { ...prev[field], type: value },
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixed</SelectItem>
+                      <SelectItem value="percentage">Percentage</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
+          <footer>
+            <Button
+              onClick={handleBatchEdit}
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+            >
+              Update {selectedProducts.size} Products
+            </Button>
+          </footer>
         </DialogContent>
       </Dialog>
     </div>
