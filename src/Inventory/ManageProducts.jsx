@@ -961,7 +961,7 @@ const ManageProducts = () => {
         </div>
       </div>
 
-      {/* <Dialog
+      <Dialog
         open={isImageUploadDialogOpen}
         onOpenChange={setIsImageUploadDialogOpen}
       >
@@ -1012,7 +1012,7 @@ const ManageProducts = () => {
             </Button>
           </div>
         </DialogContent>
-      </Dialog> */}
+      </Dialog>
     </div>
   );
 };
