@@ -105,6 +105,11 @@ const ManageProducts = () => {
 
   const [selectedProducts, setSelectedProducts] = useState(new Set());
   const [isBatchEditDialogOpen, setIsBatchEditDialogOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [editingQuantityId, setEditingQuantityId] = useState(null);
+  const [editingQuantityValue, setEditingQuantityValue] = useState("");
+
+
   const [batchEditData, setBatchEditData] = useState({
     sellingPrice: { value: "", type: "fixed" }, // type can be "fixed" or "percentage"
     cost: { value: "", type: "fixed" },
@@ -673,10 +678,14 @@ const ManageProducts = () => {
         // Handle selling price update
         if (batchEditData.sellingPrice.value) {
           if (batchEditData.sellingPrice.type === "fixed") {
-            updateData.sellingPrice = Math.round(Number(batchEditData.sellingPrice.value));
+            updateData.sellingPrice = Math.round(
+              Number(batchEditData.sellingPrice.value)
+            );
           } else {
             const percentage = Number(batchEditData.sellingPrice.value) / 100;
-            updateData.sellingPrice = Math.round(product.sellingPrice * (1 + percentage));
+            updateData.sellingPrice = Math.round(
+              product.sellingPrice * (1 + percentage)
+            );
           }
         }
 
@@ -693,7 +702,9 @@ const ManageProducts = () => {
         // Handle quantity update
         if (batchEditData.quantity.value) {
           if (batchEditData.quantity.type === "fixed") {
-            updateData.quantity = Math.round(Number(batchEditData.quantity.value));
+            updateData.quantity = Math.round(
+              Number(batchEditData.quantity.value)
+            );
           } else {
             const percentage = Number(batchEditData.quantity.value) / 100;
             updateData.quantity = Math.round(
@@ -702,7 +713,7 @@ const ManageProducts = () => {
           }
         }
 
-        console.log(updateData)
+        console.log(updateData);
 
         if (Object.keys(updateData).length > 0) {
           updates.push(
@@ -811,6 +822,53 @@ const ManageProducts = () => {
 
     return filtered;
   }, [products, productSearchTerm, selectedSupplier, appliedFilters]);
+
+  const handleQuantityUpdate = async (productId, newQuantity) => {
+    if (!newQuantity || isNaN(newQuantity)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a valid quantity.",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .update({ quantity: parseInt(newQuantity) })
+      .eq("id", productId);
+
+    if (error) {
+      console.error("Error updating quantity:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update quantity. Please try again.",
+      });
+    } else {
+      fetchProducts(); // Refresh the product list
+      toast({
+        title: "Success",
+        description: "Quantity updated successfully.",
+      });
+    }
+  };
+
+  // Function to handle the start of editing
+  const startEditingQuantity = (productId, currentQuantity) => {
+    setEditingQuantityId(productId);
+    setEditingQuantityValue(currentQuantity);
+  };
+
+  // Function to handle the end of editing
+  const finishEditingQuantity = (productId) => {
+    if (editingQuantityValue !== "") {
+      handleQuantityUpdate(productId, editingQuantityValue);
+    }
+    setEditingQuantityId(null);
+    setEditingQuantityValue("");
+  };
+
 
   const filterAndSortProducts = (products) => {
     let filtered = [...products];
@@ -1004,7 +1062,15 @@ const ManageProducts = () => {
           <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
         </TabsList>
         <TabsContent value="products">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-4 gap-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-black"
+            >
+              <Filter className="h-4 w-4" />
+              {showFilters ? "Hide Filters" : "Show Filters"}
+            </Button>
             <Button
               variant="outline"
               onClick={() => setShowAnalytics(!showAnalytics)}
@@ -1018,7 +1084,7 @@ const ManageProducts = () => {
           {showAnalytics && renderAnalytics()}
           {/* {renderStockAlerts()} */}
 
-          <div className="flex flex-col gap-4 mb-4">
+          {/* <div className="flex flex-col gap-4 mb-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Select
                 value={filterSettings.sortField}
@@ -1117,7 +1183,67 @@ const ManageProducts = () => {
                 Apply Filters
               </Button>
             </div>
-          </div>
+          </div> */}
+          {showFilters && (
+            <div className="flex flex-col gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select
+                  value={filterSettings.sortField}
+                  onValueChange={(value) =>
+                    setFilterSettings((prev) => ({ ...prev, sortField: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="created_at">Date Added</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="price">Price</SelectItem>
+                    <SelectItem value="inventory_value">
+                      Inventory Value
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+                <div className="flex gap-4">
+                  <Input
+                    type="number"
+                    placeholder="Min Price"
+                    value={filterSettings.priceRange.min}
+                    onChange={(e) =>
+                      setFilterSettings((prev) => ({
+                        ...prev,
+                        priceRange: { ...prev.priceRange, min: e.target.value },
+                      }))
+                    }
+                    className="w-32"
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Max Price"
+                    value={filterSettings.priceRange.max}
+                    onChange={(e) =>
+                      setFilterSettings((prev) => ({
+                        ...prev,
+                        priceRange: { ...prev.priceRange, max: e.target.value },
+                      }))
+                    }
+                    className="w-32"
+                  />
+                </div>
+                <Button
+                  onClick={handleApplyFilters}
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Apply Filters
+                </Button>
+              </div>
+            </div>
+          )}
 
           {selectedProducts.size > 0 && (
             <div className="flex items-center gap-4 mb-4">
@@ -1200,7 +1326,6 @@ const ManageProducts = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* {filteredProducts.map((product) => ( */}
               {filteredAndSortedProducts.map((product) => (
                 <TableRow key={product.id} className="text-white">
                   <TableCell>
@@ -1240,7 +1365,34 @@ const ManageProducts = () => {
                   {showCostColumn && <TableCell>₹{product.cost}</TableCell>}
                   <TableCell>₹{product.sellingPrice}</TableCell>
                   <TableCell>{product.barcode}</TableCell>
-                  <TableCell>{product.quantity}</TableCell>
+                  <TableCell>
+                    {editingQuantityId === product.id ? (
+                      <Input
+                        type="number"
+                        value={editingQuantityValue}
+                        onChange={(e) =>
+                          setEditingQuantityValue(e.target.value)
+                        }
+                        onBlur={() => finishEditingQuantity(product.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            finishEditingQuantity(product.id);
+                          }
+                        }}
+                        autoFocus
+                        className="w-20 bg-gray-700 border-gray-600 text-gray-100"
+                      />
+                    ) : (
+                      <span
+                        onClick={() =>
+                          startEditingQuantity(product.id, product.quantity)
+                        }
+                        className="cursor-pointer hover:underline"
+                      >
+                        {product.quantity}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <ProductActions product={product} />
                   </TableCell>

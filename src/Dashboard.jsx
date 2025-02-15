@@ -263,14 +263,43 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
   const handleDeleteInvoice = async (invoiceId) => {
     try {
+      const { data: invoice, error: fetchError } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("id", invoiceId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const products = JSON.parse(invoice.products);
+
+      // Restore stock for each product in the invoice
+      for (const product of products) {
+        const { data: existingProduct, error: fetchProductError } =
+          await supabase
+            .from("products")
+            .select("quantity")
+            .ilike("name", product.name)
+            .single();
+
+        if (fetchProductError) throw fetchProductError;
+
+        const newQuantity = existingProduct.quantity + product.quantity;
+
+        const { error: updateError } = await supabase
+          .from("products")
+          .update({ quantity: newQuantity })
+          .ilike("name", product.name)
+
+        if (updateError) throw updateError;
+      }
+
       const { error } = await supabase
         .from("invoices")
         .delete()
         .eq("id", invoiceId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       // Success message
       alert("Invoice deleted successfully");
@@ -337,6 +366,9 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       fetchRecentInvoices();
       fetchDailySales();
       fetchSales(salesType);
+
+      // Update stock after updating the invoice
+      await updateStockAfterInvoice(products);
 
       // Clear the form after updating
       setProducts([]);
@@ -522,8 +554,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       return;
     }
 
-    console.log(scannedProduct);
-
     const quantity = scannedProduct.quantity || 1;
     const price = scannedProduct.price || existingProduct.sellingPrice;
 
@@ -536,8 +566,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         const updatedProducts = [...prevProducts];
         updatedProducts[existingIndex] = {
           ...updatedProducts[existingIndex],
-          // quantity: updatedProducts[existingIndex].quantity + quantity,
-          // amount: (updatedProducts[existingIndex].quantity + quantity) * price,
           quantity: scannedProduct.quantity + quantity,
           amount: (scannedProduct.quantity + quantity) * price,
         };
@@ -559,9 +587,10 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
     toast({
       title: "Product Scanned",
-      description: `${existingProduct.name} has been in the invoice.`,
+      description: `${existingProduct.name} has been added to the invoice.`,
     });
   };
+
   const fetchDailySales = async () => {
     const today = new Date();
     const last7Days = new Date(today);
@@ -739,7 +768,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }, 1500);
 
     const newInvoice = {
-      // date: currentDate.toISOString(),
       customerName,
       customerNumber,
       products: JSON.stringify(products),
@@ -764,6 +792,9 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       fetchRecentInvoices();
       fetchDailySales();
       fetchSales(salesType);
+
+      // Update stock after saving the invoice
+      await updateStockAfterInvoice(products);
     }
 
     // Clear the form after saving
@@ -778,6 +809,37 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     clearScannedItems();
   };
 
+  const updateStockAfterInvoice = async (products) => {
+    try {
+      for (const product of products) {
+        console.log(product.name)
+        const { data: existingProduct, error: fetchError } = await supabase
+          .from("products")
+          .select()
+          .ilike("name", product.name)
+          .single();
+
+        if (fetchError) throw fetchError;
+
+        const newQuantity = existingProduct.quantity - product.quantity;
+
+        const { error: updateError } = await supabase
+          .from("products")
+          .update({ quantity: newQuantity })
+          .ilike("name", product.name)
+
+        if (updateError) throw updateError;
+      }
+    } catch (error) {
+      console.error("Error updating stock:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update product stock. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const clearScannedItems = async () => {
     try {
       setLoading(true);
@@ -788,7 +850,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
       if (error) throw error;
 
-      setScannedItems([]);
       setItems([]);
       toast({
         title: "All Items Cleared",
