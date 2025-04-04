@@ -279,8 +279,8 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
   };
 
   const handleDelete = () => {
-    onDelete(invoice.id);
-    setShowDeleteDialog(false);
+    onDelete(invoice.date);
+    setShowDeleteDialog(false); 
     onClose();
   };
 

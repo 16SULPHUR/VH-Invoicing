@@ -95,7 +95,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                       mb-2 rounded-md shadow-md cursor-pointer px-2 py-1 text-md
                        transition-colors duration-200
                     `}
-                        onClick={() => handleInvoiceClick(invoice.id)}
+                        onClick={() => handleInvoiceClick(invoice.date)}
                         onMouseEnter={() => setHoveredInvoiceId(invoice.id)}
                         onMouseLeave={() => setHoveredInvoiceId(null)}
                       >

@@ -294,11 +294,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     return `${day}/${month}`;
   }
 
-  const handleInvoiceClick = async (invoiceId) => {
+  const handleInvoiceClick = async (invoiceDate) => {
     const { data, error } = await supabase
       .from("invoices")
       .select("*")
-      .eq("id", invoiceId)
+      .eq("date", invoiceDate)
       .single();
 
     if (error) {
@@ -309,12 +309,12 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }
   };
 
-  const handleDeleteInvoice = async (invoiceId) => {
+  const handleDeleteInvoice = async (invoiceDate) => {
     try {
       const { data: invoice, error: fetchError } = await supabase
         .from("invoices")
         .select("*")
-        .eq("id", invoiceId)
+        .eq("date", invoiceDate)
         .single();
 
       if (fetchError) throw fetchError;
@@ -345,7 +345,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       const { error } = await supabase
         .from("invoices")
         .delete()
-        .eq("id", invoiceId);
+        .eq("date", invoiceDate);
 
       if (error) throw error;
 
@@ -400,10 +400,11 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       note,
     };
 
+    console.log("currentDate", currentDate);
     const { data, error } = await supabase
       .from("invoices")
       .update(updatedInvoice)
-      .eq("id", currentInvoiceId);
+      .eq("date", currentDate.toISOString());
 
     if (error) {
       console.error("Error updating invoice:", error);
