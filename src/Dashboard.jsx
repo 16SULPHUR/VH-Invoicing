@@ -87,6 +87,54 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
   const { toast } = useToast();
 
+  const [selectedFinancialYear, setSelectedFinancialYear] = useState(() => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    // If current month is before April (0-3), use previous year
+    return currentMonth < 3
+      ? `${currentYear - 1}-${currentYear}`
+      : `${currentYear}-${currentYear + 1}`;
+  });
+
+  const getFinancialYearOptions = () => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const years = [];
+    // Generate last 5 financial years
+    for (let i = 0; i < 5; i++) {
+      const year = currentYear - i;
+      years.push(`${year}-${year + 1}`);
+    }
+    return years;
+  };
+
+  // Add this function to handle financial year change
+  const handleFinancialYearChange = async (e) => {
+    const yearRange = e.target.value;
+    setSelectedFinancialYear(yearRange);
+
+    const [startYear, endYear] = yearRange.split("-");
+    const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
+    const endDate = `${endYear}-03-31T23:59:59`; // Financial year ends on March 31st
+
+    // Fetch invoices for selected financial year
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .order("date", { ascending: false });
+
+      console.log(data)
+
+    if (error) {
+      console.error("Error fetching invoices:", error);
+    } else {
+      setRecentInvoices(data || []);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: customersData, error: customersError } = await supabase
@@ -289,7 +337,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         const { error: updateError } = await supabase
           .from("products")
           .update({ quantity: newQuantity })
-          .ilike("name", product.name)
+          .ilike("name", product.name);
 
         if (updateError) throw updateError;
       }
@@ -628,12 +676,22 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   };
 
   const fetchRecentInvoices = async () => {
+    const [startYear, endYear] = selectedFinancialYear.split('-');
+    const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
+    const endDate = `${endYear}-03-31`; // Financial year ends on March 31st
+  
     const { data, error } = await supabase
       .from("invoices")
       .select()
+      .gte('date', startDate)
+      .lte('date', endDate)
       .order("date", { ascending: false });
-    if (error) console.error("Error fetching recent invoices:", error);
-    else setRecentInvoices(data || []);
+  
+    if (error) {
+      console.error("Error fetching recent invoices:", error);
+    } else {
+      setRecentInvoices(data || []);
+    }
   };
 
   const fetchInvoices = async () => {
@@ -768,6 +826,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }, 1500);
 
     const newInvoice = {
+      id: currentInvoiceId,  // Add the current invoice ID
       customerName,
       customerNumber,
       products: JSON.stringify(products),
@@ -776,6 +835,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       upi: parseFloat(upi) || 0,
       credit: parseFloat(credit) || 0,
       note,
+      date: new Date().toISOString(), // Also add the current date
     };
 
     const { data, error } = await supabase
@@ -812,7 +872,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const updateStockAfterInvoice = async (products) => {
     try {
       for (const product of products) {
-        console.log(product.name)
+        console.log(product.name);
         const { data: existingProduct, error: fetchError } = await supabase
           .from("products")
           .select()
@@ -826,7 +886,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         const { error: updateError } = await supabase
           .from("products")
           .update({ quantity: newQuantity })
-          .ilike("name", product.name)
+          .ilike("name", product.name);
 
         if (updateError) throw updateError;
       }
@@ -960,6 +1020,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                   <ChevronLeft size={24} />
                 ) : (
                   <div>
+          
                     <Sheet>
                       <SheetTrigger asChild>
                         <div>
@@ -1081,6 +1142,19 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={15} maxSize={25}>
+        <div className="w-full p-2">
+            <select
+              value={selectedFinancialYear}
+              onChange={handleFinancialYearChange}
+              className="px-2 py-1 rounded-md border bg-gray-900 text-white"
+            >
+              {getFinancialYearOptions().map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
           <RecentInvoices
             recentInvoices={recentInvoices}
             handleInvoiceClick={handleInvoiceClick}

@@ -2,8 +2,10 @@ import React, { useState, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SheetClose } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
 
 const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [hoveredInvoiceId, setHoveredInvoiceId] = useState(null);
   // const [SheetCloseWrapper, shetCloseWrapperProps] = [
   //   SheetClose,
@@ -32,16 +34,37 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
       .join("");
   };
 
+  const filteredAndGroupedInvoices = useMemo(() => {
+    const filtered = recentInvoices.filter(invoice => 
+      invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.id.toString().includes(searchTerm) ||
+      invoice.total.toString().includes(searchTerm)
+    );
+
+    const groups = {};
+    filtered.forEach((invoice) => {
+      const date = formatDate(invoice.date);
+      if (!groups[date]) groups[date] = { invoices: [], totalSale: 0 };
+      groups[date].invoices.push(invoice);
+      groups[date].totalSale += invoice.total;
+    });
+    return groups;
+  }, [recentInvoices, searchTerm, formatDate]);
+
   return (
     <Card className="w-full h-full bg-gray-900 border-0">
       <CardHeader>
-        {/* <CardTitle className="text-lg font-bold text-sky-500">
-          Recent Invoices
-        </CardTitle> */}
+      <Input
+          type="text"
+          placeholder="Search invoices..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="bg-gray-800 text-white border-gray-700"
+        />
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[calc(90vh-4rem)] px-2 me-">
-          {Object.entries(groupedInvoices).map(
+          {Object.entries(filteredAndGroupedInvoices).map(
             ([date, { invoices, totalSale }]) => (
               <div key={date} className="mb-4">
                 <p className="text-md font-bold border-b border-gray-700 mb-2 text-sky-400">
