@@ -84,6 +84,54 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   // const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] =
   //   useState(false);
 
+  const [selectedFinancialYear, setSelectedFinancialYear] = useState(() => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    // If current month is before April (0-3), use previous year
+    return currentMonth < 3
+      ? `${currentYear - 1}-${currentYear}`
+      : `${currentYear}-${currentYear + 1}`;
+  });
+
+  const getFinancialYearOptions = () => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const years = [];
+    // Generate last 5 financial years
+    for (let i = 0; i < 5; i++) {
+      const year = currentYear - i;
+      years.push(`${year}-${year + 1}`);
+    }
+    return years;
+  };
+
+  // Add this function to handle financial year change
+  const handleFinancialYearChange = async (e) => {
+    const yearRange = e.target.value;
+    setSelectedFinancialYear(yearRange);
+
+    const [startYear, endYear] = yearRange.split("-");
+    const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
+    const endDate = `${endYear}-03-31T23:59:59`; // Financial year ends on March 31st
+
+    // Fetch invoices for selected financial year
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .order("date", { ascending: false });
+
+      console.log(data)
+
+    if (error) {
+      console.error("Error fetching invoices:", error);
+    } else {
+      setRecentInvoices(data || []);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: productsData, error: productsError } = await supabase
@@ -225,11 +273,11 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
     return `${day}/${month}`;
   }
 
-  const handleInvoiceClick = async (invoiceId) => {
+  const handleInvoiceClick = async (invoiceDate) => {
     const { data, error } = await supabase
       .from("invoices")
       .select("*")
-      .eq("id", invoiceId)
+      .eq("date", invoiceDate)
       .single();
 
     if (error) {
@@ -240,12 +288,12 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }
   };
 
-  const handleDeleteInvoice = async (invoiceId) => {
+  const handleDeleteInvoice = async (invoiceDate) => {
     try {
       const { error } = await supabase
         .from("invoices")
         .delete()
-        .eq("id", invoiceId);
+        .eq("date", invoiceDate)
 
       if (error) {
         throw error;
@@ -302,10 +350,11 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
       note,
     };
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .update(updatedInvoice)
-      .eq("id", currentInvoiceId);
+    console.log("currentDate", currentDate);
+        const { data, error } = await supabase
+          .from("invoices")
+          .update(updatedInvoice)
+          .eq("date", currentDate.toISOString());
 
     if (error) {
       console.error("Error updating invoice:", error);
@@ -532,12 +581,22 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   };
 
   const fetchRecentInvoices = async () => {
+    const [startYear, endYear] = selectedFinancialYear.split('-');
+    const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
+    const endDate = `${endYear}-03-31`; // Financial year ends on March 31st
+  
     const { data, error } = await supabase
       .from("invoices")
       .select()
+      .gte('date', startDate)
+      .lte('date', endDate)
       .order("date", { ascending: false });
-    if (error) console.error("Error fetching recent invoices:", error);
-    else setRecentInvoices(data || []);
+  
+    if (error) {
+      console.error("Error fetching recent invoices:", error);
+    } else {
+      setRecentInvoices(data || []);
+    }
   };
 
   const fetchInvoices = async () => {
@@ -672,7 +731,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }, 1500);
 
     const newInvoice = {
-      // date: currentDate.toISOString(),
+      id: currentInvoiceId,  // Add the current invoice ID
       customerName,
       customerNumber,
       products: JSON.stringify(products),
@@ -681,6 +740,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
       upi: parseFloat(upi) || 0,
       credit: parseFloat(credit) || 0,
       note,
+      date: new Date().toISOString(), // Also add the current date
     };
 
     const { data, error } = await supabase
@@ -874,6 +934,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
           </button>
           {isRecentInvoicesExpanded && (
             <div>
+            
               <RecentInvoices
                 recentInvoices={recentInvoices}
                 handleInvoiceClick={handleInvoiceClick}

@@ -226,17 +226,17 @@ const GenerateReports = () => {
   };
 
   const handleUpdateInvoice = async () => {
-    const total = calculateTotal();
-    const cashAmount = parseFloat(cash) || 0;
-    const upiAmount = parseFloat(upi) || 0;
-    const creditAmount = parseFloat(credit) || 0;
-
-    if (total != cashAmount + upiAmount + creditAmount) {
-      alert("The total must be equal to the sum of Cash, UPI, and Credit.");
-      return;
-    }
-
-    const updatedInvoice = {
+      const total = calculateTotal();
+      const cashAmount = parseFloat(cash) || 0;
+      const upiAmount = parseFloat(upi) || 0;
+      const creditAmount = parseFloat(credit) || 0;
+  
+      if (total != cashAmount + upiAmount + creditAmount) {
+        alert("The total must be equal to the sum of Cash, UPI, and Credit.");
+        return;
+      }
+  
+      const updatedInvoice = {
       customerName,
       customerNumber,
       date: currentDate.toISOString(),
@@ -247,31 +247,32 @@ const GenerateReports = () => {
       credit: parseFloat(credit) || 0,
       note,
     };
-
-    const { data, error } = await supabase
-      .from("invoices")
-      .update(updatedInvoice)
-      .eq("id", currentInvoiceId);
-
-    if (error) {
-      console.error("Error updating invoice:", error);
-    } else {
-      console.log("Invoice updated successfully:", data);
-      setIsEditing(false);
-
-      // Clear the form after updating
-      setProducts([]);
-      setCustomerName("");
-      setCustomerNumber("");
-      setCurrentDate(new Date());
-      setCash("");
-      setUpi("");
-      setCredit("");
-      setNote("");
-      setIsInvoiceEditDialogOpen(false);
-      fetchCreditData()
-    }
-  };
+  
+      console.log("currentDate", currentDate.toISOString());
+      const { data, error } = await supabase
+        .from("invoices")
+        .update(updatedInvoice)
+        .eq("date", currentDate.toISOString());
+  
+      if (error) {
+        console.error("Error updating invoice:", error);
+      } else {
+        console.log("Invoice updated successfully:", data);
+        setIsEditing(false);
+  
+        // Clear the form after updating
+        setProducts([]);
+        setCustomerName("");
+        setCustomerNumber("");
+        setCurrentDate(new Date());
+        setCash("");
+        setUpi("");
+        setCredit("");
+        setNote("");
+        setIsInvoiceEditDialogOpen(false);
+        fetchCreditData( )
+      }
+    };
 
   const deleteProduct = (index) => {
     const updatedProducts = products.filter((_, i) => i !== index);
