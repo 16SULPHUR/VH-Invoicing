@@ -274,109 +274,141 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   }
 
   const handleInvoiceClick = async (invoiceDate) => {
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .eq("date", invoiceDate)
-      .single();
-
-    if (error) {
-      console.error("Error fetching invoice details:", error);
-    } else {
-      setSelectedInvoice(data);
-      setShowInvoiceModal(true);
-    }
-  };
-
-  const handleDeleteInvoice = async (invoiceDate) => {
-    try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("invoices")
-        .delete()
+        .select("*")
         .eq("date", invoiceDate)
-
+        .single();
+  
       if (error) {
-        throw error;
+        console.error("Error fetching invoice details:", error);
+      } else {
+        setSelectedInvoice(data);
+        setShowInvoiceModal(true);
       }
-
-      // Success message
-      alert("Invoice deleted successfully");
-
-      // Refresh all the necessary data
-      fetchInvoices();
-      fetchRecentInvoices();
-      fetchDailySales();
-      fetchSales(salesType);
-    } catch (error) {
-      console.error("Error deleting invoice:", error);
-      alert("Failed to delete invoice: " + error.message);
-    }
-  };
-
-  const handleEditInvoice = (invoice) => {
-    setIsEditing(true);
-    setCurrentInvoiceId(invoice.id);
-    setCustomerName(invoice.customerName);
-    setCustomerNumber(invoice.customerNumber);
-    setCurrentDate(new Date(invoice.date));
-    setProducts(JSON.parse(invoice.products));
-    setNote(invoice.note);
-    setCash(invoice.cash);
-    setUpi(invoice.upi);
-    setCredit(invoice.credit);
-    setShowInvoiceModal(false);
-  };
-
-  const handleUpdateInvoice = async () => {
-    const total = calculateTotal();
-    const cashAmount = parseFloat(cash) || 0;
-    const upiAmount = parseFloat(upi) || 0;
-    const creditAmount = parseFloat(credit) || 0;
-
-    if (total != cashAmount + upiAmount + creditAmount) {
-      alert("The total must be equal to the sum of Cash, UPI, and Credit.");
-      return;
-    }
-
-    const updatedInvoice = {
-      customerName,
-      customerNumber,
-      date: currentDate.toISOString(),
-      products: JSON.stringify(products),
-      total: calculateTotal(),
-      cash: parseFloat(cash) || 0,
-      upi: parseFloat(upi) || 0,
-      credit: parseFloat(credit) || 0,
-      note,
     };
 
-    console.log("currentDate", currentDate);
-        const { data, error } = await supabase
+  const handleDeleteInvoice = async (invoiceDate) => {
+      try {
+        const { data: invoice, error: fetchError } = await supabase
           .from("invoices")
-          .update(updatedInvoice)
-          .eq("date", currentDate.toISOString());
+          .select("*")
+          .eq("date", invoiceDate)
+          .single();
+  
+        if (fetchError) throw fetchError;
+  
+        const products = JSON.parse(invoice.products);
+  
+        // Restore stock for each product in the invoice
+        for (const product of products) {
+          const { data: existingProduct, error: fetchProductError } =
+            await supabase
+              .from("products")
+              .select("quantity")
+              .ilike("name", product.name)
+              .single();
+  
+          if (fetchProductError) throw fetchProductError;
+  
+          const newQuantity = existingProduct.quantity + product.quantity;
+  
+          const { error: updateError } = await supabase
+            .from("products")
+            .update({ quantity: newQuantity })
+            .ilike("name", product.name);
+  
+          if (updateError) throw updateError;
+        }
+  
+        const { error } = await supabase
+          .from("invoices")
+          .delete()
+          .eq("date", invoiceDate);
+  
+        if (error) throw error;
+  
+        // Success message
+        alert("Invoice deleted successfully");
+  
+        // Refresh all the necessary data
+        fetchInvoices();
+        fetchRecentInvoices();
+        fetchDailySales();
+        fetchSales(salesType);
+      } catch (error) {
+        console.error("Error deleting invoice:", error);
+        alert("Failed to delete invoice: " + error.message);
+      }
+    };
 
-    if (error) {
-      console.error("Error updating invoice:", error);
-    } else {
-      console.log("Invoice updated successfully:", data);
-      setIsEditing(false);
-      fetchInvoices();
-      fetchRecentInvoices();
-      fetchDailySales();
-      fetchSales(salesType);
-
-      // Clear the form after updating
-      setProducts([]);
-      setCustomerName("");
-      setCustomerNumber("");
-      setCurrentDate(new Date());
-      setCash("");
-      setUpi("");
-      setCredit("");
-      setNote("");
-    }
-  };
+  const handleEditInvoice = (invoice) => {
+      setIsEditing(true);
+      setCurrentInvoiceId(invoice.id);
+      setCustomerName(invoice.customerName);
+      setCustomerNumber(invoice.customerNumber);
+      setCurrentDate(new Date(invoice.date));
+      setProducts(JSON.parse(invoice.products));
+      setNote(invoice.note);
+      setCash(invoice.cash);
+      setUpi(invoice.upi);
+      setCredit(invoice.credit);
+      setShowInvoiceModal(false);
+    };
+  
+    const handleUpdateInvoice = async () => {
+      const total = calculateTotal();
+      const cashAmount = parseFloat(cash) || 0;
+      const upiAmount = parseFloat(upi) || 0;
+      const creditAmount = parseFloat(credit) || 0;
+  
+      if (total != cashAmount + upiAmount + creditAmount) {
+        alert("The total must be equal to the sum of Cash, UPI, and Credit.");
+        return;
+      }
+  
+      const updatedInvoice = {
+        customerName,
+        customerNumber,
+        date: currentDate.toISOString(),
+        products: JSON.stringify(products),
+        total: calculateTotal(),
+        cash: parseFloat(cash) || 0,
+        upi: parseFloat(upi) || 0,
+        credit: parseFloat(credit) || 0,
+        note,
+      };
+  
+      console.log("currentDate", currentDate);
+      const { data, error } = await supabase
+        .from("invoices")
+        .update(updatedInvoice)
+        .eq("date", currentDate.toISOString());
+  
+      if (error) {
+        console.error("Error updating invoice:", error);
+      } else {
+        console.log("Invoice updated successfully:", data);
+        setIsEditing(false);
+        fetchInvoices();
+        fetchRecentInvoices();
+        fetchDailySales();
+        fetchSales(salesType);
+  
+        // Update stock after updating the invoice
+        await updateStockAfterInvoice(products);
+  
+        // Clear the form after updating
+        setProducts([]);
+        setCustomerName("");
+        setCustomerNumber("");
+        setCurrentDate(new Date());
+        setCash("");
+        setUpi("");
+        setCredit("");
+        setNote("");
+      }
+    };
 
   useEffect(() => {
     fetchInvoices();
@@ -731,7 +763,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }, 1500);
 
     const newInvoice = {
-      id: currentInvoiceId,  // Add the current invoice ID
+      id: currentInvoiceId, 
       customerName,
       customerNumber,
       products: JSON.stringify(products),
