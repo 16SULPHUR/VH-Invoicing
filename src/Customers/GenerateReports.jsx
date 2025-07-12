@@ -225,21 +225,40 @@ const GenerateReports = () => {
     setIsInvoiceEditDialogOpen(true);
   };
 
+  function formatToPostgresTimestamptz(date) {
+  const pad = (n, width = 2) => String(n).padStart(width, "0");
+
+  const year = date.getUTCFullYear();
+  const month = pad(date.getUTCMonth() + 1);
+  const day = pad(date.getUTCDate());
+
+  const hours = pad(date.getUTCHours());
+  const minutes = pad(date.getUTCMinutes());
+  const seconds = pad(date.getUTCSeconds());
+  const milliseconds = String(date.getUTCMilliseconds()).padStart(3, "0");
+
+  // Add extra 3 digits as microseconds (fake/padded since JS doesn't support microseconds)
+  const microseconds = milliseconds + "001"; // You can randomize last 3 if needed
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${microseconds}+00`;
+}
+
+
   const handleUpdateInvoice = async () => {
-      const total = calculateTotal();
-      const cashAmount = parseFloat(cash) || 0;
-      const upiAmount = parseFloat(upi) || 0;
-      const creditAmount = parseFloat(credit) || 0;
-  
-      if (total != cashAmount + upiAmount + creditAmount) {
-        alert("The total must be equal to the sum of Cash, UPI, and Credit.");
-        return;
-      }
-  
-      const updatedInvoice = {
+    const total = calculateTotal();
+    const cashAmount = parseFloat(cash) || 0;
+    const upiAmount = parseFloat(upi) || 0;
+    const creditAmount = parseFloat(credit) || 0;
+
+    if (total != cashAmount + upiAmount + creditAmount) {
+      alert("The total must be equal to the sum of Cash, UPI, and Credit.");
+      return;
+    } 
+
+    const updatedInvoice = {
       customerName,
       customerNumber,
-      date: currentDate.toISOString(),
+      // date: new Date(currentDate).toISOString(),
       products: JSON.stringify(products),
       total: calculateTotal(),
       cash: parseFloat(cash) || 0,
@@ -247,32 +266,39 @@ const GenerateReports = () => {
       credit: parseFloat(credit) || 0,
       note,
     };
-  
-      console.log("currentDate", currentDate.toISOString());
-      const { data, error } = await supabase
-        .from("invoices")
-        .update(updatedInvoice)
-        .eq("date", currentDate.toISOString());
-  
-      if (error) {
-        console.error("Error updating invoice:", error);
-      } else {
-        console.log("Invoice updated successfully:", data);
-        setIsEditing(false);
-  
-        // Clear the form after updating
-        setProducts([]);
-        setCustomerName("");
-        setCustomerNumber("");
-        setCurrentDate(new Date());
-        setCash("");
-        setUpi("");
-        setCredit("");
-        setNote("");
-        setIsInvoiceEditDialogOpen(false);
-        fetchCreditData( )
-      }
-    };
+
+    console.log("updatedInvoice===");
+    console.log(updatedInvoice);
+
+    console.log("currentDate", formatToPostgresTimestamptz(currentDate));
+
+    const { data, error } = await supabase
+      .from("invoices")
+      .update(updatedInvoice)
+      .eq("date", formatToPostgresTimestamptz(currentDate))
+      .select();
+
+    console.log("data===");
+    console.log(data);
+    if (error) {
+      console.error("Error updating invoice:", error);
+    } else {
+      console.log("Invoice updated successfully:", data);
+      setIsEditing(false);
+
+      // Clear the form after updating
+      setProducts([]);
+      setCustomerName("");
+      setCustomerNumber("");
+      setCurrentDate(new Date());
+      setCash("");
+      setUpi("");
+      setCredit("");
+      setNote("");
+      setIsInvoiceEditDialogOpen(false);
+      fetchCreditData();
+    }
+  };
 
   const deleteProduct = (index) => {
     const updatedProducts = products.filter((_, i) => i !== index);
@@ -446,6 +472,7 @@ const GenerateReports = () => {
   };
 
   const handleEditInvoice = (invoice) => {
+    console.log(invoice);
     setIsEditing(true);
     setCurrentInvoiceId(invoice.id);
     setCustomerName(invoice.customerName);
@@ -464,7 +491,9 @@ const GenerateReports = () => {
       <Card className="bg-gray-900 border-0 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-sky-400 text-2xl font-bold">Credit Reports</CardTitle>
+            <CardTitle className="text-sky-400 text-2xl font-bold">
+              Credit Reports
+            </CardTitle>
             <Button
               onClick={exportToCSV}
               className="bg-sky-600 hover:bg-sky-700 text-white"
@@ -489,14 +518,19 @@ const GenerateReports = () => {
 
           <div className="grid sm:grid-cols-3 grid-cols-1 gap-4 mb-2">
             {[
-              { title: "Total Credit", value: `₹${summary.totalCredit.toFixed(2)}` },
+              {
+                title: "Total Credit",
+                value: `₹${summary.totalCredit.toFixed(2)}`,
+              },
               { title: "Customers with Credit", value: summary.totalCustomers },
               { title: "Total Credit Invoices", value: summary.totalInvoices },
             ].map((item, index) => (
               <Card key={index} className="bg-gray-800 border-0 shadow-md">
                 <CardContent className="pb-2 pt-2">
                   <p className="text-sm text-sky-400 mb-1">{item.title}</p>
-                  <p className="text-2xl font-bold text-white mb-0">{item.value}</p>
+                  <p className="text-2xl font-bold text-white mb-0">
+                    {item.value}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -512,8 +546,12 @@ const GenerateReports = () => {
                 >
                   <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-gray-700">
                     <div className="flex justify-between items-center w-full">
-                      <span className="text-white font-medium text-xl">{customer.customerName}</span>
-                      <span className="text-sky-400 font-bold text-xl">₹{customer.totalCredit.toFixed(2)}</span>
+                      <span className="text-white font-medium text-xl">
+                        {customer.customerName}
+                      </span>
+                      <span className="text-sky-400 font-bold text-xl">
+                        ₹{customer.totalCredit.toFixed(2)}
+                      </span>
                       {/* <span className="text-sky-400 font-bold text-xl"></span> */}
                     </div>
                   </AccordionTrigger>
@@ -526,16 +564,25 @@ const GenerateReports = () => {
                           <TableHead className="text-sky-400">Total</TableHead>
                           <TableHead className="text-sky-400">Credit</TableHead>
                           <TableHead className="text-sky-400">Paid</TableHead>
-                          <TableHead className="text-sky-400">Actions</TableHead>
+                          <TableHead className="text-sky-400">
+                            Actions
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {customer.invoices.map((invoice) => (
-                          <TableRow key={invoice.id} className="text-white border-b border-gray-700">
-                            <TableCell className="font-medium">#{invoice.id}</TableCell>
+                          <TableRow
+                            key={invoice.id}
+                            className="text-white border-b border-gray-700"
+                          >
+                            <TableCell className="font-medium">
+                              #{invoice.id}
+                            </TableCell>
                             <TableCell>{formatDate(invoice.date)}</TableCell>
                             <TableCell>₹{invoice.total.toFixed(2)}</TableCell>
-                            <TableCell className="text-red-400">₹{invoice.credit.toFixed(2)}</TableCell>
+                            <TableCell className="text-red-400">
+                              ₹{invoice.credit.toFixed(2)}
+                            </TableCell>
                             <TableCell className="text-green-400">
                               ₹{(invoice.total - invoice.credit).toFixed(2)}
                             </TableCell>
@@ -561,10 +608,15 @@ const GenerateReports = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={isInvoiceEditDialogOpen} onOpenChange={setIsInvoiceEditDialogOpen}>
+      <Dialog
+        open={isInvoiceEditDialogOpen}
+        onOpenChange={setIsInvoiceEditDialogOpen}
+      >
         <DialogContent className="bg-gray-800 text-gray-100 max-w-4xl max-h-[90vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-sky-400">Edit Invoice</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-sky-400">
+              Edit Invoice
+            </DialogTitle>
           </DialogHeader>
           <MainContent
             customerName={customerName}
@@ -603,7 +655,7 @@ const GenerateReports = () => {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 };
 
 export default GenerateReports;
