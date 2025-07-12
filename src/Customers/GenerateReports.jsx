@@ -62,6 +62,7 @@ const GenerateReports = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [displayDate, setDisplayDate] = useState(new Date());
   const [note, setNote] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [cash, setCash] = useState("");
@@ -267,15 +268,15 @@ const GenerateReports = () => {
       note,
     };
 
-    console.log("updatedInvoice===");
-    console.log(updatedInvoice);
+    console.log("current date====");
+    console.log(currentDate);
 
-    console.log("currentDate", formatToPostgresTimestamptz(currentDate));
+    console.log("currentDate", currentDate);
 
     const { data, error } = await supabase
       .from("invoices")
       .update(updatedInvoice)
-      .eq("date", formatToPostgresTimestamptz(currentDate))
+      .eq("date", currentDate)
       .select();
 
     console.log("data===");
@@ -477,7 +478,7 @@ const GenerateReports = () => {
     setCurrentInvoiceId(invoice.id);
     setCustomerName(invoice.customerName);
     setCustomerNumber(invoice.customerNumber);
-    setCurrentDate(new Date(invoice.date));
+    setCurrentDate(invoice.date);
     setProducts(JSON.parse(invoice.products));
     setNote(invoice.note);
     setCash(invoice.cash);
