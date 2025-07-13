@@ -92,19 +92,22 @@ const GenerateReports = () => {
       if (error) throw error;
 
       const groupedData = invoices.reduce((acc, invoice) => {
-        if (!acc[invoice.customerName]) {
-          acc[invoice.customerName] = {
-            customerName: invoice.customerName,
-            totalCredit: 0,
-            invoices: [],
-          };
-        }
+  const trimmedName = invoice.customerName.trim(); // Trim the name
 
-        acc[invoice.customerName].invoices.push(invoice);
-        acc[invoice.customerName].totalCredit += invoice.credit;
+  if (!acc[trimmedName]) {
+    acc[trimmedName] = {
+      customerName: trimmedName,
+      totalCredit: 0,
+      invoices: [],
+    };
+  }
 
-        return acc;
-      }, {});
+  acc[trimmedName].invoices.push(invoice);
+  acc[trimmedName].totalCredit += invoice.credit;
+
+  return acc;
+}, {});
+
 
       const summaryData = {
         totalCredit: invoices.reduce((sum, inv) => sum + inv.credit, 0),
