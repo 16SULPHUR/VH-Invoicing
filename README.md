@@ -15,3 +15,29 @@ By default, Replit runs the `dev` script, but you can configure it by changing t
 ### Typescript
 
 Just rename any file from `.jsx` to `.tsx`. You can also try our [TypeScript Template](https://replit.com/@replit/React-TypeScript)
+
+### Cashbook Feature
+
+This app includes a Cashbook to track daily HOME/SHOP balances and deposits.
+
+1) Database setup (Supabase):
+
+Run this SQL in Supabase SQL Editor:
+
+```
+-- Enable extension if not already
+create extension if not exists pgcrypto;
+
+-- Tables and policies
+-- Copy from src/api/accounting.js -> CASHBOOK_SQL constant
+```
+
+2) Optional Edge Function: cashbook-parser
+
+Create a Supabase Edge Function named `cashbook-parser` that accepts `{ text }` and returns `{ transactions, snapshots }`. The client will fallback to a local parser if the function is not deployed.
+
+3) Using Cashbook:
+
+- Navigate to Cashbook tab in app.
+- Quick Entry: add inflow/outflow/bank deposit with a note.
+- Paste Chat to Import: paste your chat; click Preview then Import.
