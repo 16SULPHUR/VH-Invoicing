@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import MobileDashboard from "./MobileDashboard";
 import CustomerManagement from "./CustomerManagement";
+import ReportsRouter from "./Reports/Router";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -151,6 +152,11 @@ const App = () => {
                   setCurrentView={setCurrentView}
                   setIsAuthenticated={setIsAuthenticated}
                 />
+              )}
+              {currentView === "reports" && (
+                <div className="h-full">
+                  <ReportsRouter />
+                </div>
               )}
             </div>
 

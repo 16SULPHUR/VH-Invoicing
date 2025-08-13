@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import BarcodeScanner from "./BarcodeScanner";
 import { useToast } from "@/hooks/use-toast";
+import { getCollectionsByDateRange } from "./api/accounting";
 
 import {
   Sheet,
@@ -69,6 +70,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [cashSales, setCashSales] = useState("");
   const [upiSales, setUpiSales] = useState("");
   const [creditSales, setCreditSales] = useState("");
+  const [todayCollections, setTodayCollections] = useState({ cash: 0, upi: 0, credit: 0 });
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -268,11 +270,33 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       setUpiSales(totalUpiSales.toFixed(2));
       setCreditSales(totalCreditSales.toFixed(2));
     }
+
+    // Also refresh today's collections if 'today' selected
+    if (type === "today") {
+      try {
+        const collections = await getCollectionsByDateRange(
+          todayString + "T00:00:00",
+          todayString + "T23:59:59"
+        );
+        setTodayCollections(collections);
+      } catch (e) {
+        console.error("Failed to fetch collections:", e);
+      }
+    }
   };
 
   useEffect(() => {
     fetchSales(salesType);
   }, [salesType]);
+
+  useEffect(() => {
+    // initial today's collections
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0];
+    getCollectionsByDateRange(todayString + "T00:00:00", todayString + "T23:59:59")
+      .then(setTodayCollections)
+      .catch((e) => console.error("Failed to fetch collections:", e));
+  }, []);
 
   const handleDoubleClick = (method) => {
     const totalAmount = calculateTotal();
@@ -1046,6 +1070,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
                           customDateRange={customDateRange}
                           handleCustomDateChange={handleCustomDateChange}
                           fetchSales={fetchSales}
+                          todayCollections={todayCollections}
                         />
                       </SheetContent>
                     </Sheet>

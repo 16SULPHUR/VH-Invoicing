@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FilePen, FilePlus2, RefreshCw, UserRoundXIcon } from "lucide-react";
+import { FilePen, FilePlus2, RefreshCw, UserRoundXIcon, FileChartColumn } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import CustomerDetails from "./CustomerDetails";
 import InvoiceDetails from "./InvoiceDetails";
@@ -80,6 +80,13 @@ const MainContent = ({
           >
             {" "}
             <RefreshCw />
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-green-600 text-white border-gray-600 hover:bg-green-700"
+            onClick={() => setCurrentView("reports")}
+          >
+            <FileChartColumn /> Reports
           </Button>
           <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
             <DialogTrigger asChild>
