@@ -63,6 +63,10 @@ const MainContent = ({
     return `upi://pay?pa=${upiId}&pn=Your%20Business%20Name&am=${amount}&cu=INR`;
   };
 
+  const calculateTotalItems = () => {
+    return products.reduce((total, product) => total + (product.quantity || 0), 0);
+  };
+
   return (
     <div className="flex-grow borde md:p-6 overflow-auto bg-gray-900 text-gray-100">
       {/* <h5 className="text-center font-bold bg-sky-500 text-white border border-sky-600 p-1.5 mb-4 rounded text-lg md:text-xl">
@@ -146,9 +150,16 @@ const MainContent = ({
         deleteProduct={deleteProduct}
       />
 
-      <div className="text-right font-bold text-sky-500 text-lg md:text-xl mt-4">
-        Total: ₹ {calculateTotal()}
+      <div className="flex gap-10 justify-end">
+        <div className="text-right font-bold text-sky-500 text-lg md:text-3xl ">
+          {calculateTotalItems()} Items
+        </div>
+
+        <div className="text-right font-bold text-sky-500 text-lg md:text-xl ">
+          Total: ₹ {calculateTotal()}
+        </div>
       </div>
+
 
       <PaymentDetails
         cash={cash}
@@ -165,11 +176,9 @@ const MainContent = ({
       <div className="mt-5 text-right sticky bottom-16 right-4 md:bottom-8 md:right-10">
         <button
           type="button"
-          className={`bg-${
-            isEditing ? "yellow" : "red"
-          }-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-${
-            isEditing ? "yellow" : "red"
-          }-600 transition-colors text-sm md:text-base`}
+          className={`bg-${isEditing ? "yellow" : "red"
+            }-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-${isEditing ? "yellow" : "red"
+            }-600 transition-colors text-sm md:text-base`}
           onClick={isEditing ? handleUpdateInvoice : handlePrint}
         >
           {isEditing ? (

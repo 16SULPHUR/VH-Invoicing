@@ -140,6 +140,32 @@ export const UpdatedVarietyHeavenInvoice = ({
     },
   };
 
+  // Add print-specific styles to ensure visibility in print dialog
+  React.useEffect(() => {
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @media print {
+    <div style={styles.container} className="vh-invoice-print-friendly">
+          background: white !important;
+          color: black !important;
+          box-shadow: none !important;
+        }
+        .vh-invoice-print-friendly * {
+          visibility: visible !important;
+          color: inherit !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  const calculateTotalItems = () => {
+    return products.reduce((total, product) => total + product.quantity, 0);
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -204,41 +230,67 @@ export const UpdatedVarietyHeavenInvoice = ({
         </div>
       </div>
 
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th style={styles.th}>S.N.</th>
-            <th style={styles.th}>Item name</th>
-            <th style={styles.th}>Quantity</th>
-            <th style={styles.th}>Price/Unit</th>
-            <th style={styles.th}>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product, index) => (
-            <tr key={index}>
-              <td style={styles.td}>{index + 1}</td>
-              <td style={styles.td}>{product.name}</td>
-              <td style={styles.td}>{product.quantity}</td>
-              <td style={styles.td}>{formatCurrency(product.price)}</td>
-              <td style={styles.td}>{formatCurrency(product.amount)}</td>
+      <div style={{ ...styles.section, overflowX: "auto" }}>
+        <table
+          style={{
+            ...styles.table,
+            minWidth: "100%",
+            tableLayout: "fixed",
+            background: "rgba(255,255,255,0.95)",
+            border: "1px solid #000",
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={styles.th}>S.N.</th>
+              <th style={styles.th}>Item name</th>
+              <th style={styles.th}>Quantity</th>
+              <th style={styles.th}>Price/Unit</th>
+              <th style={styles.th}>Amount</th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td
-              colSpan="4"
-              style={{ ...styles.td, textAlign: "right", fontWeight: "bold" }}
-            >
-              Total:
-            </td>
-            <td style={{ ...styles.td, fontWeight: "bold" }}>
-              {formatCurrency(grandTotal)}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((product, index) => (
+              <tr key={index}>
+                <td style={styles.td}>{index + 1}</td>
+                <td style={styles.td}>{product.name}</td>
+                <td style={styles.td}>{product.quantity}</td>
+                <td style={styles.td}>{formatCurrency(product.price)}</td>
+                <td style={styles.td}>{formatCurrency(product.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td
+                colSpan={2}
+                style={{
+                  ...styles.td,
+                  textAlign: "right",
+                  fontWeight: "bold",
+                  borderRight: "none",
+                }}
+              >
+                Total items: {calculateTotalItems()}
+              </td>
+              <td
+                colSpan={2}
+                style={{
+                  ...styles.td,
+                  textAlign: "right",
+                  fontWeight: "bold",
+                  borderLeft: "none",
+                }}
+              >
+                Total:
+              </td>
+              <td style={{ ...styles.td, fontWeight: "bold" }}>
+                {formatCurrency(grandTotal)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
 
       <div style={styles.footer}>
         <div style={{ width: "48%", border: "1px solid #000", padding: "2mm" }}>
