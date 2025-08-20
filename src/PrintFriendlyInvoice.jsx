@@ -14,12 +14,20 @@ export const UpdatedVarietyHeavenInvoice = ({
 }) => {
   const formatCurrency = (amount) => `₹ ${parseFloat(amount).toFixed(2)}`;
   function formatDate(date) {
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
+  if (!date) return "";
+
+  // Convert to ISO-friendly format (replace space with 'T')
+  const normalized = typeof date === "string" ? date.replace(" ", "T") : date;
+
+  const d = new Date(normalized);
+  if (isNaN(d.getTime())) return date; // fallback if still invalid
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 
   const total = calculateTotal();
   const subTotal = total;
@@ -107,7 +115,7 @@ export const UpdatedVarietyHeavenInvoice = ({
       width: "6rem",
     },
     logoImage: {
-      width: "10rem",
+      width: "15rem",
     },
     signImage: {
       width: "8rem",
@@ -171,7 +179,7 @@ export const UpdatedVarietyHeavenInvoice = ({
       <div style={styles.header}>
         <div>
           <h1 style={{ margin: "0", fontSize: "24px" }}>
-            <img src="vh-horizontal.png" alt="logo" style={styles.logoImage} />
+            <img src="new-logo.png" alt="logo" style={styles.logoImage} />
           </h1>
           <p style={styles.companyDetails}>
             Shop no. 09, Sentosa Enclave, Near Ramipark soc., Dindoli, Surat,

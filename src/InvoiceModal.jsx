@@ -145,7 +145,7 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
     const pdfBlob = pdf.output("blob");
-    const pdfFile = new File([pdfBlob], `invoice-${invoice.id}.pdf`, {
+    const pdfFile = new File([pdfBlob], `#${invoice.id}-${invoice.customerName}.pdf`, {
       type: "application/pdf",
     });
 
