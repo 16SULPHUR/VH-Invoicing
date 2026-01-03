@@ -41,7 +41,7 @@ const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
     <div className="fixed top-4 right-4 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" className="bg-gray-900 text-sky-400 hover:bg-gray-800 hover:text-sky-300">
+          <Button variant="outline" size="icon" className="bg-gray-900 text-pink-400 hover:bg-gray-800 hover:text-pink-300">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle menu</span>
           </Button>
@@ -51,7 +51,7 @@ const Sidebar = ({ setIsAuthenticated, setCurrentView }) => {
             <DropdownMenuItem
               key={index}
               onClick={item.onClick}
-              className="flex items-center px-2 py-2 text-sky-400 hover:bg-gray-800 hover:text-sky-300 cursor-pointer"
+              className="flex items-center px-2 py-2 text-pink-400 hover:bg-gray-800 hover:text-pink-300 cursor-pointer"
             >
               <item.icon className="mr-2 h-4 w-4" />
               <span>{item.name}</span>

@@ -231,7 +231,7 @@ const AddProduct = () => {
             checked={isAddingNewSupplier}
             onCheckedChange={setIsAddingNewSupplier}
           />
-          <Label htmlFor="add-supplier" className="text-sky-400 text-nowrap">
+          <Label htmlFor="add-supplier" className="text-pink-400 text-nowrap">
             New Supplier
           </Label>
         </div>
@@ -266,7 +266,7 @@ const AddProduct = () => {
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-sky-400">
+        <Label htmlFor="name" className="text-pink-400">
           Product Name:
         </Label>
         <Input
@@ -279,7 +279,7 @@ const AddProduct = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="quantity" className="text-sky-400">
+        <Label htmlFor="quantity" className="text-pink-400">
           Quantity:
         </Label>
         <Input
@@ -293,7 +293,7 @@ const AddProduct = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="cost" className="text-sky-400">
+        <Label htmlFor="cost" className="text-pink-400">
           Cost:
         </Label>
         <Input
@@ -306,7 +306,7 @@ const AddProduct = () => {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="sellingPrice" className="text-sky-400">
+        <Label htmlFor="sellingPrice" className="text-pink-400">
           Selling Price:
         </Label>
         <Input
@@ -320,7 +320,7 @@ const AddProduct = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="images" className="text-sky-400">
+        <Label htmlFor="images" className="text-pink-400">
           Product Images:
         </Label>
         <Input
@@ -353,7 +353,7 @@ const AddProduct = () => {
 
       <Button
         type="submit"
-        className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+        className="w-full bg-pink-600 hover:bg-pink-600 text-white"
       >
         Add Product
       </Button>

@@ -67,7 +67,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
           {Object.entries(filteredAndGroupedInvoices).map(
             ([date, { invoices, totalSale }]) => (
               <div key={date} className="mb-4">
-                <p className="text-md font-bold border-b border-gray-700 mb-2 text-sky-400">
+                <p className="text-md font-bold border-b border-gray-700 mb-2 text-pink-400">
                   {date}
                 </p>
                 {invoices.map((invoice) => {
@@ -90,7 +90,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                       ${
                         invoice.credit != 0
                           ? "bg-red-900/50 hover:bg-red-800"
-                          : "bg-sky-900/50 hover:bg-gray-800"
+                          : "bg-pink-900/50 hover:bg-gray-800"
                       }
                       mb-2 rounded-md shadow-md cursor-pointer px-2 py-1 text-md
                        transition-colors duration-200
@@ -106,7 +106,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                           <h6 className="font-bold text-gray-300">
                             {invoice.customerName.split(" ")[0]}
                           </h6>
-                          <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
+                          <p className="text-md font-bold text-gray-900 bg-pink-400 rounded-md px-1">
                             {renderPaymentIcons(paymentMethods)} ₹{" "}
                             {invoice.total}
                           </p>
@@ -119,7 +119,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                                   key={paymentMethod}
                                   className="text-sm text-gray-300"
                                 >
-                                  <p className="text-md font-bold text-gray-900 bg-sky-400 rounded-md px-1">
+                                  <p className="text-md font-bold text-gray-900 bg-pink-400 rounded-md px-1">
                                     {paymentMethod === "cash"
                                       ? "💸"
                                       : paymentMethod === "upi"
@@ -136,7 +136,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                   );
                 })}
                 <div className="mt-2 text-right">
-                  <p className="text-md font-bold text-sky-400">
+                  <p className="text-md font-bold text-pink-400">
                     Total Sale: ₹ {totalSale.toFixed(2)}
                   </p>
                 </div>

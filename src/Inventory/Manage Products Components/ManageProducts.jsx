@@ -105,7 +105,7 @@ const ManageProducts = () => {
             suppliers={suppliers}
           />
           <div className="flex items-center space-x-2">
-            <Label htmlFor="showCost" className="text-sky-400">
+            <Label htmlFor="showCost" className="text-pink-400">
               Cost
             </Label>
             <Switch

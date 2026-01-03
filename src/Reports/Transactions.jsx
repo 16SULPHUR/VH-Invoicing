@@ -72,7 +72,7 @@ const Transactions = () => {
   return (
     <div className="p-4 md:p-6 text-gray-100">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-        <h2 className="text-xl font-semibold text-sky-400">Transactions</h2>
+        <h2 className="text-xl font-semibold text-pink-400">Transactions</h2>
         <div className="w-full md:w-72">
           <Input
             value={search}
@@ -93,10 +93,10 @@ const Transactions = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-sky-400 cursor-pointer" onClick={() => toggleSort("date")}>Date</TableHead>
-                <TableHead className="text-sky-400 cursor-pointer" onClick={() => toggleSort("id")}>Transaction ID</TableHead>
-                <TableHead className="text-sky-400 cursor-pointer" onClick={() => toggleSort("description")}>Description</TableHead>
-                <TableHead className="text-sky-400">Reference</TableHead>
+                <TableHead className="text-pink-400 cursor-pointer" onClick={() => toggleSort("date")}>Date</TableHead>
+                <TableHead className="text-pink-400 cursor-pointer" onClick={() => toggleSort("id")}>Transaction ID</TableHead>
+                <TableHead className="text-pink-400 cursor-pointer" onClick={() => toggleSort("description")}>Description</TableHead>
+                <TableHead className="text-pink-400">Reference</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

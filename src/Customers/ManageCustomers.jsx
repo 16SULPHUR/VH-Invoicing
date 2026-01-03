@@ -93,10 +93,10 @@ const ManageCustomers = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-sky-400">Name</TableHead>
-              <TableHead className="text-sky-400">Address</TableHead>
-              <TableHead className="text-sky-400">Phone</TableHead>
-              <TableHead className="text-sky-400">Actions</TableHead>
+              <TableHead className="text-pink-400">Name</TableHead>
+              <TableHead className="text-pink-400">Address</TableHead>
+              <TableHead className="text-pink-400">Phone</TableHead>
+              <TableHead className="text-pink-400">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

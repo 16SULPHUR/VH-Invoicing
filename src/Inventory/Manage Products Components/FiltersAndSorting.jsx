@@ -18,7 +18,7 @@ const FiltersAndSorting = ({
         className="bg-gray-700 border-gray-600 text-gray-100"
       />
       <Select onValueChange={setSelectedSupplier} defaultValue="all">
-        <SelectTrigger className="w-[200px] text-sky-400">
+        <SelectTrigger className="w-[200px] text-pink-400">
           <SelectValue placeholder="Select a supplier" />
         </SelectTrigger>
         <SelectContent>

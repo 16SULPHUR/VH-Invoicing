@@ -109,7 +109,7 @@ const CustomerDetails = ({
       <div className="w-full md:w-[48%]">
         <div className="flex items-center justify-between mb-2">
           <label
-            className="block mb-1 font-bold text-sky-500 text-sm"
+            className="block mb-1 font-bold text-pink-500 text-sm"
             htmlFor="customerName"
           >
             Customer Name:
@@ -124,7 +124,7 @@ const CustomerDetails = ({
         </div>
         {isAddingNewCustomer ? (
           <input
-            className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
+            className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-pink-500 focus:outline-none"
             type="text"
             id="customerName"
             value={customerName}
@@ -141,13 +141,13 @@ const CustomerDetails = ({
       </div>
       <div className="w-full md:w-[48%]">
         <label
-          className="block mb-1 font-bold text-sky-500 text-sm"
+          className="block mb-1 font-bold text-pink-500 text-sm"
           htmlFor="customerNumber"
         >
           Customer Number:
         </label>
         <input
-          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-pink-500 focus:outline-none"
           type="text"
           id="customerNumber"
           placeholder="Customer Number"

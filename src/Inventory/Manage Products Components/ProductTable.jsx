@@ -26,15 +26,15 @@ const ProductTable = ({
     <Table className="bg-[#09090b] rounded-md">
       <TableHeader>
         <TableRow>
-          <TableHead className="text-sky-400 w-12"></TableHead>
-          <TableHead className="text-sky-400">Name</TableHead>
+          <TableHead className="text-pink-400 w-12"></TableHead>
+          <TableHead className="text-pink-400">Name</TableHead>
           {showCostColumn && (
-            <TableHead className="text-sky-400">Cost</TableHead>
+            <TableHead className="text-pink-400">Cost</TableHead>
           )}
-          <TableHead className="text-sky-400">Selling Price</TableHead>
-          <TableHead className="text-sky-400">Barcode</TableHead>
-          <TableHead className="text-sky-400">Quantity</TableHead>
-          <TableHead className="text-sky-400">Actions</TableHead>
+          <TableHead className="text-pink-400">Selling Price</TableHead>
+          <TableHead className="text-pink-400">Barcode</TableHead>
+          <TableHead className="text-pink-400">Quantity</TableHead>
+          <TableHead className="text-pink-400">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -56,7 +56,7 @@ const ProductTable = ({
             <TableCell>
               <div className="flex flex-col">
                 <span>{product.name}</span>
-                <span style={{ fontSize: "13px" }} className="text-sky-500">
+                <span style={{ fontSize: "13px" }} className="text-pink-500">
                   {getSupplier(product.supplier)?.name ?? "Loading..."}
                 </span>
               </div>

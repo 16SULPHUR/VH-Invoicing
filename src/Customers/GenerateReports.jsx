@@ -495,12 +495,12 @@ const GenerateReports = () => {
       <Card className="bg-gray-900 border-0 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-sky-400 text-2xl font-bold">
+            <CardTitle className="text-pink-400 text-2xl font-bold">
               Credit Reports
             </CardTitle>
             <Button
               onClick={exportToCSV}
-              className="bg-sky-600 hover:bg-sky-700 text-white"
+              className="bg-pink-600 hover:bg-pink-700 text-white"
               disabled={isLoading || filteredData.length === 0}
             >
               <FileDown className="mr-2 h-4 w-4" />
@@ -515,7 +515,7 @@ const GenerateReports = () => {
                 placeholder="Search by customer name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-800 text-white border-gray-700 focus:border-sky-500"
+                className="pl-10 bg-gray-800 text-white border-gray-700 focus:border-pink-500"
               />
             </div>
           </div>
@@ -531,7 +531,7 @@ const GenerateReports = () => {
             ].map((item, index) => (
               <Card key={index} className="bg-gray-800 border-0 shadow-md">
                 <CardContent className="pb-2 pt-2">
-                  <p className="text-sm text-sky-400 mb-1">{item.title}</p>
+                  <p className="text-sm text-pink-400 mb-1">{item.title}</p>
                   <p className="text-2xl font-bold text-white mb-0">
                     {item.value}
                   </p>
@@ -553,22 +553,22 @@ const GenerateReports = () => {
                       <span className="text-white font-medium text-xl">
                         {customer.customerName}
                       </span>
-                      <span className="text-sky-400 font-bold text-xl">
+                      <span className="text-pink-400 font-bold text-xl">
                         ₹{customer.totalCredit.toFixed(2)}
                       </span>
-                      {/* <span className="text-sky-400 font-bold text-xl"></span> */}
+                      {/* <span className="text-pink-400 font-bold text-xl"></span> */}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-3 pt-1">
                     <Table>
                       <TableHeader>
                         <TableRow className="border-b border-gray-700">
-                          <TableHead className="text-sky-400">ID</TableHead>
-                          <TableHead className="text-sky-400">Date</TableHead>
-                          <TableHead className="text-sky-400">Total</TableHead>
-                          <TableHead className="text-sky-400">Credit</TableHead>
-                          <TableHead className="text-sky-400">Paid</TableHead>
-                          <TableHead className="text-sky-400">
+                          <TableHead className="text-pink-400">ID</TableHead>
+                          <TableHead className="text-pink-400">Date</TableHead>
+                          <TableHead className="text-pink-400">Total</TableHead>
+                          <TableHead className="text-pink-400">Credit</TableHead>
+                          <TableHead className="text-pink-400">Paid</TableHead>
+                          <TableHead className="text-pink-400">
                             Actions
                           </TableHead>
                         </TableRow>
@@ -595,7 +595,7 @@ const GenerateReports = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleEditInvoice(invoice)}
-                                className="text-sky-400 border-sky-400 hover:bg-sky-400 hover:text-white"
+                                className="text-pink-400 border-pink-400 hover:bg-pink-400 hover:text-white"
                               >
                                 Edit
                               </Button>
@@ -618,7 +618,7 @@ const GenerateReports = () => {
       >
         <DialogContent className="bg-gray-800 text-gray-100 max-w-4xl max-h-[90vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-sky-400">
+            <DialogTitle className="text-2xl font-bold text-pink-400">
               Edit Invoice
             </DialogTitle>
           </DialogHeader>

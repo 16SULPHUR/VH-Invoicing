@@ -4,11 +4,11 @@
 //   <table className="w-full border-collapse mb-5">
 //     <thead>
 //       <tr>
-//         <th className="bg-sky-500 text-white border border-sky-600 p-2.5 text-left">Item Name</th>
-//         <th className="bg-sky-500 text-white border border-sky-600 p-2.5 text-left">Quantity</th>
-//         <th className="bg-sky-500 text-white border border-sky-600 p-2.5 text-left">Price/Unit</th>
-//         <th className="bg-sky-500 text-white border border-sky-600 p-2.5 text-left">Amount</th>
-//         <th className="bg-sky-500 text-white border border-sky-600 p-2.5 text-left">Action</th>
+//         <th className="bg-pink-600 text-white border border-pink-600 p-2.5 text-left">Item Name</th>
+//         <th className="bg-pink-600 text-white border border-pink-600 p-2.5 text-left">Quantity</th>
+//         <th className="bg-pink-600 text-white border border-pink-600 p-2.5 text-left">Price/Unit</th>
+//         <th className="bg-pink-600 text-white border border-pink-600 p-2.5 text-left">Amount</th>
+//         <th className="bg-pink-600 text-white border border-pink-600 p-2.5 text-left">Action</th>
 //       </tr>
 //     </thead>
 //     <tbody>
@@ -19,7 +19,7 @@
 //           <td className="border border-gray-700 text-white font-semibold text-lg p-2.5">₹ {product.price.toFixed(2)}</td>
 //           <td className="border border-gray-700 text-white font-semibold text-lg p-2.5">₹ {product.amount.toFixed(2)}</td>
 //           <td className="border border-gray-700 text-white font-semibold text-lg p-2.5">
-//             <button className="bg-sky-500 text-white px-2 py-1 rounded-md mr-2 hover:bg-sky-600 transition-colors" onClick={() => startEditing(index)}>
+//             <button className="bg-pink-600 text-white px-2 py-1 rounded-md mr-2 hover:bg-pink-600 transition-colors" onClick={() => startEditing(index)}>
 //               Edit
 //             </button>
 //             <button className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition-colors" onClick={() => deleteProduct(index)}>
@@ -40,11 +40,11 @@ const ProductTable = ({ products, startEditing, deleteProduct }) => (
     <table className="w-full border-collapse mb-5">
       <thead>
         <tr>
-          <th className="bg-sky-500 text-white border border-sky-600 p-2 text-left">Item Name</th>
-          <th className="bg-sky-500 text-white border border-sky-600 p-2 text-left">Quantity</th>
-          <th className="bg-sky-500 text-white border border-sky-600 p-2 text-left">Price/Unit</th>
-          <th className="bg-sky-500 text-white border border-sky-600 p-2 text-left">Amount</th>
-          <th className="bg-sky-500 text-white border border-sky-600 p-2 text-left">Action</th>
+          <th className="bg-pink-600 text-white border border-pink-600 p-2 text-left">Item Name</th>
+          <th className="bg-pink-600 text-white border border-pink-600 p-2 text-left">Quantity</th>
+          <th className="bg-pink-600 text-white border border-pink-600 p-2 text-left">Price/Unit</th>
+          <th className="bg-pink-600 text-white border border-pink-600 p-2 text-left">Amount</th>
+          <th className="bg-pink-600 text-white border border-pink-600 p-2 text-left">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -55,7 +55,7 @@ const ProductTable = ({ products, startEditing, deleteProduct }) => (
             <td className="border border-gray-700 text-white font-semibold text-sm md:text-base p-2">₹ {product.price.toFixed(2)}</td>
             <td className="border border-gray-700 text-white font-semibold text-sm md:text-base p-2">₹ {product.amount.toFixed(2)}</td>
             <td className="border border-gray-700 text-white font-semibold text-sm md:text-base p-2">
-              <button className="bg-sky-500 text-white px-2 py-1 rounded-md mr-2 hover:bg-sky-600 transition-colors text-xs md:text-sm" onClick={() => startEditing(index)}>
+              <button className="bg-pink-600 text-white px-2 py-1 rounded-md mr-2 hover:bg-pink-600 transition-colors text-xs md:text-sm" onClick={() => startEditing(index)}>
                 Edit
               </button>
               <button className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition-colors text-xs md:text-sm" onClick={() => deleteProduct(index)}>

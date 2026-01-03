@@ -1275,7 +1275,7 @@ const ManageProducts = () => {
           />
           <div className="flex justify-around items-center mb-4 gap-5 w-full mt-2">
             <div className="flex items-center space-x-2">
-              <Label htmlFor="showCost" className="text-sky-400">
+              <Label htmlFor="showCost" className="text-pink-400">
                 Cost
               </Label>
               <Switch
@@ -1285,11 +1285,11 @@ const ManageProducts = () => {
               />
             </div>
             <Select
-              className="text-sky-400"
+              className="text-pink-400"
               onValueChange={setSelectedSupplier}
               defaultValue="all"
             >
-              <SelectTrigger className="w-[200px] text-sky-400">
+              <SelectTrigger className="w-[200px] text-pink-400">
                 <SelectValue placeholder="Select a supplier" />
               </SelectTrigger>
               <SelectContent>
@@ -1314,15 +1314,15 @@ const ManageProducts = () => {
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead className="text-sky-400 w-12"></TableHead>
-                <TableHead className="text-sky-400">Name</TableHead>
+                <TableHead className="text-pink-400 w-12"></TableHead>
+                <TableHead className="text-pink-400">Name</TableHead>
                 {showCostColumn && (
-                  <TableHead className="text-sky-400">Cost</TableHead>
+                  <TableHead className="text-pink-400">Cost</TableHead>
                 )}
-                <TableHead className="text-sky-400">Selling Price</TableHead>
-                <TableHead className="text-sky-400">Barcode</TableHead>
-                <TableHead className="text-sky-400">Quantity</TableHead>
-                <TableHead className="text-sky-400">Actions</TableHead>
+                <TableHead className="text-pink-400">Selling Price</TableHead>
+                <TableHead className="text-pink-400">Barcode</TableHead>
+                <TableHead className="text-pink-400">Quantity</TableHead>
+                <TableHead className="text-pink-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1356,7 +1356,7 @@ const ManageProducts = () => {
                       <span>{product.name}</span>
                       <span
                         style={{ fontSize: "13px" }}
-                        className="text-sky-500"
+                        className="text-pink-500"
                       >
                         {getSupplier(product.supplier)?.name ?? "Loading..."}
                       </span>
@@ -1411,9 +1411,9 @@ const ManageProducts = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-sky-400">Name</TableHead>
-                <TableHead className="text-sky-400">Code</TableHead>
-                <TableHead className="text-sky-400">Actions</TableHead>
+                <TableHead className="text-pink-400">Name</TableHead>
+                <TableHead className="text-pink-400">Code</TableHead>
+                <TableHead className="text-pink-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1457,7 +1457,7 @@ const ManageProducts = () => {
           {editingProduct && (
             <form onSubmit={handleProductUpdate} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sky-400">
+                <Label htmlFor="name" className="text-pink-400">
                   Product Name:
                 </Label>
                 <Input
@@ -1474,7 +1474,7 @@ const ManageProducts = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="quantity" className="text-sky-400">
+                <Label htmlFor="quantity" className="text-pink-400">
                   Quantity:
                 </Label>
                 <Input
@@ -1492,7 +1492,7 @@ const ManageProducts = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cost" className="text-sky-400">
+                <Label htmlFor="cost" className="text-pink-400">
                   Cost:
                 </Label>
                 <Input
@@ -1510,7 +1510,7 @@ const ManageProducts = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sellingPrice" className="text-sky-400">
+                <Label htmlFor="sellingPrice" className="text-pink-400">
                   Selling Price:
                 </Label>
                 <Input
@@ -1529,7 +1529,7 @@ const ManageProducts = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+                className="w-full bg-pink-600 hover:bg-pink-600 text-white"
               >
                 Update Product
               </Button>
@@ -1549,7 +1549,7 @@ const ManageProducts = () => {
           {editingSupplier && (
             <form onSubmit={handleSupplierUpdate} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="supplierName" className="text-sky-400">
+                <Label htmlFor="supplierName" className="text-pink-400">
                   Supplier Name:
                 </Label>
                 <Input
@@ -1566,7 +1566,7 @@ const ManageProducts = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="supplierCode" className="text-sky-400">
+                <Label htmlFor="supplierCode" className="text-pink-400">
                   Supplier Code:
                 </Label>
                 <Input
@@ -1584,7 +1584,7 @@ const ManageProducts = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+                className="w-full bg-pink-600 hover:bg-pink-600 text-white"
               >
                 Update Supplier
               </Button>
@@ -1639,7 +1639,7 @@ const ManageProducts = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="images" className="text-sky-400">
+              <Label htmlFor="images" className="text-pink-400">
                 Add New Images:
               </Label>
               <Input
@@ -1673,7 +1673,7 @@ const ManageProducts = () => {
             </div>
             <Button
               onClick={handleImageUpload}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+              className="w-full bg-pink-600 hover:bg-pink-600 text-white"
               disabled={imagePreviews.length === 0}
             >
               Save Changes
@@ -1693,7 +1693,7 @@ const ManageProducts = () => {
           <div className="space-y-4">
             {Object.entries(batchEditData).map(([field, data]) => (
               <div key={field} className="space-y-2">
-                <Label className="text-sky-400 capitalize">{field}:</Label>
+                <Label className="text-pink-400 capitalize">{field}:</Label>
                 <div className="flex gap-2">
                   <Input
                     type="number"
@@ -1731,7 +1731,7 @@ const ManageProducts = () => {
           <footer>
             <Button
               onClick={handleBatchEdit}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+              className="w-full bg-pink-600 hover:bg-pink-600 text-white"
             >
               Update {selectedProducts.size} Products
             </Button>

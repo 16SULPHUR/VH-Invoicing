@@ -69,11 +69,11 @@ const MainContent = ({
 
   return (
     <div className="flex-grow borde md:p-6 overflow-auto bg-gray-900 text-gray-100">
-      {/* <h5 className="text-center font-bold bg-sky-500 text-white border border-sky-600 p-1.5 mb-4 rounded text-lg md:text-xl">
+      {/* <h5 className="text-center font-bold bg-pink-600 text-white border border-pink-600 p-1.5 mb-4 rounded text-lg md:text-xl">
         Create Invoice
       </h5> */}
       <div className="flex justify-between items-center mb-4">
-        <h5 className="font-bold bg-sky-500 text-white border border-sky-600 p-1.5 rounded text-lg md:text-xl">
+        <h5 className="font-bold bg-pink-600 text-white border border-pink-600 p-1.5 rounded text-lg md:text-xl">
           Create Invoice
         </h5>
         <div className="hidden md:flex gap-3">
@@ -140,7 +140,7 @@ const MainContent = ({
         products={allProducts}
       />
 
-      <h5 className="text-lg font-semibold mb-2 text-sky-500">
+      <h5 className="text-lg font-semibold mb-2 text-pink-500">
         {editingProduct !== null ? "Edit Product" : "Add Product"}
       </h5>
 

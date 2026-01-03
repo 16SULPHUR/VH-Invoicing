@@ -20,7 +20,7 @@ const SupplierEditDialog = ({
         {editingSupplier && (
           <form onSubmit={handleSupplierUpdate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="supplierName" className="text-sky-400">
+              <Label htmlFor="supplierName" className="text-pink-400">
                 Supplier Name:
               </Label>
               <Input
@@ -37,7 +37,7 @@ const SupplierEditDialog = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="supplierCode" className="text-sky-400">
+              <Label htmlFor="supplierCode" className="text-pink-400">
                 Supplier Code:
               </Label>
               <Input
@@ -55,7 +55,7 @@ const SupplierEditDialog = ({
             </div>
             <Button
               type="submit"
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+              className="w-full bg-pink-600 hover:bg-pink-600 text-white"
             >
               Update Supplier
             </Button>

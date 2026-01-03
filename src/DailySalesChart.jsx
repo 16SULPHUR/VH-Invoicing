@@ -12,7 +12,7 @@ const DailySalesChart = ({ dailySales }) => {
   return (
     <Card className="w-full bg-gray-900 border-gray-700">
       <CardHeader>
-        <CardTitle className="text-sky-500 flex justify-between">
+        <CardTitle className="text-pink-500 flex justify-between">
           
           <span>Daily Sales</span>
 

@@ -31,7 +31,7 @@ const ImageUploadDialog = ({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="images" className="text-sky-400">
+            <Label htmlFor="images" className="text-pink-400">
               Add New Images:
             </Label>
             <Input
@@ -65,7 +65,7 @@ const ImageUploadDialog = ({
           </div>
           <Button
             onClick={handleImageUpload}
-            className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+            className="w-full bg-pink-600 hover:bg-pink-600 text-white"
             disabled={imagePreviews.length === 0}
           >
             Save Changes

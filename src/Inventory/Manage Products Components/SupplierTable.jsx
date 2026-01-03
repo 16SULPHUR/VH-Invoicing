@@ -15,9 +15,9 @@ const SupplierTable = ({ suppliers, handleSupplierEdit, handleSupplierDelete }) 
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="text-sky-400">Name</TableHead>
-          <TableHead className="text-sky-400">Code</TableHead>
-          <TableHead className="text-sky-400">Actions</TableHead>
+          <TableHead className="text-pink-400">Name</TableHead>
+          <TableHead className="text-pink-400">Code</TableHead>
+          <TableHead className="text-pink-400">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

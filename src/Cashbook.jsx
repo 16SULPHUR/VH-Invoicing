@@ -295,7 +295,7 @@ const Cashbook = () => {
   return (
     <div className="p-4 md:p-6 text-gray-100">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-bold text-xl md:text-2xl flex items-center gap-2 text-sky-500">
+        <h2 className="font-bold text-xl md:text-2xl flex items-center gap-2 text-pink-500">
           <Wallet className="w-6 h-6" /> Cashbook
         </h2>
         <div className="flex gap-2">
@@ -316,14 +316,14 @@ const Cashbook = () => {
         {accounts.map((a) => (
           <div key={a.id} className="rounded border border-slate-700 bg-slate-900/60 p-4">
             <div className="text-sm text-slate-400">{accountDisplayName(a.name)}</div>
-            <div className="text-2xl font-bold text-sky-400">₹ {formatINR(balances[a.id] || 0)}</div>
+            <div className="text-2xl font-bold text-pink-400">₹ {formatINR(balances[a.id] || 0)}</div>
           </div>
         ))}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="rounded border border-slate-700 bg-slate-900/60 p-4">
-          <div className="font-semibold text-sky-400 mb-3 flex items-center gap-2"><DatabaseZap className="w-4 h-4"/> Quick entry</div>
+          <div className="font-semibold text-pink-400 mb-3 flex items-center gap-2"><DatabaseZap className="w-4 h-4"/> Quick entry</div>
           <div className="grid grid-cols-2 gap-3 mb-2">
             <div>
               <Label className="text-xs">Account</Label>
@@ -367,7 +367,7 @@ const Cashbook = () => {
         </div>
 
         <div className="rounded border border-slate-700 bg-slate-900/60 p-4">
-          <div className="font-semibold text-sky-400 mb-3 flex items-center gap-2"><DownloadCloud className="w-4 h-4"/> Paste chat to import</div>
+          <div className="font-semibold text-pink-400 mb-3 flex items-center gap-2"><DownloadCloud className="w-4 h-4"/> Paste chat to import</div>
           <textarea
             className="w-full h-40 bg-transparent border border-slate-700 rounded p-2 text-sm"
             placeholder="Paste your cash balance chat here..."
@@ -378,7 +378,7 @@ const Cashbook = () => {
             <Button variant="outline" className="bg-white text-black" onClick={handleBulkPreview} disabled={!bulkText || isBusy}>
               Preview
             </Button>
-            <Button onClick={handleBulkImport} disabled={!bulkPreview || isBusy} className="bg-sky-600 hover:bg-sky-700">
+            <Button onClick={handleBulkImport} disabled={!bulkPreview || isBusy} className="bg-pink-600 hover:bg-pink-700">
               Import
             </Button>
           </div>
@@ -392,7 +392,7 @@ const Cashbook = () => {
       </div>
 
       <div className="rounded border border-slate-700 bg-slate-900/60 p-4">
-        <div className="font-semibold text-sky-400 mb-3">Recent transactions (last 120 days)</div>
+        <div className="font-semibold text-pink-400 mb-3">Recent transactions (last 120 days)</div>
         <div className="overflow-auto">
           <table className="min-w-full text-sm">
             <thead>

@@ -58,7 +58,7 @@ const TrialBalance = () => {
   return (
     <div className="p-4 md:p-6 text-gray-100">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-        <h2 className="text-xl font-semibold text-sky-400">Trial Balance</h2>
+        <h2 className="text-xl font-semibold text-pink-400">Trial Balance</h2>
         <div className="flex gap-2 w-full md:w-[520px]">
           <Input
             value={search}
@@ -85,9 +85,9 @@ const TrialBalance = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-sky-400">Account</TableHead>
-                <TableHead className="text-sky-400">Total Debit</TableHead>
-                <TableHead className="text-sky-400">Total Credit</TableHead>
+                <TableHead className="text-pink-400">Account</TableHead>
+                <TableHead className="text-pink-400">Total Debit</TableHead>
+                <TableHead className="text-pink-400">Total Credit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

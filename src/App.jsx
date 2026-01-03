@@ -173,7 +173,7 @@ const App = () => {
                             onClick={() => handleTabClick(tab.view)}
                             className={`px-4 py-2 flex items-center cursor-pointer transition-colors ${
                               currentView === tab.view
-                                ? "border-b-2 md:border-b-2 border-sky-500 text-sky-500 font-semibold"
+                                ? "border-b-2 md:border-b-2 border-pink-500 text-pink-500 font-semibold"
                                 : "text-gray-400 hover:text-gray-300"
                             }`}
                           >

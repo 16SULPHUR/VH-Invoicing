@@ -141,7 +141,7 @@ const ProductForm = ({
         <div className="w-full md:w-[48%]">
           <div className="flex items-center justify-between mb-2">
             <label
-              className="font-bold text-sky-500 text-sm"
+              className="font-bold text-pink-500 text-sm"
               htmlFor="productName"
             >
               Product Name:
@@ -155,7 +155,7 @@ const ProductForm = ({
           </div>
           {isAddingNewProduct ? (
             <input
-              className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
+              className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-pink-500 focus:outline-none"
               type="text"
               id="productName"
               value={productName}
@@ -174,13 +174,13 @@ const ProductForm = ({
         {/* Quantity Section */}
         <div className="w-full md:w-[24%]">
           <label
-            className="block mb-1 font-bold text-sky-500 text-sm"
+            className="block mb-1 font-bold text-pink-500 text-sm"
             htmlFor="productQuantity"
           >
             Quantity:
           </label>
           <input
-            className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
+            className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-pink-500 focus:outline-none"
             type="number"
             id="productQuantity"
             value={productQuantity}
@@ -192,13 +192,13 @@ const ProductForm = ({
         {/* Price Section */}
         <div className="w-full md:w-[24%]">
           <label
-            className="block mb-1 font-bold text-sky-500 text-sm"
+            className="block mb-1 font-bold text-pink-500 text-sm"
             htmlFor="productPrice"
           >
             Price:
           </label>
           <input
-            className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-sky-500 focus:outline-none"
+            className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white focus:border-pink-500 focus:outline-none"
             type="number"
             id="productPrice"
             value={productPrice}
@@ -210,7 +210,7 @@ const ProductForm = ({
         <div className="w-full md:w-auto md:self-end">
           <button
             type="submit"
-            className="w-full md:w-auto bg-sky-500 text-white px-6 py-2 rounded-md cursor-pointer hover:bg-sky-600 transition-colors"
+            className="w-full md:w-auto bg-pink-600 text-white px-6 py-2 rounded-md cursor-pointer hover:bg-pink-600 transition-colors"
           >
             {editingProduct !== null ? (
               <div>

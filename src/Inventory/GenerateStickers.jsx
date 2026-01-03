@@ -212,7 +212,7 @@ const GenerateStickers = () => {
       
       <div className="w-3/5">
         <div className="space-y-2">
-          <Label htmlFor="supplier" className="text-sky-400">
+          <Label htmlFor="supplier" className="text-pink-400">
             Select Supplier:
           </Label>
           <Select onValueChange={setSelectedSupplier} value={selectedSupplier}>
@@ -229,7 +229,7 @@ const GenerateStickers = () => {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="product" className="text-sky-400">
+          <Label htmlFor="product" className="text-pink-400">
             Select Product:
           </Label>
           <Select onValueChange={setSelectedProduct} value={selectedProduct}>
@@ -251,7 +251,7 @@ const GenerateStickers = () => {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="quantity" className="text-sky-400">
+          <Label htmlFor="quantity" className="text-pink-400">
             Quantity:
           </Label>
           <Input
@@ -264,7 +264,7 @@ const GenerateStickers = () => {
         </div>
         <Button
           type="button"
-          className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+          className="w-full bg-pink-600 hover:bg-pink-600 text-white"
           onClick={handlePrint}
         >
           <Printer className="mr-2 h-4 w-4" /> Generate Stickers

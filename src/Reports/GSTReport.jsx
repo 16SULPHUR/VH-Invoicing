@@ -56,7 +56,7 @@ const GSTReport = () => {
   return (
     <div className="p-4 md:p-6 text-gray-100">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-        <h2 className="text-xl font-semibold text-sky-400">GST Output</h2>
+        <h2 className="text-xl font-semibold text-pink-400">GST Output</h2>
         <div className="w-full md:w-72">
           <Input
             value={search}
@@ -77,11 +77,11 @@ const GSTReport = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-sky-400">Date</TableHead>
-                <TableHead className="text-sky-400">Transaction ID</TableHead>
-                <TableHead className="text-sky-400">Description</TableHead>
-                <TableHead className="text-sky-400">Reference</TableHead>
-                <TableHead className="text-sky-400">GST (Credit)</TableHead>
+                <TableHead className="text-pink-400">Date</TableHead>
+                <TableHead className="text-pink-400">Transaction ID</TableHead>
+                <TableHead className="text-pink-400">Description</TableHead>
+                <TableHead className="text-pink-400">Reference</TableHead>
+                <TableHead className="text-pink-400">GST (Credit)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

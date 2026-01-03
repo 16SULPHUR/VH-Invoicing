@@ -37,7 +37,7 @@ const Login = ({ setIsAuthenticated }) => {
 
   return (
     <div>
-      {/* <div className="flex flex-row gap-48 items-center justify-center h-screen bg-gradient-to-b to-sky-950 from-sky-600 to-99%">
+      {/* <div className="flex flex-row gap-48 items-center justify-center h-screen bg-gradient-to-b to-pink-950 from-pink-600 to-99%">
         <div>
           <img src="./logo.png" alt="Logo" className="self-start w-80" />
         </div>
@@ -45,12 +45,12 @@ const Login = ({ setIsAuthenticated }) => {
           onSubmit={handleSignIn}
           className="bg-zinc-900 p-8 rounded-md shadow-md w-[400px]"
         >
-          <h1 className="text-center text-2xl font-bold text-sky-500 mb-6">
+          <h1 className="text-center text-2xl font-bold text-pink-500 mb-6">
             Welcome Back
           </h1>
           <div className="mb-4">
             <label
-              className="block text-sky-400 font-bold mb-2"
+              className="block text-pink-400 font-bold mb-2"
               htmlFor="email"
             >
               Email
@@ -65,7 +65,7 @@ const Login = ({ setIsAuthenticated }) => {
           </div>
           <div className="mb-6">
             <label
-              className="block text-sky-400 font-bold mb-2"
+              className="block text-pink-400 font-bold mb-2"
               htmlFor="password"
             >
               Password
@@ -79,7 +79,7 @@ const Login = ({ setIsAuthenticated }) => {
             />
           </div>
           <button
-            className={`w-full py-2 bg-sky-500 text-white font-bold rounded-md hover:bg-sky-600 transition duration-200 ${
+            className={`w-full py-2 bg-pink-600 text-white font-bold rounded-md hover:bg-pink-600 transition duration-200 ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
             type="submit"
@@ -91,7 +91,7 @@ const Login = ({ setIsAuthenticated }) => {
         </form>
       </div> */}
 
-      <div className="min-h-screen bg-gradient-to-r from-sky-950 via-sky-900 to-sky-800 flex flex-col items-center justify-start water-drops">
+      <div className="min-h-screen bg-gradient-to-r from-pink-950 via-pink-900 to-pink-800 flex flex-col items-center justify-start water-drops">
         {/* Add 10 water drops */}
         <div className="water-drop"></div>
         <div className="water-drop"></div>
@@ -142,7 +142,7 @@ const Login = ({ setIsAuthenticated }) => {
               className="w-60 h-auto"
             />
           </div>
-        <div className="bg-blue-950/10 backdrop-blur-md rounded-lg shadow-lg p-8 max-w-md w-full">
+        <div className="bg-pink-950/10 backdrop-blur-md rounded-lg shadow-lg p-8 max-w-md w-full">
           {/* Logo */}
 
           {/* Form */}
@@ -160,7 +160,7 @@ const Login = ({ setIsAuthenticated }) => {
                 onChange={handleEmailChange}
                 required
                 id="email"
-                className="mt-1 block w-full px-4 py-2 bg-gray-700/60 text-gray-300 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-skyBlue"
+                className="mt-1 block w-full px-4 py-2 bg-gray-700/60 text-gray-300 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-pinkBlue"
                 placeholder="Enter your email"
               />
             </div>
@@ -177,14 +177,14 @@ const Login = ({ setIsAuthenticated }) => {
                 onChange={handlePasswordChange}
                 required
                 id="password"
-                className="mt-1 block w-full px-4 py-2 bg-gray-700/60 text-gray-300 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-skyBlue"
+                className="mt-1 block w-full px-4 py-2 bg-gray-700/60 text-gray-300 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-pinkBlue"
                 placeholder="Enter your password"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-skyBlue hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded transition duration-300"
+              className="w-full bg-pinkBlue hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded transition duration-300"
             >
             {loading ? "Signing in..." : "Sign In"}
             </button>
