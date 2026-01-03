@@ -151,11 +151,11 @@ const MainContent = ({
       />
 
       <div className="flex gap-10 justify-end">
-        <div className="text-right font-bold text-sky-500 text-lg md:text-3xl ">
+        <div className="text-right font-bold text-pink-500 text-lg md:text-3xl ">
           {calculateTotalItems()} Items
         </div>
 
-        <div className="text-right font-bold text-sky-500 text-lg md:text-xl ">
+        <div className="text-right font-bold text-pink-500 text-lg md:text-xl ">
           Total: ₹ {calculateTotal()}
         </div>
       </div>

@@ -8,7 +8,8 @@ export default {
   theme: {
   	extend: {
   		colors: {
-  			pinkBlue: '#38BDF8',
+  			skyBlue: '#38BDF8',
+  			// pink: '#db2777',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

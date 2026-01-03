@@ -229,7 +229,7 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
               </Button>
 
               <Button
-                className="bg-blue-400 hover:bg-blue-500 text-black rounded-md transition-colors w-full md:w-auto"
+                className="bg-pink-400 hover:bg-pink-500 text-black rounded-md transition-colors w-full md:w-auto"
                 variant="secondary"
                 onClick={handlePrint}
               >
@@ -252,13 +252,13 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-1 gap-2 w-full">
-              <div className="bg-gray-800 text-sky-400 rounded p-2">
+              <div className="bg-gray-800 text-pink-400 rounded p-2">
                 <p className="text-sm font-medium">🧾 Total ₹{invoice.total}</p>
               </div>
               <div className="bg-gray-800 text-green-400 rounded p-2">
                 <p className="text-sm font-medium">💸 Cash ₹{invoice.cash}</p>
               </div>
-              <div className="bg-gray-800 text-blue-400 rounded p-2">
+              <div className="bg-gray-800 text-pink-400 rounded p-2">
                 <p className="text-sm font-medium">🏛️ UPI ₹{invoice.upi}</p>
               </div>
               <div className="bg-gray-800 text-red-400 rounded p-2">
