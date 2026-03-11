@@ -21,6 +21,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import BarcodeScanner from "./BarcodeScanner";
 import { useToast } from "@/hooks/use-toast";
+import { invoiceService } from "./lib/invoiceService";
+import { cacheManager } from "./lib/cacheManager";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
 import {
   Sheet,
@@ -35,6 +38,7 @@ import {
 
 const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const [allproducts, setAllProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -79,6 +83,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   ];
 
   const { toast } = useToast();
+  const { isOnline } = useOnlineStatus();
 
   // const [isLeftSidebarExpanded, setIsLeftSidebarExpanded] = useState(false);
   // const [isRecentInvoicesExpanded, setIsRecentInvoicesExpanded] =
@@ -110,39 +115,40 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const handleFinancialYearChange = async (e) => {
     const yearRange = e.target.value;
     setSelectedFinancialYear(yearRange);
-
     const [startYear, endYear] = yearRange.split("-");
-    const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
-    const endDate = `${endYear}-03-31T23:59:59`; // Financial year ends on March 31st
-
-    // Fetch invoices for selected financial year
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .gte("date", startDate)
-      .lte("date", endDate)
-      .order("date", { ascending: false });
-
-      console.log(data)
-
-    if (error) {
-      console.error("Error fetching invoices:", error);
-    } else {
+    const startDate = `${startYear}-04-01`;
+    const endDate = `${endYear}-03-31T23:59:59`;
+    try {
+      const data = await invoiceService.getInvoicesByFinancialYear(startDate, endDate);
       setRecentInvoices(data || []);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: productsData, error: productsError } = await supabase
-        .from("products")
-        .select("id, name, quantity, sellingPrice, supplier, barcode");
-
-      if (productsError)
-        console.error("Error fetching products:", productsError);
-      else setAllProducts(productsData);
+      const cached = await cacheManager.getCachedProducts();
+      if (cached.length > 0) setAllProducts(cached);
+      if (navigator.onLine) {
+        await cacheManager.refreshProducts();
+        const refreshed = await cacheManager.getCachedProducts();
+        if (refreshed.length > 0) setAllProducts(refreshed);
+      }
     };
+    fetchData();
+  }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const cached = await cacheManager.getCachedCustomers();
+      if (cached.length > 0) setCustomers(cached);
+      if (navigator.onLine) {
+        await cacheManager.refreshCustomers();
+        const refreshed = await cacheManager.getCachedCustomers();
+        if (refreshed.length > 0) setCustomers(refreshed);
+      }
+    };
     fetchData();
   }, []);
 
@@ -274,73 +280,28 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
   }
 
   const handleInvoiceClick = async (invoiceDate) => {
-      const { data, error } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("date", invoiceDate)
-        .single();
-  
-      if (error) {
-        console.error("Error fetching invoice details:", error);
-      } else {
-        setSelectedInvoice(data);
-        setShowInvoiceModal(true);
-      }
-    };
+    try {
+      const data = await invoiceService.getInvoiceByDate(invoiceDate);
+      setSelectedInvoice(data);
+      setShowInvoiceModal(true);
+    } catch (error) {
+      console.error("Error fetching invoice details:", error);
+    }
+  };
 
   const handleDeleteInvoice = async (invoiceDate) => {
-      try {
-        const { data: invoice, error: fetchError } = await supabase
-          .from("invoices")
-          .select("*")
-          .eq("date", invoiceDate)
-          .single();
-  
-        if (fetchError) throw fetchError;
-  
-        const products = JSON.parse(invoice.products);
-  
-        // Restore stock for each product in the invoice
-        for (const product of products) {
-          const { data: existingProduct, error: fetchProductError } =
-            await supabase
-              .from("products")
-              .select("quantity")
-              .ilike("name", product.name)
-              .single();
-  
-          if (fetchProductError) throw fetchProductError;
-  
-          const newQuantity = existingProduct.quantity + product.quantity;
-  
-          const { error: updateError } = await supabase
-            .from("products")
-            .update({ quantity: newQuantity })
-            .ilike("name", product.name);
-  
-          if (updateError) throw updateError;
-        }
-  
-        const { error } = await supabase
-          .from("invoices")
-          .delete()
-          .eq("date", invoiceDate);
-  
-        if (error) throw error;
-  
-        // Success message
-        alert("Invoice deleted successfully");
-  
-        // Refresh all the necessary data
-        fetchInvoices();
-        fetchRecentInvoices();
-        fetchDailySales();
-        fetchSales(salesType);
-      } catch (error) {
-        console.error("Error deleting invoice:", error);
-        alert("Failed to delete invoice: " + error.message);
-      }
-    };
+    try {
+      await invoiceService.deleteInvoice(invoiceDate);
+      alert("Invoice deleted successfully");
+      fetchInvoices();
+      fetchRecentInvoices();
+      fetchDailySales();
+      fetchSales(salesType);
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      alert("Failed to delete invoice: " + error.message);
+    }
+  };
 
   const handleEditInvoice = (invoice) => {
       setIsEditing(true);
@@ -361,15 +322,12 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
       const cashAmount = parseFloat(cash) || 0;
       const upiAmount = parseFloat(upi) || 0;
       const creditAmount = parseFloat(credit) || 0;
-  
       if (total != cashAmount + upiAmount + creditAmount) {
         alert("The total must be equal to the sum of Cash, UPI, and Credit.");
         return;
       }
-  
       const updatedInvoice = {
-        customerName,
-        customerNumber,
+        customerName, customerNumber,
         date: currentDate.toISOString(),
         products: JSON.stringify(products),
         total: calculateTotal(),
@@ -378,35 +336,18 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
         credit: parseFloat(credit) || 0,
         note,
       };
-  
-      console.log("currentDate", currentDate);
-      const { data, error } = await supabase
-        .from("invoices")
-        .update(updatedInvoice)
-        .eq("date", currentDate.toISOString());
-  
-      if (error) {
-        console.error("Error updating invoice:", error);
-      } else {
-        console.log("Invoice updated successfully:", data);
+      try {
+        await invoiceService.updateInvoice(currentDate.toISOString(), updatedInvoice);
         setIsEditing(false);
-        fetchInvoices();
-        fetchRecentInvoices();
-        fetchDailySales();
-        fetchSales(salesType);
-  
-        // Update stock after updating the invoice
-        await updateStockAfterInvoice(products);
-  
-        // Clear the form after updating
-        setProducts([]);
-        setCustomerName("");
-        setCustomerNumber("");
-        setCurrentDate(new Date());
-        setCash("");
-        setUpi("");
-        setCredit("");
-        setNote("");
+        fetchInvoices(); fetchRecentInvoices(); fetchDailySales(); fetchSales(salesType);
+        if (!isOnline) {
+          toast({ title: "Saved Offline", description: "Invoice update saved offline. Will sync when online." });
+        }
+        setProducts([]); setCustomerName(""); setCustomerNumber("");
+        setCurrentDate(new Date()); setCash(""); setUpi(""); setCredit(""); setNote("");
+      } catch (error) {
+        console.error("Error updating invoice:", error);
+        toast({ title: "Error", description: "Failed to update invoice.", variant: "destructive" });
       }
     };
 
@@ -614,32 +555,24 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
   const fetchRecentInvoices = async () => {
     const [startYear, endYear] = selectedFinancialYear.split('-');
-    const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
-    const endDate = `${endYear}-03-31`; // Financial year ends on March 31st
-  
-    const { data, error } = await supabase
-      .from("invoices")
-      .select()
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .order("date", { ascending: false });
-  
-    if (error) {
-      console.error("Error fetching recent invoices:", error);
-    } else {
+    const startDate = `${startYear}-04-01`;
+    const endDate = `${endYear}-03-31`;
+    try {
+      const data = await invoiceService.getInvoicesByFinancialYear(startDate, endDate);
       setRecentInvoices(data || []);
+    } catch (error) {
+      console.error("Error fetching recent invoices:", error);
     }
   };
 
   const fetchInvoices = async () => {
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .order("date", { ascending: false });
-    if (error) console.error("Error fetching invoices:", error);
-    else {
+    try {
+      const data = await invoiceService.getAllInvoices();
       setInvoices(data || []);
-      setCurrentInvoiceId(data[0].id + 1);
+      const nextId = invoiceService.getNextInvoiceId(data || []);
+      setCurrentInvoiceId(nextId);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
     }
   };
 
@@ -763,32 +696,27 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
     }, 1500);
 
     const newInvoice = {
-      id: currentInvoiceId, 
-      customerName,
-      customerNumber,
+      id: currentInvoiceId,
+      customerName, customerNumber,
       products: JSON.stringify(products),
       total: calculateTotal(),
       cash: parseFloat(cash) || 0,
       upi: parseFloat(upi) || 0,
       credit: parseFloat(credit) || 0,
       note,
-      date: new Date().toISOString(), // Also add the current date
+      date: new Date().toISOString(),
     };
-
-    const { data, error } = await supabase
-      .from("invoices")
-      .insert([newInvoice])
-      .select();
-
-    if (error) {
+    try {
+      const result = await invoiceService.createInvoice(newInvoice);
+      if (result._syncStatus === "pending") {
+        toast({ title: "Saved Offline", description: "Invoice saved offline. Will sync when you go online." });
+      } else {
+        setCurrentInvoiceId((prev) => prev + 1);
+      }
+      fetchInvoices(); fetchRecentInvoices(); fetchDailySales(); fetchSales(salesType);
+    } catch (error) {
       console.error("Error saving invoice:", error);
-    } else {
-      console.log("Invoice saved successfully:", data);
-      setCurrentInvoiceId((prev) => prev + 1);
-      fetchInvoices();
-      fetchRecentInvoices();
-      fetchDailySales();
-      fetchSales(salesType);
+      toast({ title: "Error", description: "Failed to save invoice.", variant: "destructive" });
     }
 
     // Clear the form after saving
@@ -925,6 +853,7 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
           handleDoubleClick={handleDoubleClick}
           allProducts={allproducts}
           setCurrentView={setCurrentView}
+          isOnline={isOnline}
         />
 
         <div

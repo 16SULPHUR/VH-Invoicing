@@ -22,6 +22,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import BarcodeScanner from "./BarcodeScanner";
 import { useToast } from "@/hooks/use-toast";
 import { getCollectionsByDateRange } from "./api/accounting";
+import { invoiceService } from "./lib/invoiceService";
+import { cacheManager } from "./lib/cacheManager";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
 import {
   Sheet,
@@ -88,6 +91,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   ];
 
   const { toast } = useToast();
+  const { isOnline } = useOnlineStatus();
 
   const [selectedFinancialYear, setSelectedFinancialYear] = useState(() => {
     const currentDate = new Date();
@@ -120,32 +124,25 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
     const endDate = `${endYear}-03-31T23:59:59`; // Financial year ends on March 31st
 
-    // Fetch invoices for selected financial year
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .gte("date", startDate)
-      .lte("date", endDate)
-      .order("date", { ascending: false });
-
-      console.log(data)
-
-    if (error) {
-      console.error("Error fetching invoices:", error);
-    } else {
+    try {
+      const data = await invoiceService.getInvoicesByFinancialYear(startDate, endDate);
       setRecentInvoices(data || []);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: customersData, error: customersError } = await supabase
-        .from("customers")
-        .select();
-
-      if (customersError)
-        console.error("Error fetching customers:", customersError);
-      else setCustomers(customersData);
+      const cached = await cacheManager.getCachedCustomers();
+      if (cached.length > 0) {
+        setCustomers(cached);
+      }
+      if (navigator.onLine) {
+        await cacheManager.refreshCustomers();
+        const refreshed = await cacheManager.getCachedCustomers();
+        if (refreshed.length > 0) setCustomers(refreshed);
+      }
     };
 
     fetchData();
@@ -157,13 +154,15 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: productsData, error: productsError } = await supabase
-        .from("products")
-        .select("id, name, quantity, sellingPrice, supplier, barcode");
-
-      if (productsError)
-        console.error("Error fetching products:", productsError);
-      else setAllProducts(productsData);
+      const cached = await cacheManager.getCachedProducts();
+      if (cached.length > 0) {
+        setAllProducts(cached);
+      }
+      if (navigator.onLine) {
+        await cacheManager.refreshProducts();
+        const refreshed = await cacheManager.getCachedProducts();
+        if (refreshed.length > 0) setAllProducts(refreshed);
+      }
     };
 
     fetchData();
@@ -319,59 +318,18 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   }
 
   const handleInvoiceClick = async (invoiceDate) => {
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .eq("date", invoiceDate)
-      .single();
-
-    if (error) {
-      console.error("Error fetching invoice details:", error);
-    } else {
+    try {
+      const data = await invoiceService.getInvoiceByDate(invoiceDate);
       setSelectedInvoice(data);
       setShowInvoiceModal(true);
+    } catch (error) {
+      console.error("Error fetching invoice details:", error);
     }
   };
 
   const handleDeleteInvoice = async (invoiceDate) => {
     try {
-      const { data: invoice, error: fetchError } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("date", invoiceDate)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const products = JSON.parse(invoice.products);
-
-      // Restore stock for each product in the invoice
-      for (const product of products) {
-        const { data: existingProduct, error: fetchProductError } =
-          await supabase
-            .from("products")
-            .select("quantity")
-            .ilike("name", product.name)
-            .single();
-
-        if (fetchProductError) throw fetchProductError;
-
-        const newQuantity = existingProduct.quantity + product.quantity;
-
-        const { error: updateError } = await supabase
-          .from("products")
-          .update({ quantity: newQuantity })
-          .ilike("name", product.name);
-
-        if (updateError) throw updateError;
-      }
-
-      const { error } = await supabase
-        .from("invoices")
-        .delete()
-        .eq("date", invoiceDate);
-
-      if (error) throw error;
+      await invoiceService.deleteInvoice(invoiceDate);
 
       // Success message
       alert("Invoice deleted successfully");
@@ -424,24 +382,20 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       note,
     };
 
-    console.log("currentDate", currentDate);
-    const { data, error } = await supabase
-      .from("invoices")
-      .update(updatedInvoice)
-      .eq("date", currentDate.toISOString());
-
-    if (error) {
-      console.error("Error updating invoice:", error);
-    } else {
-      console.log("Invoice updated successfully:", data);
+    try {
+      await invoiceService.updateInvoice(currentDate.toISOString(), updatedInvoice);
       setIsEditing(false);
       fetchInvoices();
       fetchRecentInvoices();
       fetchDailySales();
       fetchSales(salesType);
 
-      // Update stock after updating the invoice
-      await updateStockAfterInvoice(products);
+      if (!isOnline) {
+        toast({
+          title: "Saved Offline",
+          description: "Invoice update saved offline. Will sync when online.",
+        });
+      }
 
       // Clear the form after updating
       setProducts([]);
@@ -452,6 +406,13 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       setUpi("");
       setCredit("");
       setNote("");
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update invoice.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -704,30 +665,23 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     const [startYear, endYear] = selectedFinancialYear.split('-');
     const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
     const endDate = `${endYear}-03-31`; // Financial year ends on March 31st
-  
-    const { data, error } = await supabase
-      .from("invoices")
-      .select()
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .order("date", { ascending: false });
-  
-    if (error) {
-      console.error("Error fetching recent invoices:", error);
-    } else {
+
+    try {
+      const data = await invoiceService.getInvoicesByFinancialYear(startDate, endDate);
       setRecentInvoices(data || []);
+    } catch (error) {
+      console.error("Error fetching recent invoices:", error);
     }
   };
 
   const fetchInvoices = async () => {
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .order("date", { ascending: false });
-    if (error) console.error("Error fetching invoices:", error);
-    else {
+    try {
+      const data = await invoiceService.getAllInvoices();
       setInvoices(data || []);
-      setCurrentInvoiceId(data[0].id + 1);
+      const nextId = invoiceService.getNextInvoiceId(data || []);
+      setCurrentInvoiceId(nextId);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
     }
   };
 
@@ -863,23 +817,29 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
       date: new Date().toISOString(), // Also add the current date
     };
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .insert([newInvoice])
-      .select();
+    try {
+      const result = await invoiceService.createInvoice(newInvoice);
 
-    if (error) {
-      console.error("Error saving invoice:", error);
-    } else {
-      console.log("Invoice saved successfully:", data);
-      setCurrentInvoiceId((prev) => prev + 1);
+      if (result._syncStatus === "pending") {
+        toast({
+          title: "Saved Offline",
+          description: "Invoice saved offline. Will sync when you go online.",
+        });
+      } else {
+        setCurrentInvoiceId((prev) => prev + 1);
+      }
+
       fetchInvoices();
       fetchRecentInvoices();
       fetchDailySales();
       fetchSales(salesType);
-
-      // Update stock after saving the invoice
-      await updateStockAfterInvoice(products);
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save invoice.",
+        variant: "destructive",
+      });
     }
 
     // Clear the form after saving
@@ -892,37 +852,6 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     setCredit("");
     setNote("");
     clearScannedItems();
-  };
-
-  const updateStockAfterInvoice = async (products) => {
-    try {
-      for (const product of products) {
-        console.log(product.name);
-        const { data: existingProduct, error: fetchError } = await supabase
-          .from("products")
-          .select()
-          .ilike("name", product.name)
-          .single();
-
-        if (fetchError) throw fetchError;
-
-        const newQuantity = existingProduct.quantity - product.quantity;
-
-        const { error: updateError } = await supabase
-          .from("products")
-          .update({ quantity: newQuantity })
-          .ilike("name", product.name);
-
-        if (updateError) throw updateError;
-      }
-    } catch (error) {
-      console.error("Error updating stock:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update product stock. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   const clearScannedItems = async () => {
@@ -1115,6 +1044,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
               handleDoubleClick={handleDoubleClick}
               allProducts={allproducts}
               setCurrentView={setCurrentView}
+              isOnline={isOnline}
             />
 
             {/* <div

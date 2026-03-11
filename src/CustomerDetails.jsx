@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "./supabaseClient";
+import { cacheManager } from "./lib/cacheManager";
 
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -92,13 +92,13 @@ const CustomerDetails = ({
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: customersData, error: customersError } = await supabase
-        .from("customers")
-        .select();
-
-      if (customersError)
-        console.error("Error fetching customers:", customersError);
-      else setCustomers(customersData);
+      const cached = await cacheManager.getCachedCustomers();
+      if (cached.length > 0) setCustomers(cached);
+      if (navigator.onLine) {
+        await cacheManager.refreshCustomers();
+        const refreshed = await cacheManager.getCachedCustomers();
+        if (refreshed.length > 0) setCustomers(refreshed);
+      }
     };
 
     fetchData();

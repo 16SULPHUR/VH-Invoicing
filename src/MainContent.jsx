@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { UPIPaymentCard } from "./InvoiceModal";
+import OfflineInvoiceBanner from "./components/OfflineInvoiceBanner";
+import SyncStatusBar from "./components/SyncStatusBar";
 // Cashbook will be opened as a dedicated page via setCurrentView("cashbook")
 
 const MainContent = ({
@@ -52,7 +54,8 @@ const MainContent = ({
   handleUpdateInvoice,
   handlePrint,
   allProducts,
-  setCurrentView
+  setCurrentView,
+  isOnline
 }) => {
   const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
   const [qrAmount, setQrAmount] = useState("");
@@ -76,12 +79,15 @@ const MainContent = ({
         <h5 className="font-bold bg-pink-600 text-white border border-pink-600 p-1.5 rounded text-lg md:text-xl">
           Create Invoice
         </h5>
-        <div className="hidden md:flex gap-3">
+        <div className="hidden md:flex gap-3 items-center">
+          <SyncStatusBar />
           <Button className="hidden lg:block" onClick={() => window.location.reload()}>
             <RefreshCw />
           </Button>
         </div>
       </div>
+
+      {!isOnline && <OfflineInvoiceBanner />}
 
       {/* Utilities grid for mobile and desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-4">

@@ -18,6 +18,7 @@ import { QrCode, X, Printer, Edit, Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Share2 } from "lucide-react"; // share icon
+import OfflineBadge from "./components/OfflineBadge";
 
 
 export const UPIPaymentCard = ({ upiLink, totalAmount, isVisible }) => {
@@ -199,6 +200,11 @@ export const InvoiceModal = ({ invoice, onClose, onEdit, onDelete }) => {
           </div>
 
           <div className="bg-white p-2 rounded-lg w-full md:w-2/3 max-h-[60vh] md:max-h-[80vh] overflow-auto">
+            {invoice._syncStatus && invoice._syncStatus !== "synced" && (
+              <div className="mb-2 p-2 flex items-center justify-center">
+                <OfflineBadge syncStatus={invoice._syncStatus} />
+              </div>
+            )}
             <UpdatedVarietyHeavenInvoice
               invoiceId={invoice.id}
               invoiceDate={new Date(invoice.date).toLocaleDateString()}

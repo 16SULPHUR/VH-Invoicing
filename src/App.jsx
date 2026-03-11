@@ -16,6 +16,8 @@ import MobileDashboard from "./MobileDashboard";
 import CustomerManagement from "./CustomerManagement";
 import ReportsRouter from "./Reports/Router";
 import Cashbook from "./Cashbook";
+import { syncManager } from "./lib/syncManager";
+import { cacheManager } from "./lib/cacheManager";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -80,6 +82,14 @@ const App = () => {
     return () => {
       authListener.subscription.unsubscribe();
     };
+  }, []);
+
+  // Initialize offline sync system and cache
+  useEffect(() => {
+    syncManager.setupConnectivityListeners();
+    if (navigator.onLine) {
+      cacheManager.refreshAll();
+    }
   }, []);
 
   // Periodic session validation

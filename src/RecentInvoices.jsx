@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SheetClose } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import OfflineBadge from "./components/OfflineBadge";
 
 const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,7 +19,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
       const date = formatDate(invoice.date);
       if (!groups[date]) groups[date] = { invoices: [], totalSale: 0 };
       groups[date].invoices.push(invoice);
-      groups[date].totalSale += invoice.total;
+      groups[date].totalSale += parseFloat(invoice.total) || 0;
     });
     return groups;
   }, [recentInvoices, formatDate]);
@@ -35,7 +36,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
   };
 
   const filteredAndGroupedInvoices = useMemo(() => {
-    const filtered = recentInvoices.filter(invoice => 
+    const filtered = recentInvoices.filter(invoice =>
       invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.id.toString().includes(searchTerm) ||
       invoice.total.toString().includes(searchTerm)
@@ -46,7 +47,7 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
       const date = formatDate(invoice.date);
       if (!groups[date]) groups[date] = { invoices: [], totalSale: 0 };
       groups[date].invoices.push(invoice);
-      groups[date].totalSale += invoice.total;
+      groups[date].totalSale += parseFloat(invoice.total) || 0;
     });
     return groups;
   }, [recentInvoices, searchTerm, formatDate]);
@@ -92,6 +93,8 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                           ? "bg-red-900/50 hover:bg-red-800"
                           : "bg-pink-900/50 hover:bg-gray-800"
                       }
+                      ${invoice._syncStatus === "pending" ? "border border-dashed border-amber-500/50" : ""}
+                      ${invoice._syncStatus === "failed" ? "border border-dashed border-red-500/50" : ""}
                       mb-2 rounded-md shadow-md cursor-pointer px-2 py-1 text-md
                        transition-colors duration-200
                     `}
@@ -103,6 +106,9 @@ const RecentInvoices = ({ recentInvoices, handleInvoiceClick, formatDate }) => {
                           <h6 className="font-bold text-gray-300">
                             #{invoice.id}
                           </h6>
+                          {invoice._syncStatus && invoice._syncStatus !== "synced" && (
+                            <OfflineBadge syncStatus={invoice._syncStatus} />
+                          )}
                           <h6 className="font-bold text-gray-300">
                             {invoice.customerName.split(" ")[0]}
                           </h6>
