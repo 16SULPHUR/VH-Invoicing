@@ -664,7 +664,7 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
   const fetchRecentInvoices = async () => {
     const [startYear, endYear] = selectedFinancialYear.split('-');
     const startDate = `${startYear}-04-01`; // Financial year starts from April 1st
-    const endDate = `${endYear}-03-31`; // Financial year ends on March 31st
+    const endDate = `${endYear}-03-31T23:59:59`; // Financial year ends on March 31st
 
     try {
       const data = await invoiceService.getInvoicesByFinancialYear(startDate, endDate);
