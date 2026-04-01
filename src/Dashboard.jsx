@@ -669,6 +669,12 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     try {
       const data = await invoiceService.getInvoicesByFinancialYear(startDate, endDate);
       setRecentInvoices(data || []);
+
+      const nextId = invoiceService.getNextInvoiceId(data || []);
+
+      console.log("Next invoice ID:", nextId);
+      setCurrentInvoiceId(nextId);
+
     } catch (error) {
       console.error("Error fetching recent invoices:", error);
     }
@@ -678,8 +684,9 @@ const Dashboard = ({ setIsAuthenticated, setCurrentView }) => {
     try {
       const data = await invoiceService.getAllInvoices();
       setInvoices(data || []);
-      const nextId = invoiceService.getNextInvoiceId(data || []);
-      setCurrentInvoiceId(nextId);
+
+      // const nextId = invoiceService.getNextInvoiceId(data || []);
+      // setCurrentInvoiceId(nextId);
     } catch (error) {
       console.error("Error fetching invoices:", error);
     }
