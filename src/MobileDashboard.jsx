@@ -560,17 +560,18 @@ const MobileDashboard = ({ setIsAuthenticated, setCurrentView }) => {
     try {
       const data = await invoiceService.getInvoicesByFinancialYear(startDate, endDate);
       setRecentInvoices(data || []);
+  
+      const nextId = invoiceService.getNextInvoiceId(data || []);
+      setCurrentInvoiceId(nextId);
     } catch (error) {
       console.error("Error fetching recent invoices:", error);
     }
   };
-
+  
   const fetchInvoices = async () => {
     try {
       const data = await invoiceService.getAllInvoices();
       setInvoices(data || []);
-      const nextId = invoiceService.getNextInvoiceId(data || []);
-      setCurrentInvoiceId(nextId);
     } catch (error) {
       console.error("Error fetching invoices:", error);
     }
