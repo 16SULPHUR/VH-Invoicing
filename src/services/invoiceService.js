@@ -1,0 +1,289 @@
+import { supabase } from "@/lib/supabase";
+import { db, SYNC_STATUS } from "@/lib/offline/db";
+import { syncManager } from "@/lib/offline/syncManager";
+import {
+  generateOfflineId,
+  isNetworkError,
+  isOnline,
+  withOfflineFallback,
+} from "@/lib/offline/network";
+import { productService } from "./productService";
+
+const TABLE = "invoices";
+
+function parseLines(products) {
+  if (!products) return [];
+  return typeof products === "string" ? JSON.parse(products) : products;
+}
+
+function asSynced(invoice) {
+  return { ...invoice, _syncStatus: SYNC_STATUS.SYNCED, _offlineId: null };
+}
+
+function stripLocalFields(invoice) {
+  const payload = { ...invoice };
+  delete payload._syncStatus;
+  delete payload._offlineId;
+  return payload;
+}
+
+export const invoiceService = {
+  createInvoice(invoice) {
+    return withOfflineFallback(
+      async () => {
+        const { data, error } = await supabase.from(TABLE).insert([invoice]).select();
+        if (error) throw error;
+
+        const saved = asSynced(data[0]);
+        await db.invoices.put(saved);
+        await productService.deductStock(parseLines(saved.products));
+        return saved;
+      },
+      () => this._createOffline(invoice)
+    );
+  },
+
+  async _createOffline(invoice) {
+    const offlineId = generateOfflineId();
+    const offlineInvoice = {
+      ...invoice,
+      id: offlineId,
+      _offlineId: offlineId,
+      _syncStatus: SYNC_STATUS.PENDING,
+    };
+
+    await db.invoices.put(offlineInvoice);
+    await syncManager.addToQueue({
+      type: "create",
+      table: TABLE,
+      data: offlineInvoice,
+      originalDate: invoice.date,
+    });
+
+    return offlineInvoice;
+  },
+
+  getInvoicesByFinancialYear(startDate, endDate) {
+    return withOfflineFallback(
+      async () => {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .select()
+          .gte("date", startDate)
+          .lte("date", endDate)
+          .order("date", { ascending: false });
+        if (error) throw error;
+
+        const serverInvoices = (data || []).map(asSynced);
+        await this._replaceSyncedRange(startDate, endDate, serverInvoices);
+
+        const localPending = await db.invoices
+          .where("_syncStatus")
+          .anyOf(SYNC_STATUS.PENDING, SYNC_STATUS.FAILED)
+          .filter((inv) => inv.date >= startDate && inv.date <= endDate)
+          .toArray();
+
+        return [...localPending, ...serverInvoices].sort((a, b) => (a.date < b.date ? 1 : -1));
+      },
+      () => this._getOfflineRange(startDate, endDate)
+    );
+  },
+
+  /** Server data wins for synced rows; locally queued rows are never dropped. */
+  async _replaceSyncedRange(startDate, endDate, serverInvoices) {
+    const staleSynced = await db.invoices
+      .where("_syncStatus")
+      .equals(SYNC_STATUS.SYNCED)
+      .filter((inv) => inv.date >= startDate && inv.date <= endDate)
+      .toArray();
+
+    if (staleSynced.length > 0) {
+      await db.invoices.bulkDelete(staleSynced.map((inv) => inv.date));
+    }
+    if (serverInvoices.length > 0) {
+      await db.invoices.bulkPut(serverInvoices);
+    }
+  },
+
+  _getOfflineRange(startDate, endDate) {
+    return db.invoices
+      .filter((inv) => inv.date >= startDate && inv.date <= endDate)
+      .reverse()
+      .sortBy("date");
+  },
+
+  async getInvoiceByDate(date) {
+    const local = await db.invoices.get(date);
+
+    // A locally queued edit is newer than whatever the server still holds.
+    if (local && local._syncStatus !== SYNC_STATUS.SYNCED) return local;
+
+    if (!isOnline()) {
+      if (!local) throw new Error("Invoice not found in offline cache");
+      return local;
+    }
+
+    try {
+      const { data, error } = await supabase.from(TABLE).select("*").eq("date", date).single();
+      if (error) throw error;
+
+      const invoice = asSynced(data);
+      await db.invoices.put(invoice);
+      return invoice;
+    } catch (error) {
+      if (isNetworkError(error) && local) return local;
+      throw error;
+    }
+  },
+
+  getAllInvoices() {
+    return withOfflineFallback(
+      async () => {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .select("*")
+          .order("date", { ascending: false });
+        if (error) throw error;
+        return data || [];
+      },
+      () => db.invoices.reverse().sortBy("date")
+    );
+  },
+
+  /** Offline IDs are strings like OFFLINE-123-abcd and must not seed the counter. */
+  getNextInvoiceId(invoices) {
+    const numericIds = (invoices || [])
+      .map((invoice) => invoice.id)
+      .filter((id) => typeof id === "number" || /^\d+$/.test(String(id)))
+      .map(Number);
+
+    return numericIds.length === 0 ? 1 : Math.max(...numericIds) + 1;
+  },
+
+  updateInvoice(date, changes) {
+    return withOfflineFallback(
+      async () => {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .update(stripLocalFields(changes))
+          .eq("date", date);
+        if (error) throw error;
+
+        await db.invoices.put(asSynced({ ...changes, date }));
+        await productService.deductStock(parseLines(changes.products));
+        return data;
+      },
+      () => this._updateOffline(date, changes)
+    );
+  },
+
+  async _updateOffline(date, changes) {
+    await db.invoices.put({ ...changes, date, _syncStatus: SYNC_STATUS.PENDING });
+    await syncManager.addToQueue({
+      type: "update",
+      table: TABLE,
+      data: changes,
+      originalDate: date,
+    });
+    return changes;
+  },
+
+  deleteInvoice(date) {
+    return withOfflineFallback(
+      async () => {
+        const invoice = await this.getInvoiceByDate(date);
+        await productService.restoreStock(parseLines(invoice.products));
+
+        const { error } = await supabase.from(TABLE).delete().eq("date", date);
+        if (error) throw error;
+
+        await db.invoices.delete(date);
+      },
+      () => this._deleteOffline(date)
+    );
+  },
+
+  async _deleteOffline(date) {
+    const invoice = await db.invoices.get(date);
+    if (!invoice) throw new Error("Invoice not found in offline cache");
+
+    await db.invoices.delete(date);
+
+    // An invoice that never synced can just be dropped along with its queued create.
+    if (invoice._offlineId && invoice._syncStatus === SYNC_STATUS.PENDING) {
+      const queued = await db.syncQueue.where("originalDate").equals(date).toArray();
+      await db.syncQueue.bulkDelete(queued.map((entry) => entry.id));
+      return;
+    }
+
+    await syncManager.addToQueue({
+      type: "delete",
+      table: TABLE,
+      data: invoice,
+      originalDate: date,
+    });
+  },
+
+  /** Totals for the sales summary panel, computed server-side where possible. */
+  async getSalesSummary(startDate, endDate) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("date, total, cash, upi, credit")
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .order("date", { ascending: false });
+    if (error) throw error;
+
+    const sum = (rows, key) => rows.reduce((acc, row) => acc + (parseFloat(row[key]) || 0), 0);
+    const rows = data || [];
+
+    return {
+      total: sum(rows, "total"),
+      cash: sum(rows, "cash"),
+      upi: sum(rows, "upi"),
+      credit: sum(rows, "credit"),
+      count: rows.length,
+    };
+  },
+
+  async getDailySales(days = 7) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("date, total")
+      .gte("date", since.toISOString().split("T")[0])
+      .order("date", { ascending: false });
+    if (error) throw error;
+
+    const totalsByDate = (data || []).reduce((acc, invoice) => {
+      const day = new Date(invoice.date).toISOString().split("T")[0];
+      acc[day] = (acc[day] || 0) + parseFloat(invoice.total);
+      return acc;
+    }, {});
+
+    return Object.entries(totalsByDate)
+      .map(([date, total]) => ({
+        date,
+        total,
+        formattedDate: String(new Date(date).getDate()).padStart(2, "0"),
+      }))
+      .reverse();
+  },
+
+  async getCreditInvoices() {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .gt("credit", 0)
+      .order("date", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async updatePaymentStatus(id, paymentStatus) {
+    const { error } = await supabase.from(TABLE).update({ paymentStatus }).eq("id", id);
+    if (error) throw error;
+  },
+};

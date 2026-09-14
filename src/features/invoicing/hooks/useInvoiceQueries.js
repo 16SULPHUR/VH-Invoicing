@@ -1,0 +1,106 @@
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryClient";
+import { invoiceService } from "@/services/invoiceService";
+import { getCollectionsByDateRange } from "@/services/accountingService";
+import { cacheManager } from "@/lib/offline/cacheManager";
+import { isOnline } from "@/lib/offline/network";
+import {
+  currentFinancialYear,
+  endOfDay,
+  financialYearRange,
+  salesPeriodRange,
+  startOfDay,
+  toISODate,
+} from "@/utils/date";
+
+const DAILY_SALES_WINDOW = 7;
+
+export function useRecentInvoices() {
+  const [financialYear, setFinancialYear] = useState(currentFinancialYear);
+  const { startDate, endDate } = useMemo(() => financialYearRange(financialYear), [financialYear]);
+
+  const query = useQuery({
+    queryKey: queryKeys.invoices.financialYear(startDate, endDate),
+    queryFn: () => invoiceService.getInvoicesByFinancialYear(startDate, endDate),
+  });
+
+  const invoices = useMemo(() => query.data ?? [], [query.data]);
+  const nextInvoiceId = useMemo(() => invoiceService.getNextInvoiceId(invoices), [invoices]);
+
+  return { invoices, nextInvoiceId, financialYear, setFinancialYear, ...query };
+}
+
+export function useDailySales() {
+  return useQuery({
+    queryKey: queryKeys.invoices.dailySales(DAILY_SALES_WINDOW),
+    queryFn: () => invoiceService.getDailySales(DAILY_SALES_WINDOW),
+    initialData: [],
+  });
+}
+
+export function useSalesSummary() {
+  const [period, setPeriod] = useState("today");
+  const [customRange, setCustomRange] = useState({ start: "", end: "" });
+
+  const range = useMemo(() => salesPeriodRange(period, customRange), [period, customRange]);
+  const hasRange = Boolean(range.startDate && range.endDate && !range.startDate.startsWith("T"));
+
+  const summary = useQuery({
+    queryKey: queryKeys.invoices.salesSummary(range.startDate, range.endDate),
+    queryFn: () => invoiceService.getSalesSummary(range.startDate, range.endDate),
+    enabled: hasRange && period !== "custom",
+  });
+
+  const today = toISODate();
+  const collections = useQuery({
+    queryKey: queryKeys.accounting.collections(startOfDay(today), endOfDay(today)),
+    queryFn: () => getCollectionsByDateRange(startOfDay(today), endOfDay(today)),
+    initialData: { cash: 0, upi: 0, credit: 0 },
+  });
+
+  return {
+    period,
+    setPeriod,
+    customRange,
+    setCustomRange,
+    summary: summary.data ?? { total: 0, cash: 0, upi: 0, credit: 0, count: 0 },
+    refetchSummary: summary.refetch,
+    todayCollections: collections.data,
+  };
+}
+
+/** Catalog of every product, served from IndexedDB first so the till works offline. */
+export function useProductCatalog() {
+  return useQuery({
+    queryKey: queryKeys.products.all,
+    queryFn: async () => {
+      const cached = await cacheManager.getCachedProducts();
+      if (!isOnline()) return cached;
+      await cacheManager.refreshProducts();
+      const refreshed = await cacheManager.getCachedProducts();
+      return refreshed.length > 0 ? refreshed : cached;
+    },
+    initialData: [],
+  });
+}
+
+export function useCustomerDirectory() {
+  return useQuery({
+    queryKey: queryKeys.customers.all,
+    queryFn: async () => {
+      const cached = await cacheManager.getCachedCustomers();
+      if (!isOnline()) return cached;
+      await cacheManager.refreshCustomers();
+      const refreshed = await cacheManager.getCachedCustomers();
+      return refreshed.length > 0 ? refreshed : cached;
+    },
+    initialData: [],
+  });
+}
+
+/** One place to invalidate everything an invoice write affects. */
+export function useInvalidateInvoiceData() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
+}

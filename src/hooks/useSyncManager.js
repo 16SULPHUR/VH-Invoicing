@@ -1,51 +1,29 @@
-import { useState, useCallback, useEffect } from "react";
-import { syncManager } from "../lib/syncManager";
-import { db } from "../lib/offlineDb";
+import { useCallback, useEffect, useState } from "react";
+import { syncManager } from "@/lib/offline/syncManager";
 
 export function useSyncManager() {
   const [syncErrors, setSyncErrors] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Subscribe to sync manager events to update errors
+  const refreshErrors = useCallback(async () => {
+    try {
+      setSyncErrors(await syncManager.listFailed());
+    } catch {
+      // IndexedDB may not be open yet.
+    }
+  }, []);
+
   useEffect(() => {
-    const unsubscribe = syncManager.subscribe(async (event) => {
-      if (
-        event.type === "sync_completed" ||
-        event.type === "item_failed" ||
-        event.type === "queue_updated"
-      ) {
-        const failed = await db.syncQueue
-          .where("status")
-          .equals("failed")
-          .toArray();
-        setSyncErrors(failed);
-      }
-      if (event.type === "sync_started") {
-        setIsSyncing(true);
-      }
-      if (
-        event.type === "sync_completed" ||
-        event.type === "sync_error"
-      ) {
-        setIsSyncing(false);
+    refreshErrors();
+
+    return syncManager.subscribe((event) => {
+      if (event.type === "sync_started") setIsSyncing(true);
+      if (event.type === "sync_completed" || event.type === "sync_error") setIsSyncing(false);
+      if (["sync_completed", "item_failed", "queue_updated"].includes(event.type)) {
+        refreshErrors();
       }
     });
-
-    // Load initial failed items
-    (async () => {
-      try {
-        const failed = await db.syncQueue
-          .where("status")
-          .equals("failed")
-          .toArray();
-        setSyncErrors(failed);
-      } catch (err) {
-        // IndexedDB may not be ready
-      }
-    })();
-
-    return unsubscribe;
-  }, []);
+  }, [refreshErrors]);
 
   const triggerSync = useCallback(async () => {
     if (isSyncing) return;
@@ -54,22 +32,16 @@ export function useSyncManager() {
       await syncManager.processQueue();
     } finally {
       setIsSyncing(false);
-      const failed = await db.syncQueue
-        .where("status")
-        .equals("failed")
-        .toArray();
-      setSyncErrors(failed);
+      refreshErrors();
     }
-  }, [isSyncing]);
+  }, [isSyncing, refreshErrors]);
 
   const dismissError = useCallback(async (queueId) => {
     await syncManager.dismissError(queueId);
-    setSyncErrors((prev) => prev.filter((e) => e.id !== queueId));
+    setSyncErrors((previous) => previous.filter((entry) => entry.id !== queueId));
   }, []);
 
-  const retryFailed = useCallback(async () => {
-    await syncManager.retryFailed();
-  }, []);
+  const retryFailed = useCallback(() => syncManager.retryFailed(), []);
 
   return { triggerSync, isSyncing, syncErrors, dismissError, retryFailed };
 }

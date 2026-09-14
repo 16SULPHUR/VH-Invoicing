@@ -1,15 +1,20 @@
+import { BUSINESS } from "@/config/business";
+
+const currencyFormatter = new Intl.NumberFormat(BUSINESS.locale, {
+  style: "currency",
+  currency: BUSINESS.currency,
+  maximumFractionDigits: 2,
+});
+
 export function formatINR(amount) {
-  const numeric = Number(amount) || 0;
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(numeric);
+  return currencyFormatter.format(Number(amount) || 0);
 }
 
-export function formatDateDDMMMYYYY(dateValue) {
-  const d = new Date(dateValue);
-  if (Number.isNaN(d.getTime())) return "";
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = d.toLocaleString("en-GB", { month: "short" });
-  const year = d.getFullYear();
-  return `${day} ${month} ${year}`;
+export function formatAmount(amount) {
+  return (Number(amount) || 0).toFixed(2);
 }
 
-
+export function toNumber(value) {
+  const numeric = parseFloat(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
