@@ -1,13 +1,11 @@
 const BADGE_STYLES = {
   pending: {
-    label: "Offline",
-    className: "bg-amber-900/60 text-amber-300 border-amber-500/40",
-    dot: "bg-amber-400 animate-pulse",
+    label: "Queued",
+    className: "border-warning/40 bg-warning/10 text-warning",
   },
   failed: {
-    label: "Sync Failed",
-    className: "bg-red-900/60 text-red-300 border-red-500/40",
-    dot: "bg-red-400",
+    label: "Sync failed",
+    className: "border-destructive/40 bg-destructive/10 text-destructive",
   },
 };
 
@@ -17,9 +15,8 @@ export function OfflineBadge({ syncStatus }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${badge.className}`}
+      className={`inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
       {badge.label}
     </span>
   );

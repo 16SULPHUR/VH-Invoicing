@@ -25,14 +25,17 @@ export function ImageUploadDialog({ product, onClose }) {
 
   return (
     <Dialog open={product !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-gray-800 text-gray-100">
+      <DialogContent className="bg-surface text-foreground">
         <DialogHeader>
           <DialogTitle>Images for {product?.name}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="images" className="text-pink-400">
+            <Label
+              htmlFor="images"
+              className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+            >
               Add New Images:
             </Label>
             <Input
@@ -45,7 +48,7 @@ export function ImageUploadDialog({ product, onClose }) {
                 // Allows re-picking the same file after a discard.
                 event.target.value = null;
               }}
-              className="border-gray-600 bg-gray-700 text-gray-100"
+              className="border-border bg-surface text-foreground"
             />
 
             <div className="flex flex-wrap gap-2">
@@ -54,13 +57,16 @@ export function ImageUploadDialog({ product, onClose }) {
                   <LazyLoadImage
                     src={preview.url}
                     alt={`Preview ${index + 1}`}
+                    width={96}
+                    height={96}
+                    loading="lazy"
                     className="h-24 w-24 rounded object-cover"
                   />
                   <button
                     type="button"
                     aria-label={`Remove image ${index + 1}`}
                     onClick={() => draft.discard(index)}
-                    className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white"
+                    className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-destructive "
                   >
                     &times;
                   </button>
@@ -72,7 +78,7 @@ export function ImageUploadDialog({ product, onClose }) {
           <Button
             onClick={handleSave}
             disabled={draft.isSaving}
-            className="w-full bg-pink-600 text-white hover:bg-pink-700"
+            className="w-full bg-primary hover:bg-primary"
           >
             {draft.isSaving ? "Saving…" : "Save Changes"}
           </Button>

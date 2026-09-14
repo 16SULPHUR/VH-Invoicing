@@ -41,7 +41,7 @@ export default function TrialBalancePage() {
   );
 
   const footerRows = (
-    <TableRow className="font-semibold text-white">
+    <TableRow className="font-semibold ">
       <TableCell className="text-right">Total</TableCell>
       <TableCell>{formatINR(totals.debit)}</TableCell>
       <TableCell>{formatINR(totals.credit)}</TableCell>

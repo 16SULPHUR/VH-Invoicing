@@ -20,7 +20,7 @@ const FIELDS = [
   { key: "sellingPrice", label: "Selling Price", type: "number" },
 ];
 
-const inputClass = "border-gray-600 bg-gray-700 text-gray-100";
+const inputClass = "border-border bg-surface text-foreground";
 
 export default function AddProductForm() {
   const { data: suppliers } = useSuppliers();
@@ -43,11 +43,11 @@ export default function AddProductForm() {
         <div className="flex items-center space-x-2">
           <Switch
             id="add-supplier"
-            className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
+
             checked={form.isAddingNewSupplier}
             onCheckedChange={form.setIsAddingNewSupplier}
           />
-          <Label htmlFor="add-supplier" className="text-nowrap text-pink-400">
+          <Label htmlFor="add-supplier" className="text-nowrap text-sm text-muted-foreground">
             New Supplier
           </Label>
         </div>
@@ -84,7 +84,10 @@ export default function AddProductForm() {
 
       {FIELDS.map(({ key, label, type }, index) => (
         <div key={key} className="space-y-2">
-          <Label htmlFor={key} className="text-pink-400">
+          <Label
+            htmlFor={key}
+            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+          >
             {label}:
           </Label>
           <Input
@@ -100,7 +103,10 @@ export default function AddProductForm() {
       ))}
 
       <div className="space-y-2">
-        <Label htmlFor="images" className="text-pink-400">
+        <Label
+          htmlFor="images"
+          className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+        >
           Product Images:
         </Label>
         <Input
@@ -120,13 +126,16 @@ export default function AddProductForm() {
               <img
                 src={preview}
                 alt={`Preview ${index + 1}`}
+                width={96}
+                height={96}
+                loading="lazy"
                 className="h-24 w-24 rounded object-cover"
               />
               <button
                 type="button"
                 aria-label={`Remove image ${index + 1}`}
                 onClick={() => form.images.discard(index)}
-                className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white"
+                className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-destructive "
               >
                 &times;
               </button>
@@ -138,7 +147,7 @@ export default function AddProductForm() {
       <Button
         type="submit"
         disabled={form.submit.isPending}
-        className="w-full bg-pink-600 text-white hover:bg-pink-700"
+        className="w-full bg-primary hover:bg-primary"
       >
         {form.submit.isPending ? "Adding…" : "Add Product"}
       </Button>

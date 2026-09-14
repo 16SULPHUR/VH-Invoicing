@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { paymentsBalance, paymentsTotal } from "@/utils/invoice";
 import { toNumber } from "@/utils/formatters";
+import { formatInvoiceDate } from "@/utils/date";
 import { PrintableInvoice } from "../components/PrintableInvoice";
 import { useInvoiceDraft } from "./useInvoiceDraft";
 import { usePrintDocument } from "./useInvoicePrinting";
@@ -160,7 +161,7 @@ export function useInvoiceWorkspace() {
     const printed = printDocument(
       <PrintableInvoice
         invoiceId={invoiceId}
-        invoiceDate={new Date().toLocaleDateString()}
+        invoiceDate={formatInvoiceDate(new Date())}
         customerName={draft.customerName}
         customerContact={draft.customerNumber}
         products={draft.lines}

@@ -24,6 +24,18 @@ export function formatDayMonth(date) {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
 }
 
+const invoiceDateFormatter = new Intl.DateTimeFormat("en-IN", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+/** Locale-aware date for the printed invoice header. */
+export function formatInvoiceDate(dateValue) {
+  const date = new Date(dateValue);
+  return Number.isNaN(date.getTime()) ? "" : invoiceDateFormatter.format(date);
+}
+
 export function formatDateDDMMMYYYY(dateValue) {
   const d = new Date(dateValue);
   if (Number.isNaN(d.getTime())) return "";

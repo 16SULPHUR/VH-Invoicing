@@ -1,20 +1,25 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTabParam } from "@/hooks/useTabParam";
+import { PageHeader } from "@/components/common/PageHeader";
 import ManageCustomers from "./components/ManageCustomers";
 import AddCustomerForm from "./components/AddCustomerForm";
 import CreditReport from "./components/CreditReport";
 
 const TABS = [
-  { value: "manage", label: "Manage Customers", Component: ManageCustomers },
-  { value: "add", label: "Add Customer", Component: AddCustomerForm },
-  { value: "reports", label: "Credit Report", Component: CreditReport },
+  { value: "reports", label: "Credit", Component: CreditReport },
+  { value: "manage", label: "Customers", Component: ManageCustomers },
+  { value: "add", label: "Add customer", Component: AddCustomerForm },
 ];
 
 export default function CustomersPage() {
+  const [tab, setTab] = useTabParam("reports");
+
   return (
-    <div className="min-h-screen bg-gray-900 p-4 text-white">
-      <h1 className="mb-4 text-2xl font-bold">Customer Management</h1>
-      <Tabs defaultValue="reports" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+    <div className="mx-auto flex h-full max-w-[1400px] flex-col gap-4 p-4">
+      <PageHeader title="Customers" subtitle="Directory and outstanding credit" />
+
+      <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col gap-4">
+        <TabsList className="w-full justify-start">
           {TABS.map(({ value, label }) => (
             <TabsTrigger key={value} value={value}>
               {label}
@@ -22,7 +27,7 @@ export default function CustomersPage() {
           ))}
         </TabsList>
         {TABS.map(({ value, Component }) => (
-          <TabsContent key={value} value={value}>
+          <TabsContent key={value} value={value} className="min-h-0 flex-1 overflow-y-auto">
             <Component />
           </TabsContent>
         ))}

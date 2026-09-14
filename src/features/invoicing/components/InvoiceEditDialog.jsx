@@ -19,9 +19,9 @@ export function InvoiceEditDialog({ invoice, onClose, onSaved }) {
 
   return (
     <Dialog open={invoice !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-auto bg-gray-800 text-gray-100">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-auto bg-surface text-foreground">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-pink-400">Edit Invoice</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-primary">Edit Invoice</DialogTitle>
         </DialogHeader>
 
         {invoice && (

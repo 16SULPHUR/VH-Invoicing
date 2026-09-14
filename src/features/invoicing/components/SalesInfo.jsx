@@ -1,86 +1,87 @@
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/common/Field";
+import { Input } from "@/components/ui/input";
+import { StatTile } from "@/components/common/StatTile";
 import { formatAmount } from "@/utils/formatters";
+import { PAYMENT_METHODS } from "../paymentMethods";
 
 const SALES_PERIODS = [
   { value: "today", label: "Today" },
-  { value: "week", label: "This Week" },
-  { value: "month", label: "This Month" },
-  { value: "custom", label: "Custom Date Range" },
+  { value: "week", label: "This week" },
+  { value: "month", label: "This month" },
+  { value: "custom", label: "Custom range" },
 ];
-
-const fieldClass =
-  "w-full rounded-md border border-gray-600 bg-gray-700 p-2 text-white focus:border-pink-500 focus:outline-none";
 
 export function SalesInfo({ period, setPeriod, customRange, setCustomRange, summary, onFetch }) {
   const setRangeField = (field) => (event) =>
     setCustomRange((previous) => ({ ...previous, [field]: event.target.value }));
 
   return (
-    <div className="mb-5 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-md">
-      <label htmlFor="salesPeriod" className="mb-2 block font-semibold text-pink-500">
-        Select Sales Period:
-      </label>
-      <select
-        id="salesPeriod"
-        className={fieldClass}
-        value={period}
-        onChange={(event) => setPeriod(event.target.value)}
-      >
-        {SALES_PERIODS.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
+    <section className="space-y-3">
+      <Field label="Period" htmlFor="sales-period">
+        {(id) => (
+          <select
+            id={id}
+            value={period}
+            onChange={(event) => setPeriod(event.target.value)}
+            className="h-9 w-full rounded-md border border-input bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {SALES_PERIODS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        )}
+      </Field>
 
       {period === "custom" && (
-        <div className="mt-4">
-          <label className="mb-1 block text-sm text-pink-500" htmlFor="salesStart">
-            Start Date:
-          </label>
-          <input
-            type="date"
-            id="salesStart"
-            className={fieldClass}
-            value={customRange.start}
-            onChange={setRangeField("start")}
-          />
-          <label className="mb-1 mt-4 block text-sm text-pink-500" htmlFor="salesEnd">
-            End Date:
-          </label>
-          <input
-            type="date"
-            id="salesEnd"
-            className={fieldClass}
-            value={customRange.end}
-            onChange={setRangeField("end")}
-          />
-          <button
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="From" htmlFor="sales-start">
+            {(id) => (
+              <Input
+                id={id}
+                type="date"
+                value={customRange.start}
+                onChange={setRangeField("start")}
+                className="h-9"
+              />
+            )}
+          </Field>
+          <Field label="To" htmlFor="sales-end">
+            {(id) => (
+              <Input
+                id={id}
+                type="date"
+                value={customRange.end}
+                onChange={setRangeField("end")}
+                className="h-9"
+              />
+            )}
+          </Field>
+          <Button
             type="button"
-            className="mt-4 w-full rounded-md bg-pink-600 py-2 text-white transition-colors hover:bg-pink-700 disabled:opacity-50"
+            className="press sm:col-span-2"
             disabled={!customRange.start || !customRange.end}
             onClick={onFetch}
           >
-            Fetch Custom Sales
-          </button>
+            Fetch range
+          </Button>
         </div>
       )}
 
-      <div className="mt-6">
-        <h4 className="text-lg font-semibold text-pink-500">Total Sales:</h4>
-        <p className="mt-2 text-3xl text-white">₹ {formatAmount(summary.total)}</p>
-      </div>
+      <StatTile label="Total sales" value={`₹${formatAmount(summary.total)}`} />
 
-      <div className="mt-4 flex gap-3">
-        <span className="rounded-md bg-green-700 px-2 py-1 text-lg font-semibold text-white">
-          💸 ₹{formatAmount(summary.cash)}
-        </span>
-        <span className="rounded-md bg-pink-700 px-2 py-1 text-lg font-semibold text-white">
-          🏛️ ₹{formatAmount(summary.upi)}
-        </span>
-        <span className="rounded-md bg-red-700 px-2 py-1 text-lg font-semibold text-white">
-          ❌ ₹{formatAmount(summary.credit)}
-        </span>
+      <div className="grid grid-cols-3 gap-2">
+        {PAYMENT_METHODS.map(({ key, label, text }) => (
+          <StatTile
+            key={key}
+            label={label}
+            value={`₹${formatAmount(summary[key])}`}
+            accent={`${text} text-lg`}
+          />
+        ))}
       </div>
-    </div>
+    </section>
   );
 }

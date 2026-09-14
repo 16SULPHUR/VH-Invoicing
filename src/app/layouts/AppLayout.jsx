@@ -1,20 +1,20 @@
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
-import { AppNav } from "./AppNav";
+import { AppRail, AppTabBar } from "./AppNav";
 import { PageLoader } from "@/components/common/PageLoader";
 
 export function AppLayout({ onSignOut }) {
   return (
-    <div className="relative flex h-screen w-full flex-col">
-      <div className="absolute inset-0 z-10 h-full w-full bg-gray-900 bg-cover bg-center bg-blend-soft-light" />
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
+      <AppRail onSignOut={onSignOut} />
 
-      <div className="relative z-20 flex h-full flex-col">
-        <main className="flex-grow overflow-auto md:mt-10">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main className="min-h-0 flex-1 overflow-y-auto">
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
         </main>
-        <AppNav onSignOut={onSignOut} />
+        <AppTabBar onSignOut={onSignOut} />
       </div>
     </div>
   );

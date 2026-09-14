@@ -1,3 +1,5 @@
+import { Receipt } from "lucide-react";
+import { EmptyState } from "@/components/common/EmptyState";
 import { formatAmount } from "@/utils/formatters";
 import { accountDisplayName } from "../balances";
 
@@ -14,52 +16,65 @@ export function TransactionsTable({ transactions, accounts }) {
   };
 
   return (
-    <div className="rounded border border-slate-700 bg-slate-900/60 p-4">
-      <div className="mb-3 font-semibold text-pink-400">Recent transactions</div>
-      <div className="overflow-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-700 text-slate-400">
-              {HEADERS.map((header) => (
-                <th
-                  key={header}
-                  className={`p-2 ${header === "Amount" ? "text-right" : "text-left"}`}
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.length === 0 && (
-              <tr>
-                <td colSpan={HEADERS.length} className="p-4 text-center text-slate-400">
-                  No entries yet
-                </td>
-              </tr>
-            )}
-            {[...transactions].sort(byMostRecent).map((transaction) => {
-              const isOutflow = Number(transaction.amount) < 0;
-              return (
-                <tr key={transaction.id} className="border-b border-slate-800/60">
-                  <td className="whitespace-nowrap p-2">{transaction.txn_date}</td>
-                  <td className="whitespace-nowrap p-2">{accountName(transaction.account_id)}</td>
-                  <td
-                    className={`whitespace-nowrap p-2 text-right ${
-                      isOutflow ? "text-red-300" : "text-green-300"
-                    }`}
+    <section className="space-y-2">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Recent transactions
+      </h2>
+
+      {transactions.length === 0 ? (
+        <EmptyState
+          icon={Receipt}
+          title="No entries yet"
+          description="Add one above, or import from a pasted chat."
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="min-w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-surface text-left text-xs uppercase tracking-wide text-muted-foreground">
+                {HEADERS.map((header) => (
+                  <th
+                    key={header}
+                    scope="col"
+                    className={`px-3 py-2 font-medium ${header === "Amount" ? "text-right" : ""}`}
                   >
-                    {isOutflow ? "-" : "+"}₹ {formatAmount(Math.abs(transaction.amount))}
-                  </td>
-                  <td className="whitespace-nowrap p-2 uppercase">{transaction.type}</td>
-                  <td className="p-2">{transaction.description || "-"}</td>
-                  <td className="p-2">{transaction.author || "-"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {[...transactions].sort(byMostRecent).map((transaction) => {
+                const isOutflow = Number(transaction.amount) < 0;
+                return (
+                  <tr key={transaction.id} className="hover:bg-surface/60">
+                    <td className="whitespace-nowrap px-3 py-2 tabular-nums">
+                      {transaction.txn_date}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2">
+                      {accountName(transaction.account_id)}
+                    </td>
+                    <td
+                      className={`whitespace-nowrap px-3 py-2 text-right font-medium tabular-nums ${
+                        isOutflow ? "text-destructive" : "text-success"
+                      }`}
+                    >
+                      {isOutflow ? "-" : "+"}₹{formatAmount(Math.abs(transaction.amount))}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-xs uppercase text-muted-foreground">
+                      {transaction.type.replace("_", " ")}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {transaction.description || "-"}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{transaction.author || "-"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }

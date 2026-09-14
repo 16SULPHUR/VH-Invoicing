@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { BetweenHorizontalEnd, Check, ChevronsUpDown, PencilLine } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -10,42 +9,47 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
+import { Field } from "@/components/common/Field";
+import { cn } from "@/lib/utils";
+import { formatAmount } from "@/utils/formatters";
+import { ICON_STROKE } from "@/config/navigation";
 
-const inputClass =
-  "w-full rounded-md border border-gray-600 bg-gray-800 p-2 text-white focus:border-pink-500 focus:outline-none";
-
-function CatalogCombobox({ catalog, selectedId, onSelect }) {
+function CatalogCombobox({ catalog, selectedId, onSelect, onTypeName, typedName, id }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const selected = catalog.find((product) => product.id === selectedId);
+  const shown = selected?.name || typedName;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between text-black"
+          className="h-9 w-full justify-between font-normal"
         >
-          {selected?.name ?? "Select product..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <span className={cn("truncate", !shown && "text-muted-foreground")}>
+            {shown || "Select product"}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search products..." />
+          <CommandInput placeholder="Search products…" value={search} onValueChange={setSearch} />
           <CommandEmpty>No products found.</CommandEmpty>
           <CommandList>
             <CommandGroup>
               {catalog.map((product) => (
                 <CommandItem
-                  className="text-black"
                   key={product.id}
                   value={product.name}
                   onSelect={() => {
-                    onSelect(product.id === selectedId ? "" : product.id);
+                    onSelect(product.id);
                     setOpen(false);
                   }}
                 >
@@ -54,14 +58,31 @@ function CatalogCombobox({ catalog, selectedId, onSelect }) {
                       "mr-2 h-4 w-4",
                       selectedId === product.id ? "opacity-100" : "opacity-0"
                     )}
+                    aria-hidden
                   />
-                  <div className="flex w-full justify-between">
-                    <span>{product.name}</span>
-                    <span>₹ {product.sellingPrice}</span>
-                  </div>
+                  <span className="flex w-full justify-between gap-2">
+                    <span className="truncate">{product.name}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {formatAmount(product.sellingPrice)}
+                    </span>
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>
+            {search && (
+              <CommandGroup heading="Not in catalog">
+                <CommandItem
+                  value={search}
+                  onSelect={() => {
+                    onTypeName(search);
+                    onSelect("");
+                    setOpen(false);
+                  }}
+                >
+                  Add &quot;{search}&quot; as a one-off
+                </CommandItem>
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
@@ -71,17 +92,15 @@ function CatalogCombobox({ catalog, selectedId, onSelect }) {
 
 export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, onSubmit }) {
   const [selectedId, setSelectedId] = useState("");
-  const [isTypingNewProduct, setIsTypingNewProduct] = useState(false);
 
   const setField = (field) => (event) =>
     setLineForm((previous) => ({ ...previous, [field]: event.target.value }));
 
-  // Picking a catalog product prefills the line with its name, price and qty 1.
+  // Picking a catalog product prefills name, price and a quantity of one.
   useEffect(() => {
     if (!selectedId) return;
     const product = catalog.find((item) => item.id === selectedId);
     if (!product) return;
-
     setLineForm({
       name: product.name,
       quantity: "1",
@@ -95,74 +114,60 @@ export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, o
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-2">
-      <div className="space-y-4 md:flex md:gap-4 md:space-y-0">
-        <div className="w-full md:w-[48%]">
-          <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-bold text-pink-500" htmlFor="productName">
-              Product Name:
-            </label>
-            <Switch
-              id="type-new-product"
-              aria-label="Type a product not in the catalog"
-              className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-zinc-500"
-              checked={isTypingNewProduct}
-              onCheckedChange={setIsTypingNewProduct}
-            />
-          </div>
-          {isTypingNewProduct ? (
-            <input
-              className={inputClass}
-              type="text"
-              id="productName"
-              value={lineForm.name}
-              onChange={setField("name")}
-            />
-          ) : (
-            <CatalogCombobox catalog={catalog} selectedId={selectedId} onSelect={setSelectedId} />
-          )}
-        </div>
+    <form
+      onSubmit={handleSubmit}
+      className="grid items-end gap-3 rounded-lg border border-border bg-surface p-3 sm:grid-cols-[1fr_5rem_7rem_auto]"
+    >
+      <Field label="Product" htmlFor="line-product">
+        {(id) => (
+          <CatalogCombobox
+            id={id}
+            catalog={catalog}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            typedName={lineForm.name}
+            onTypeName={(name) => setLineForm((previous) => ({ ...previous, name }))}
+          />
+        )}
+      </Field>
 
-        <div className="w-full md:w-[24%]">
-          <label className="mb-1 block text-sm font-bold text-pink-500" htmlFor="productQuantity">
-            Quantity:
-          </label>
-          <input
-            className={inputClass}
+      <Field label="Qty" htmlFor="line-qty">
+        {(id) => (
+          <Input
+            id={id}
             type="number"
-            id="productQuantity"
+            autoComplete="off"
+            inputMode="numeric"
+            min="1"
             value={lineForm.quantity}
             onChange={setField("quantity")}
+            className="h-9 text-right tabular-nums"
             required
           />
-        </div>
+        )}
+      </Field>
 
-        <div className="w-full md:w-[24%]">
-          <label className="mb-1 block text-sm font-bold text-pink-500" htmlFor="productPrice">
-            Price:
-          </label>
-          <input
-            className={inputClass}
+      <Field label="Price" htmlFor="line-price">
+        {(id) => (
+          <Input
+            id={id}
             type="number"
-            id="productPrice"
+            autoComplete="off"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
             value={lineForm.price}
             onChange={setField("price")}
+            className="h-9 text-right tabular-nums"
             required
           />
-        </div>
+        )}
+      </Field>
 
-        <div className="w-full md:w-auto md:self-end">
-          <button
-            type="submit"
-            className="w-full cursor-pointer rounded-md bg-pink-600 px-6 py-2 text-white transition-colors hover:bg-pink-700 md:w-auto"
-          >
-            <div className="flex justify-center gap-3">
-              {isEditingLine ? <PencilLine size={27} /> : <BetweenHorizontalEnd size={27} />}
-              <span className="md:hidden">{isEditingLine ? "Update Item" : "Add Item"}</span>
-            </div>
-          </button>
-        </div>
-      </div>
+      <Button type="submit" className="press h-9">
+        <Plus size={16} strokeWidth={ICON_STROKE} className="mr-1.5" aria-hidden />
+        {isEditingLine ? "Update" : "Add"}
+      </Button>
     </form>
   );
 }

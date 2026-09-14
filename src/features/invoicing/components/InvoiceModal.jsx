@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit, Printer, QrCode, Share2, Trash2, X } from "lucide-react";
+import { Pencil, Printer, QrCode, Share2, Trash2, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,24 +11,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OfflineBadge } from "@/components/common/OfflineBadge";
 import { useToast } from "@/hooks/use-toast";
+import { formatAmount } from "@/utils/formatters";
 import { parseInvoiceLines } from "@/utils/invoice";
+import { PAYMENT_METHODS } from "../paymentMethods";
 import { PrintableInvoice } from "./PrintableInvoice";
 import { UpiPaymentCard } from "./UpiPaymentCard";
 import { usePrintDocument } from "../hooks/useInvoicePrinting";
 import { useShareInvoicePdf } from "../hooks/useInvoiceSharing";
-
-const TOTAL_TILES = [
-  { key: "total", label: "🧾 Total", className: "text-pink-400" },
-  { key: "cash", label: "💸 Cash", className: "text-green-400" },
-  { key: "upi", label: "🏛️ UPI", className: "text-pink-400" },
-  { key: "credit", label: "❌ Credit", className: "text-red-400" },
-];
+import { ICON_STROKE } from "@/config/navigation";
+import { formatInvoiceDate } from "@/utils/date";
 
 export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showQRCode, setShowQRCode] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const printDocument = usePrintDocument();
   const shareInvoicePdf = useShareInvoicePdf();
@@ -39,7 +37,7 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const printable = (
     <PrintableInvoice
       invoiceId={invoice.id}
-      invoiceDate={new Date(invoice.date).toLocaleDateString()}
+      invoiceDate={formatInvoiceDate(invoice.date)}
       customerName={invoice.customerName}
       customerContact={invoice.customerNumber}
       products={parseInvoiceLines(invoice.products)}
@@ -64,11 +62,7 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
       await shareInvoicePdf(invoice);
     } catch (error) {
       if (error.name !== "AbortError") {
-        toast({
-          title: "Share failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast({ title: "Share failed", description: error.message, variant: "destructive" });
       }
     } finally {
       setIsSharing(false);
@@ -77,100 +71,100 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
 
   return (
     <>
-      <div
-        role="presentation"
-        onClick={(event) => event.target === event.currentTarget && onClose()}
-        className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black bg-opacity-50 text-black"
-      >
-        <div className="flex w-full max-w-full flex-col md:max-w-6xl md:flex-row md:space-x-4">
-          <div className="flex w-full flex-col md:w-auto">
-            {!showQRCode && (
-              <Button
-                onClick={() => setShowQRCode(true)}
-                className="w-full bg-[#5f259f] text-white hover:bg-[#4a1d7a] md:w-auto"
-              >
-                <QrCode className="mr-2 h-4 w-4" /> Payment QR
-              </Button>
-            )}
-            <UpiPaymentCard amount={invoice.total} isVisible={showQRCode} />
-          </div>
-
-          <div className="max-h-[60vh] w-full overflow-auto rounded-lg bg-white p-2 md:max-h-[80vh] md:w-2/3">
-            {invoice._syncStatus && invoice._syncStatus !== "synced" && (
-              <div className="mb-2 flex items-center justify-center p-2">
+      <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-h-[92dvh] max-w-5xl overflow-y-auto p-0">
+          <DialogHeader className="flex-row items-center justify-between gap-3 border-b border-border p-4">
+            <DialogTitle className="flex items-center gap-2">
+              Invoice #{invoice.id}
+              {invoice._syncStatus && invoice._syncStatus !== "synced" && (
                 <OfflineBadge syncStatus={invoice._syncStatus} />
-              </div>
-            )}
-            {printable}
-          </div>
+              )}
+            </DialogTitle>
+          </DialogHeader>
 
-          <div className="flex w-full flex-col-reverse space-y-2 md:w-auto md:flex-col">
-            <div className="flex w-full flex-col space-y-2 md:w-auto">
-              <Button variant="destructive" onClick={onClose} className="w-full md:w-auto">
-                <X className="mr-2 h-4 w-4" /> Close
-              </Button>
-              <Button
-                className="w-full rounded-md bg-green-500 text-white transition-colors hover:bg-green-600 md:w-auto"
-                onClick={handleShare}
-                disabled={isSharing}
-              >
-                <Share2 className="mr-2 h-4 w-4" /> {isSharing ? "Preparing…" : "Share"}
-              </Button>
-              <Button
-                className="w-full rounded-md bg-pink-400 text-black transition-colors hover:bg-pink-500 md:w-auto"
-                variant="secondary"
-                onClick={handlePrint}
-              >
-                <Printer className="mr-2 h-4 w-4" /> Print
-              </Button>
-              <Button
-                className="w-full rounded-md bg-[#FFDD00] text-black transition-colors hover:bg-[#FFE033] md:w-auto"
-                onClick={() => onEdit(invoice)}
-              >
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteDialog(true)}
-                className="w-full md:w-auto"
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </Button>
-            </div>
+          <div className="grid gap-4 p-4 lg:grid-cols-[1fr_16rem]">
+            <div className="paper max-h-[60dvh] overflow-auto rounded-lg p-3">{printable}</div>
 
-            <div className="grid w-full grid-cols-2 gap-2 md:grid-cols-1">
-              {TOTAL_TILES.map(({ key, label, className }) => (
-                <div key={key} className={`rounded bg-gray-800 p-2 ${className}`}>
-                  <p className="text-sm font-medium">
-                    {label} ₹{invoice[key] ?? 0}
-                  </p>
+            <div className="space-y-4">
+              <dl className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                <div className="rounded-md border border-border bg-surface px-3 py-2">
+                  <dt className="text-xs text-muted-foreground">Total</dt>
+                  <dd className="text-lg font-semibold tabular-nums">
+                    ₹{formatAmount(invoice.total)}
+                  </dd>
                 </div>
-              ))}
+                {PAYMENT_METHODS.map(({ key, label, icon: Icon, text }) => (
+                  <div key={key} className="rounded-md border border-border bg-surface px-3 py-2">
+                    <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Icon size={13} strokeWidth={ICON_STROKE} className={text} aria-hidden />
+                      {label}
+                    </dt>
+                    <dd className="text-lg font-semibold tabular-nums">
+                      ₹{formatAmount(invoice[key])}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="grid gap-2">
+                <Button variant="outline" className="press" onClick={() => setShowQR((v) => !v)}>
+                  <QrCode size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                  {showQR ? "Hide QR" : "Payment QR"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="press"
+                  onClick={handleShare}
+                  disabled={isSharing}
+                >
+                  <Share2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                  {isSharing ? "Preparing…" : "Share PDF"}
+                </Button>
+                <Button variant="outline" className="press" onClick={handlePrint}>
+                  <Printer size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                  Print
+                </Button>
+                <Button className="press" onClick={() => onEdit(invoice)}>
+                  <Pencil size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="press"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                  Delete
+                </Button>
+                <Button variant="ghost" className="press" onClick={onClose}>
+                  <X size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                  Close
+                </Button>
+              </div>
+
+              {showQR && <UpiPaymentCard amount={invoice.total} />}
             </div>
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-gray-800 text-gray-100">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete this invoice?</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-300">
-              This cannot be undone. It permanently deletes the invoice for &quot;
-              {invoice.customerName}&quot; totalling ₹{invoice.total}, and returns its items to
-              stock.
+            <AlertDialogTitle>Delete invoice #{invoice.id}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This cannot be undone. The invoice for {invoice.customerName || "this customer"},
+              totalling ₹{formatAmount(invoice.total)}, is removed and its items return to stock.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-gray-700 text-gray-100 hover:bg-gray-600">
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 onDelete(invoice.date);
                 setShowDeleteDialog(false);
               }}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
             </AlertDialogAction>

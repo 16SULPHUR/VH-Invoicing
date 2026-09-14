@@ -28,7 +28,7 @@ export function BatchEditDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gray-800 text-gray-100">
+      <DialogContent className="bg-surface text-foreground">
         <DialogHeader>
           <DialogTitle>Batch Edit Products</DialogTitle>
         </DialogHeader>
@@ -36,7 +36,10 @@ export function BatchEditDialog({
         <div className="space-y-4">
           {BATCH_EDIT_FIELDS.map((field) => (
             <div key={field} className="space-y-2">
-              <Label htmlFor={`batch-${field}`} className="text-pink-400">
+              <Label
+                htmlFor={`batch-${field}`}
+                className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              >
                 {FIELD_LABELS[field]}:
               </Label>
               <div className="flex gap-2">
@@ -45,7 +48,7 @@ export function BatchEditDialog({
                   type="number"
                   value={batchEditData[field].value}
                   onChange={(event) => setField(field, { value: event.target.value })}
-                  className="border-gray-600 bg-gray-700 text-gray-100"
+                  className="border-border bg-surface text-foreground"
                   placeholder={`Leave blank to keep current ${FIELD_LABELS[field].toLowerCase()}`}
                 />
                 <Select
@@ -68,7 +71,7 @@ export function BatchEditDialog({
         <Button
           onClick={onApply}
           disabled={isSaving}
-          className="w-full bg-pink-600 text-white hover:bg-pink-700"
+          className="w-full bg-primary hover:bg-primary"
         >
           {isSaving ? "Updating…" : `Update ${count} Products`}
         </Button>

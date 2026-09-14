@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ReceiptText, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyState } from "@/components/common/EmptyState";
 import { OfflineBadge } from "@/components/common/OfflineBadge";
 import { formatAmount } from "@/utils/formatters";
 import { formatDayMonth } from "@/utils/date";
-import { PAYMENT_ICONS, usedPaymentMethods } from "../paymentMethods";
+import { usedPaymentMethods } from "../paymentMethods";
+import { ICON_STROKE } from "@/config/navigation";
 
 function matchesSearch(invoice, term) {
   if (!term) return true;
@@ -29,15 +31,8 @@ function groupByDay(invoices) {
   return Array.from(groups.entries());
 }
 
-function syncBorderClass(syncStatus) {
-  if (syncStatus === "pending") return "border border-dashed border-amber-500/50";
-  if (syncStatus === "failed") return "border border-dashed border-red-500/50";
-  return "";
-}
-
 export function RecentInvoices({ invoices, onInvoiceClick }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [hoveredInvoiceId, setHoveredInvoiceId] = useState(null);
 
   const grouped = useMemo(
     () => groupByDay(invoices.filter((invoice) => matchesSearch(invoice, searchTerm))),
@@ -45,83 +40,87 @@ export function RecentInvoices({ invoices, onInvoiceClick }) {
   );
 
   return (
-    <Card className="h-full w-full border-0 bg-gray-900">
-      <CardHeader>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="relative p-3">
+        <Search
+          size={15}
+          strokeWidth={ICON_STROKE}
+          className="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
         <Input
-          type="text"
-          placeholder="Search invoices..."
+          type="search"
+          placeholder="Search invoices…"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          className="border-gray-700 bg-gray-800 text-white"
+          aria-label="Search invoices"
+          className="h-9 pl-8"
         />
-      </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-[calc(90vh-4rem)] px-2">
-          {grouped.length === 0 && (
-            <p className="p-4 text-center text-sm text-gray-500">No invoices found.</p>
-          )}
+      </div>
 
-          {grouped.map(([day, { invoices: dayInvoices, totalSale }]) => (
-            <div key={day} className="mb-4">
-              <p className="text-md mb-2 border-b border-gray-700 font-bold text-pink-400">{day}</p>
-
-              {dayInvoices.map((invoice) => {
-                const methods = usedPaymentMethods(invoice);
-                const isCredit = Number(invoice.credit) > 0;
-
-                return (
-                  <div
-                    key={invoice.id ?? invoice.date}
-                    role="button"
-                    tabIndex={0}
-                    className={`text-md mb-2 cursor-pointer rounded-md px-2 py-1 shadow-md transition-colors duration-200 ${
-                      isCredit
-                        ? "bg-red-900/50 hover:bg-red-800"
-                        : "bg-pink-900/50 hover:bg-gray-800"
-                    } ${syncBorderClass(invoice._syncStatus)}`}
-                    onClick={() => onInvoiceClick(invoice.date)}
-                    onKeyDown={(event) => event.key === "Enter" && onInvoiceClick(invoice.date)}
-                    onMouseEnter={() => setHoveredInvoiceId(invoice.id)}
-                    onMouseLeave={() => setHoveredInvoiceId(null)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h6 className="font-bold text-gray-300">#{invoice.id}</h6>
-                      {invoice._syncStatus && invoice._syncStatus !== "synced" && (
-                        <OfflineBadge syncStatus={invoice._syncStatus} />
-                      )}
-                      <h6 className="font-bold text-gray-300">
-                        {String(invoice.customerName ?? "—").split(" ")[0]}
-                      </h6>
-                      <p className="text-md rounded-md bg-pink-400 px-1 font-bold text-gray-900">
-                        {methods.map((method) => PAYMENT_ICONS[method]).join("")} ₹ {invoice.total}
-                      </p>
-                    </div>
-
-                    {methods.length > 1 && hoveredInvoiceId === invoice.id && (
-                      <div className="mt-2 flex h-full gap-3 transition-opacity duration-300">
-                        {methods.map((method) => (
-                          <p
-                            key={method}
-                            className="text-md rounded-md bg-pink-400 px-1 font-bold text-gray-900"
-                          >
-                            {PAYMENT_ICONS[method]} ₹ {invoice[method]}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              <div className="mt-2 text-right">
-                <p className="text-md font-bold text-pink-400">
-                  Total Sale: ₹ {formatAmount(totalSale)}
-                </p>
+      <ScrollArea className="min-h-0 flex-1 px-3 pb-3">
+        {grouped.length === 0 ? (
+          <EmptyState
+            icon={ReceiptText}
+            title={searchTerm ? "No matches" : "No invoices yet"}
+            description={
+              searchTerm ? "Try a different search." : "Invoices appear here once billed."
+            }
+          />
+        ) : (
+          grouped.map(([day, { invoices: dayInvoices, totalSale }]) => (
+            <section key={day} className="mb-4">
+              <div className="mb-1.5 flex items-baseline justify-between border-b border-border pb-1">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {day}
+                </h3>
+                <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                  ₹{formatAmount(totalSale)}
+                </span>
               </div>
-            </div>
-          ))}
-        </ScrollArea>
-      </CardContent>
-    </Card>
+
+              <ul className="space-y-1">
+                {dayInvoices.map((invoice) => {
+                  const methods = usedPaymentMethods(invoice);
+                  const onCredit = Number(invoice.credit) > 0;
+
+                  return (
+                    <li key={invoice.id ?? invoice.date}>
+                      <button
+                        type="button"
+                        onClick={() => onInvoiceClick(invoice.date)}
+                        className={`press flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors ${
+                          onCredit
+                            ? "border-credit/30 bg-credit/5 hover:bg-credit/10"
+                            : "border-border bg-background hover:bg-surface-elevated"
+                        }`}
+                      >
+                        <span className="w-10 shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
+                          #{invoice.id}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm">
+                          {String(invoice.customerName ?? "").split(" ")[0] || "Walk-in"}
+                        </span>
+                        {invoice._syncStatus && invoice._syncStatus !== "synced" && (
+                          <OfflineBadge syncStatus={invoice._syncStatus} />
+                        )}
+                        <span className="flex shrink-0 items-center gap-1" aria-hidden>
+                          {methods.map(({ key, icon: Icon, text }) => (
+                            <Icon key={key} size={13} strokeWidth={ICON_STROKE} className={text} />
+                          ))}
+                        </span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums">
+                          ₹{formatAmount(invoice.total)}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))
+        )}
+      </ScrollArea>
+    </div>
   );
 }

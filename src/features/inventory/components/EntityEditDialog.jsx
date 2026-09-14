@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, onClose, isSaving }) {
   return (
     <Dialog open={entity !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-gray-800 text-gray-100">
+      <DialogContent className="bg-surface text-foreground">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -22,7 +22,10 @@ export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, on
           >
             {fields.map(({ key, label, type, parse }) => (
               <div key={key} className="space-y-2">
-                <Label htmlFor={`edit-${key}`} className="text-pink-400">
+                <Label
+                  htmlFor={`edit-${key}`}
+                  className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                >
                   {label}:
                 </Label>
                 <Input
@@ -32,7 +35,7 @@ export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, on
                   onChange={(event) =>
                     onChange(key, parse ? parse(event.target.value) : event.target.value)
                   }
-                  className="border-gray-600 bg-gray-700 text-gray-100"
+                  className="border-border bg-surface text-foreground"
                   required
                 />
               </div>
@@ -40,7 +43,7 @@ export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, on
             <Button
               type="submit"
               disabled={isSaving}
-              className="w-full bg-pink-600 text-white hover:bg-pink-700"
+              className="w-full bg-primary hover:bg-primary"
             >
               {isSaving ? "Saving…" : `Update ${title.replace("Edit ", "")}`}
             </Button>

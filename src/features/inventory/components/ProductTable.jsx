@@ -47,7 +47,7 @@ function QuantityCell({ product, onCommit }) {
         if (event.key === "Enter") commit();
         if (event.key === "Escape") setDraft(null);
       }}
-      className="w-20 border-gray-600 bg-gray-700 text-gray-100"
+      className="w-20 border-border bg-surface text-foreground"
     />
   );
 }
@@ -71,19 +71,33 @@ export function ProductTable({
               onCheckedChange={selection.toggleAll}
             />
           </TableHead>
-          <TableHead className="w-12 text-pink-400" />
-          <TableHead className="text-pink-400">Name</TableHead>
-          {showCost && <TableHead className="text-pink-400">Cost</TableHead>}
-          <TableHead className="text-pink-400">Selling Price</TableHead>
-          <TableHead className="text-pink-400">Barcode</TableHead>
-          <TableHead className="text-pink-400">Quantity</TableHead>
-          <TableHead className="text-pink-400">Actions</TableHead>
+          <TableHead className="w-12" />
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            Name
+          </TableHead>
+          {showCost && (
+            <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+              Cost
+            </TableHead>
+          )}
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            Selling Price
+          </TableHead>
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            Barcode
+          </TableHead>
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            Quantity
+          </TableHead>
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            Actions
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {products.length === 0 && (
           <TableRow>
-            <TableCell colSpan={showCost ? 8 : 7} className="text-center text-gray-400">
+            <TableCell colSpan={showCost ? 8 : 7} className="text-center text-muted-foreground">
               No products match these filters.
             </TableCell>
           </TableRow>
@@ -92,7 +106,7 @@ export function ProductTable({
         {products.map((product) => {
           const images = product.images ?? [];
           return (
-            <TableRow key={product.id} className="text-white">
+            <TableRow key={product.id}>
               <TableCell>
                 <Checkbox
                   aria-label={`Select ${product.name}`}
@@ -116,7 +130,7 @@ export function ProductTable({
               <TableCell>
                 <div className="flex flex-col">
                   <span>{product.name}</span>
-                  <span className="text-[13px] text-pink-500">
+                  <span className="text-[13px] text-primary">
                     {supplierNameFor(product.supplier) ?? "—"}
                   </span>
                 </div>

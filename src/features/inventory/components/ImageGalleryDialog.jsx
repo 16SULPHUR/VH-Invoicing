@@ -9,17 +9,17 @@ export function ImageGalleryDialog({ images, onClose }) {
   return (
     <div
       role="presentation"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div className="relative mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-slate-800 p-4 shadow-lg">
+      <div className="relative mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-surface border border-border p-4 shadow-lg">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close gallery"
-          className="absolute right-2 top-2 rounded-full bg-red-500 p-2 transition-colors hover:bg-red-700"
+          className="absolute right-2 top-2 rounded-full bg-destructive p-2 transition-colors hover:bg-destructive/90"
         >
-          <X className="h-5 w-5 font-bold text-white" />
+          <X className="h-5 w-5 font-bold " />
         </button>
 
         <PhotoProvider>
@@ -29,6 +29,9 @@ export function ImageGalleryDialog({ images, onClose }) {
                 <LazyLoadImage
                   src={image}
                   alt=""
+                  width={160}
+                  height={128}
+                  loading="lazy"
                   className="h-32 w-full cursor-pointer rounded-lg object-cover hover:opacity-80"
                 />
               </PhotoView>

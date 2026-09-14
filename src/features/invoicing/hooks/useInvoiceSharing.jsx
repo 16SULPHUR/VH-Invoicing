@@ -3,6 +3,7 @@ import ReactDOMServer from "react-dom/server";
 import { BUSINESS } from "@/config/business";
 import { PrintableInvoice } from "../components/PrintableInvoice";
 import { parseInvoiceLines } from "@/utils/invoice";
+import { formatInvoiceDate } from "@/utils/date";
 
 /**
  * Rasterises an invoice into a one-page PDF and hands it to the Web Share API,
@@ -21,7 +22,7 @@ export function useShareInvoicePdf() {
     host.innerHTML = ReactDOMServer.renderToStaticMarkup(
       <PrintableInvoice
         invoiceId={invoice.id}
-        invoiceDate={new Date(invoice.date).toLocaleDateString()}
+        invoiceDate={formatInvoiceDate(invoice.date)}
         customerName={invoice.customerName}
         customerContact={invoice.customerNumber}
         products={parseInvoiceLines(invoice.products)}

@@ -46,7 +46,7 @@ export default function ManageCustomers() {
     <div className="space-y-4">
       <Input
         type="text"
-        placeholder="Search customers..."
+        placeholder="Search customers…"
         value={searchTerm}
         onChange={(event) => setSearchTerm(event.target.value)}
         className="max-w-sm"
@@ -59,7 +59,10 @@ export default function ManageCustomers() {
           <TableHeader>
             <TableRow>
               {["Name", "Address", "Phone", "Actions"].map((header) => (
-                <TableHead key={header} className="text-pink-400">
+                <TableHead
+                  key={header}
+                  className="text-xs uppercase tracking-wide text-muted-foreground"
+                >
                   {header}
                 </TableHead>
               ))}
@@ -68,7 +71,7 @@ export default function ManageCustomers() {
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-gray-400">
+                <TableCell colSpan={4} className="text-center text-muted-foreground">
                   No customers found.
                 </TableCell>
               </TableRow>
@@ -83,7 +86,7 @@ export default function ManageCustomers() {
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingCustomer(customer)}
-                    className="mr-2 text-black"
+                    className="mr-2 "
                   >
                     Edit
                   </Button>

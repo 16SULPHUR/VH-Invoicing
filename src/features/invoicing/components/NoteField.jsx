@@ -1,17 +1,15 @@
+import { Field } from "@/components/common/Field";
+
 export function NoteField({ note, setNote }) {
   return (
-    <div className="mb-4">
-      <label className="mb-1 block text-sm font-bold text-pink-500" htmlFor="note">
-        Note:
-      </label>
+    <Field label="Note" htmlFor="invoice-note">
       <textarea
-        className="w-full rounded-md border border-gray-600 bg-gray-800 p-2 text-white focus:border-pink-500 focus:outline-none"
-        id="note"
-        rows={3}
+        id="invoice-note"
+        rows={2}
         value={note}
         onChange={(event) => setNote(event.target.value)}
-        placeholder="Add a note..."
+        className="flex w-full rounded-md border border-input bg-surface px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       />
-    </div>
+    </Field>
   );
 }

@@ -52,7 +52,7 @@ export default function LedgerPage() {
   );
 
   const footerRows = (
-    <TableRow className="font-semibold text-white">
+    <TableRow className="font-semibold ">
       <TableCell colSpan={4} className="text-right">
         Total
       </TableCell>

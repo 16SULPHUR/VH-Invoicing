@@ -24,7 +24,7 @@ const PDF_OPTIONS = {
   overrides: { pdf: { compress: true }, canvas: { useCORS: true } },
 };
 
-const inputClass = "border-gray-600 bg-gray-700 text-gray-100";
+const inputClass = "border-border bg-surface text-foreground";
 
 export default function GenerateStickers() {
   const { data: suppliers } = useSuppliers();
@@ -63,7 +63,10 @@ export default function GenerateStickers() {
     <div className="flex w-full justify-between gap-10 space-y-4">
       <div className="w-3/5 space-y-2">
         <div className="space-y-2">
-          <Label htmlFor="supplier" className="text-pink-400">
+          <Label
+            htmlFor="supplier"
+            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+          >
             Select Supplier:
           </Label>
           <Select
@@ -87,7 +90,10 @@ export default function GenerateStickers() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="product" className="text-pink-400">
+          <Label
+            htmlFor="product"
+            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+          >
             Select Product:
           </Label>
           <Select value={productId} onValueChange={setProductId} disabled={!supplierId}>
@@ -108,7 +114,10 @@ export default function GenerateStickers() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="quantity" className="text-pink-400">
+          <Label
+            htmlFor="quantity"
+            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+          >
             Quantity:
           </Label>
           <Input
@@ -121,16 +130,12 @@ export default function GenerateStickers() {
           />
         </div>
 
-        <Button
-          type="button"
-          className="w-full bg-pink-600 text-white hover:bg-pink-700"
-          onClick={handlePrint}
-        >
+        <Button type="button" className="w-full bg-primary hover:bg-primary" onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" /> Generate Stickers
         </Button>
       </div>
 
-      <div className="mb-6 h-40 overflow-auto rounded-md bg-white p-4" ref={targetRef}>
+      <div className="paper mb-6 h-40 overflow-auto rounded-md p-4" ref={targetRef}>
         <PrintableSticker
           sku={product?.name ?? "SAMPLE SKU"}
           price={product?.sellingPrice ?? "0"}

@@ -47,13 +47,13 @@ export default function GstReportPage() {
 
   const footerRows = (
     <>
-      <TableRow className="font-semibold text-white">
+      <TableRow className="font-semibold ">
         <TableCell colSpan={4} className="text-right">
           Subtotal (page)
         </TableCell>
         <TableCell>{formatINR(pageSubtotal)}</TableCell>
       </TableRow>
-      <TableRow className="font-semibold text-white">
+      <TableRow className="font-semibold ">
         <TableCell colSpan={4} className="text-right">
           Total GST
         </TableCell>

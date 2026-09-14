@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/common/PageHeader";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { CameraPanel } from "./components/CameraPanel";
@@ -84,6 +85,8 @@ export default function ScannerPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <PageHeader title="Scanner" subtitle="Scans sync to the till in real time" />
+
       <Card className="p-4">
         <CameraPanel camera={camera} />
 
@@ -100,7 +103,7 @@ export default function ScannerPage() {
         </div>
       </Card>
 
-      <Card className="mx-auto max-w-4xl p-4">
+      <Card className="p-4">
         <ScannedItemsTable
           items={cart.items}
           isLoading={cart.isLoading}

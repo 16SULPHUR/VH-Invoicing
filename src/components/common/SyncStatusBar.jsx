@@ -1,149 +1,159 @@
-import React, { useState } from "react";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { useSyncManager } from "@/hooks/useSyncManager";
-import { Wifi, WifiOff, RefreshCw, X, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, RotateCcw, Wifi, WifiOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useSyncManager } from "@/hooks/useSyncManager";
+import { ICON_STROKE } from "@/config/navigation";
 
-export const SyncStatusBar = React.forwardRef(({ ...props }, ref) => {
+function formatLastSync(timestamp) {
+  if (!timestamp) return "Never";
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  return `${Math.floor(minutes / 60)}h ago`;
+}
+
+export function SyncStatusBar() {
   const { isOnline, pendingSyncCount, lastSyncTime, syncStatus } = useOnlineStatus();
   const { triggerSync, isSyncing, syncErrors, dismissError, retryFailed } = useSyncManager();
   const [open, setOpen] = useState(false);
 
-  const formatLastSync = (timestamp) => {
-    if (!timestamp) return "Never";
-    const diff = Date.now() - timestamp;
-    const seconds = Math.floor(diff / 1000);
-    if (seconds < 60) return "Just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
-  };
-
-  const hasIssues = pendingSyncCount > 0 || syncErrors.length > 0;
+  const outstanding = pendingSyncCount + syncErrors.length;
+  const statusLabel = isOnline ? "Online" : "Offline";
 
   return (
     <>
-      {/* Trigger button — sits in the nav bar */}
-      <div
-        ref={ref}
-        {...props}
-        onClick={() => setOpen(true)}
-        className="px-4 py-2 flex items-center cursor-pointer transition-colors text-gray-400 hover:text-gray-300 relative"
-      >
-        {isOnline ? (
-          <Wifi className="h-5 w-5 text-green-400" />
-        ) : (
-          <WifiOff className="h-5 w-5 text-red-400" />
-        )}
-        {hasIssues && (
-          <span className="absolute -top-0 -right-0 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-amber-500 text-black text-[10px] font-bold">
-            {pendingSyncCount + syncErrors.length}
-          </span>
-        )}
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={`Sync status: ${statusLabel}${outstanding ? `, ${outstanding} outstanding` : ""}`}
+            className="press relative flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
+          >
+            {isOnline ? (
+              <Wifi size={20} strokeWidth={ICON_STROKE} className="text-success" aria-hidden />
+            ) : (
+              <WifiOff
+                size={20}
+                strokeWidth={ICON_STROKE}
+                className="text-destructive"
+                aria-hidden
+              />
+            )}
+            {outstanding > 0 && (
+              <span className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-warning-foreground">
+                {outstanding}
+              </span>
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right">{statusLabel}</TooltipContent>
+      </Tooltip>
 
-      {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2">
               {isOnline ? (
-                <Wifi className="h-5 w-5 text-green-400" />
+                <Wifi className="h-5 w-5 text-success" aria-hidden />
               ) : (
-                <WifiOff className="h-5 w-5 text-red-400" />
+                <WifiOff className="h-5 w-5 text-destructive" aria-hidden />
               )}
-              {isOnline ? "Online" : "Offline"}
+              {statusLabel}
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Sync status and pending changes
-            </DialogDescription>
+            <DialogDescription>Sync status and pending changes</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Status summary */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-800 rounded-lg p-3">
-                <p className="text-xs text-gray-400">Pending</p>
+              <div className="rounded-lg border border-border bg-surface p-3">
+                <p className="text-xs text-muted-foreground">Pending</p>
                 <p
-                  className={`text-xl font-bold ${pendingSyncCount > 0 ? "text-amber-400" : "text-gray-300"}`}
+                  className={`text-xl font-bold tabular-nums ${
+                    pendingSyncCount > 0 ? "text-warning" : "text-foreground"
+                  }`}
                 >
                   {pendingSyncCount}
                 </p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-3">
-                <p className="text-xs text-gray-400">Failed</p>
+              <div className="rounded-lg border border-border bg-surface p-3">
+                <p className="text-xs text-muted-foreground">Failed</p>
                 <p
-                  className={`text-xl font-bold ${syncErrors.length > 0 ? "text-red-400" : "text-gray-300"}`}
+                  className={`text-xl font-bold tabular-nums ${
+                    syncErrors.length > 0 ? "text-destructive" : "text-foreground"
+                  }`}
                 >
                   {syncErrors.length}
                 </p>
               </div>
             </div>
 
-            <div className="text-xs text-gray-400">Last synced: {formatLastSync(lastSyncTime)}</div>
+            <p className="text-xs text-muted-foreground">
+              Last synced: {formatLastSync(lastSyncTime)}
+            </p>
 
             {syncStatus === "auth_required" && (
-              <div className="bg-amber-900/30 border border-amber-700/50 rounded-lg p-3 text-sm text-amber-300">
-                Re-login required to sync
-              </div>
+              <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
+                Log in again to resume syncing.
+              </p>
             )}
 
-            {/* Failed items list */}
             {syncErrors.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-red-400">Failed items:</p>
-                {syncErrors.map((err) => (
+                <p className="text-sm font-medium text-destructive">Failed items</p>
+                {syncErrors.map((entry) => (
                   <div
-                    key={err.id}
-                    className="flex items-center justify-between bg-red-900/20 border border-red-800/40 rounded px-3 py-2 text-xs"
+                    key={entry.id}
+                    className="flex items-start justify-between gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs"
                   >
-                    <div className="text-red-300">
-                      <span className="font-semibold capitalize">{err.type}</span> {err.table} —{" "}
-                      {err.error || "Unknown error"}
-                      <span className="text-red-500 ml-2">(retries: {err.retryCount})</span>
-                    </div>
+                    <span className="text-destructive">
+                      <span className="font-semibold capitalize">{entry.type}</span> {entry.table}:{" "}
+                      {entry.error || "Unknown error"} (retries: {entry.retryCount})
+                    </span>
                     <button
-                      onClick={() => dismissError(err.id)}
-                      className="text-red-400 hover:text-red-300 ml-2"
+                      type="button"
+                      onClick={() => dismissError(entry.id)}
+                      aria-label="Dismiss this failure"
+                      className="press shrink-0 text-destructive hover:opacity-80"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-3.5 w-3.5" aria-hidden />
                     </button>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Action buttons */}
             <div className="flex gap-2 pt-2">
               {syncErrors.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-400 border-red-800 hover:bg-red-900/30 hover:text-red-300"
                   onClick={retryFailed}
                   disabled={isSyncing || !isOnline}
                 >
-                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                  Retry Failed
+                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden /> Retry failed
                 </Button>
               )}
-
               <Button
                 size="sm"
-                className="bg-pink-500 hover:bg-pink-600 text-white"
                 onClick={triggerSync}
                 disabled={isSyncing || !isOnline || pendingSyncCount === 0}
               >
-                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? "animate-spin" : ""}`} />
-                {isSyncing ? "Syncing..." : "Sync Now"}
+                <RefreshCw
+                  className={`mr-1.5 h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+                  aria-hidden
+                />
+                {isSyncing ? "Syncing…" : "Sync now"}
               </Button>
             </div>
           </div>
@@ -151,6 +161,4 @@ export const SyncStatusBar = React.forwardRef(({ ...props }, ref) => {
       </Dialog>
     </>
   );
-});
-
-SyncStatusBar.displayName = "SyncStatusBar";
+}

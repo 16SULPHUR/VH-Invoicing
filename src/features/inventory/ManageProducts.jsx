@@ -82,7 +82,7 @@ export default function ManageProducts() {
   return (
     <div className="space-y-4">
       <Tabs defaultValue="products" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-zinc-300 text-black">
+        <TabsList className="w-fit">
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
         </TabsList>
@@ -92,14 +92,14 @@ export default function ManageProducts() {
             <Button
               variant="outline"
               onClick={() => setShowFilters((current) => !current)}
-              className="flex items-center gap-2 text-black"
+              className="flex items-center gap-2 "
             >
               <Filter className="h-4 w-4" /> {showFilters ? "Hide Filters" : "Show Filters"}
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowAnalytics((current) => !current)}
-              className="flex items-center gap-2 text-black"
+              className="flex items-center gap-2 "
             >
               <TrendingUp className="h-4 w-4" />
               {showAnalytics ? "Hide Analytics" : "Show Analytics"}
@@ -119,39 +119,38 @@ export default function ManageProducts() {
 
           {selection.selectedIds.size > 0 && (
             <div className="mb-4 flex items-center gap-4">
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-muted-foreground">
                 {selection.selectedIds.size} items selected
               </span>
-              <Button
-                variant="outline"
-                className="text-black"
-                onClick={() => setIsBatchDialogOpen(true)}
-              >
+              <Button variant="outline" onClick={() => setIsBatchDialogOpen(true)}>
                 Edit Selected
               </Button>
-              <Button variant="outline" className="text-black" onClick={selection.clear}>
+              <Button variant="outline" onClick={selection.clear}>
                 Clear Selection
               </Button>
             </div>
           )}
 
           <Input
-            placeholder="Search products, supplier, barcode..."
+            placeholder="Search products, supplier, barcode…"
             value={filters.search}
             onChange={(event) => filters.setSearch(event.target.value)}
-            className="border-gray-600 bg-gray-700 text-gray-100"
+            className="border-border bg-surface text-foreground"
           />
 
           <div className="mb-4 mt-2 flex w-full items-center justify-around gap-5">
             <div className="flex items-center space-x-2">
-              <Label htmlFor="showCost" className="text-pink-400">
+              <Label
+                htmlFor="showCost"
+                className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              >
                 Cost
               </Label>
               <Switch id="showCost" checked={showCost} onCheckedChange={setShowCost} />
             </div>
 
             <Select value={filters.supplierId} onValueChange={filters.setSupplierId}>
-              <SelectTrigger className="w-[200px] text-pink-400">
+              <SelectTrigger className="h-9 w-[200px]">
                 <SelectValue placeholder="Select a supplier" />
               </SelectTrigger>
               <SelectContent>

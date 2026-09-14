@@ -7,11 +7,10 @@ import { InvoiceModal } from "./components/InvoiceModal";
 export default function InvoicingPage() {
   const isMobile = useIsMobile();
   const workspace = useInvoiceWorkspace();
-
   const Layout = isMobile ? MobileInvoicing : DesktopInvoicing;
 
   return (
-    <div className="flex h-svh w-full font-sans backdrop-blur-sm">
+    <div className="h-full min-h-0">
       <Layout workspace={workspace} />
 
       {workspace.selectedInvoice && (

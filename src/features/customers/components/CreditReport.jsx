@@ -7,7 +7,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { InvoiceEditDialog } from "@/features/invoicing/components/InvoiceEditDialog";
 import { PageLoader } from "@/components/common/PageLoader";
+import { StatTile } from "@/components/common/StatTile";
 import { downloadCsv, toCsv } from "@/utils/csv";
 import { formatDateDDMMMYYYY, toISODate } from "@/utils/date";
 import { formatAmount } from "@/utils/formatters";
@@ -60,45 +60,36 @@ export default function CreditReport() {
 
   return (
     <div className="mx-auto">
-      <Card className="border-0 bg-gray-900 shadow-lg">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold text-pink-400">Credit Reports</CardTitle>
-            <Button
-              onClick={exportToCsv}
-              className="bg-pink-600 text-white hover:bg-pink-700"
-              disabled={report.isLoading || report.customers.length === 0}
-            >
-              <FileDown className="mr-2 h-4 w-4" /> Export to CSV
-            </Button>
-          </div>
-        </CardHeader>
-
-        <CardContent>
+      <div className="space-y-4">
+        <div className="flex items-center justify-end">
+          <Button
+            onClick={exportToCsv}
+            className="press"
+            disabled={report.isLoading || report.customers.length === 0}
+          >
+            <FileDown className="mr-2 h-4 w-4" /> Export to CSV
+          </Button>
+        </div>
+        <div className="space-y-4">
           <Input
-            placeholder="Search by customer name..."
+            placeholder="Search by customer name…"
             value={report.searchTerm}
             onChange={(event) => report.setSearchTerm(event.target.value)}
-            className="mb-2 border-gray-700 bg-gray-800 text-white focus:border-pink-500"
+            className="h-9"
           />
 
-          <div className="mb-2 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {summaryTiles.map(({ title, value }) => (
-              <Card key={title} className="border-0 bg-gray-800 shadow-md">
-                <CardContent className="pb-2 pt-2">
-                  <p className="mb-1 text-sm text-pink-400">{title}</p>
-                  <p className="mb-0 text-2xl font-bold text-white">{value}</p>
-                </CardContent>
-              </Card>
+              <StatTile key={title} label={title} value={value} />
             ))}
           </div>
 
           {report.isLoading ? (
             <PageLoader label="Loading credit report…" />
           ) : (
-            <ScrollArea className="h-[calc(100vh-25rem)] p-2 outline outline-1 outline-white">
+            <ScrollArea className="h-[calc(100dvh-24rem)] rounded-lg border border-border p-2">
               {report.customers.length === 0 && (
-                <p className="p-4 text-center text-sm text-gray-400">
+                <p className="p-4 text-center text-sm text-muted-foreground">
                   No outstanding credit found.
                 </p>
               )}
@@ -108,14 +99,12 @@ export default function CreditReport() {
                   <AccordionItem
                     key={customer.customerName}
                     value={customer.customerName}
-                    className="overflow-hidden rounded-lg bg-gray-800"
+                    className="overflow-hidden rounded-lg bg-surface"
                   >
-                    <AccordionTrigger className="px-4 py-2 hover:bg-gray-700 hover:no-underline">
+                    <AccordionTrigger className="px-4 py-2 hover:bg-surface hover:no-underline">
                       <div className="flex w-full items-center justify-between">
-                        <span className="text-xl font-medium text-white">
-                          {customer.customerName}
-                        </span>
-                        <span className="text-xl font-bold text-pink-400">
+                        <span className="text-xl font-medium ">{customer.customerName}</span>
+                        <span className="text-xl font-bold text-primary">
                           ₹{formatAmount(customer.totalCredit)}
                         </span>
                       </div>
@@ -124,9 +113,12 @@ export default function CreditReport() {
                     <AccordionContent className="px-4 pb-3 pt-1">
                       <Table>
                         <TableHeader>
-                          <TableRow className="border-b border-gray-700">
+                          <TableRow className="border-b border-border">
                             {["ID", "Date", "Total", "Credit", "Paid", "Actions"].map((header) => (
-                              <TableHead key={header} className="text-pink-400">
+                              <TableHead
+                                key={header}
+                                className="text-xs uppercase tracking-wide text-muted-foreground"
+                              >
                                 {header}
                               </TableHead>
                             ))}
@@ -134,17 +126,14 @@ export default function CreditReport() {
                         </TableHeader>
                         <TableBody>
                           {customer.invoices.map((invoice) => (
-                            <TableRow
-                              key={invoice.id}
-                              className="border-b border-gray-700 text-white"
-                            >
+                            <TableRow key={invoice.id} className="border-b border-border ">
                               <TableCell className="font-medium">#{invoice.id}</TableCell>
                               <TableCell>{formatDateDDMMMYYYY(invoice.date)}</TableCell>
                               <TableCell>₹{formatAmount(invoice.total)}</TableCell>
-                              <TableCell className="text-red-400">
+                              <TableCell className="text-destructive">
                                 ₹{formatAmount(invoice.credit)}
                               </TableCell>
-                              <TableCell className="text-green-400">
+                              <TableCell className="text-success">
                                 ₹{formatAmount(invoice.total - invoice.credit)}
                               </TableCell>
                               <TableCell>
@@ -152,7 +141,7 @@ export default function CreditReport() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setEditingInvoice(invoice)}
-                                  className="border-pink-400 text-pink-400 hover:bg-pink-400 hover:text-white"
+                                  className="press"
                                 >
                                   Edit
                                 </Button>
@@ -167,8 +156,8 @@ export default function CreditReport() {
               </Accordion>
             </ScrollArea>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <InvoiceEditDialog
         invoice={editingInvoice}

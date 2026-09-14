@@ -22,7 +22,7 @@ export default function AddCustomerForm() {
   };
 
   return (
-    <Card className="bg-transparent text-white">
+    <Card className="bg-transparent ">
       <CardHeader>
         <CardTitle>Add New Customer</CardTitle>
       </CardHeader>

@@ -12,7 +12,7 @@ const ENTRY_TYPES = [
   { value: "correction", label: "Correction" },
 ];
 
-const selectClass = "w-full rounded border border-slate-700 bg-transparent px-2 py-1";
+const selectClass = "w-full rounded border border-border bg-transparent px-2 py-1";
 
 export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
   const [entry, setEntry] = useState({
@@ -32,8 +32,8 @@ export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded border border-slate-700 bg-slate-900/60 p-4">
-      <div className="mb-3 flex items-center gap-2 font-semibold text-pink-400">
+    <form onSubmit={handleSubmit} className="rounded border border-border bg-surface p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
         <DatabaseZap className="h-4 w-4" /> Quick entry
       </div>
 
@@ -49,7 +49,7 @@ export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
             className={selectClass}
           >
             {accounts.map((account) => (
-              <option key={account.id} value={account.name} className="bg-slate-900">
+              <option key={account.id} value={account.name} className="bg-surface">
                 {accountDisplayName(account.name)}
               </option>
             ))}
@@ -75,7 +75,7 @@ export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
             className={selectClass}
           >
             {ENTRY_TYPES.map(({ value, label }) => (
-              <option key={value} value={value} className="bg-slate-900">
+              <option key={value} value={value} className="bg-surface">
                 {label}
               </option>
             ))}
@@ -108,11 +108,7 @@ export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
         />
       </div>
 
-      <Button
-        type="submit"
-        disabled={isSubmitting || !entry.amount}
-        className="bg-green-600 hover:bg-green-700"
-      >
+      <Button type="submit" disabled={isSubmitting || !entry.amount} className="press">
         <Upload className="mr-2 h-4 w-4" /> Save Entry
       </Button>
     </form>

@@ -1,32 +1,38 @@
-import { NavLink, Outlet } from "react-router-dom";
 import { Suspense } from "react";
+import { NavLink, Outlet } from "react-router-dom";
 import { PageLoader } from "@/components/common/PageLoader";
 
 const REPORT_TABS = [
   { to: "transactions", label: "Transactions" },
   { to: "ledger", label: "Ledger" },
-  { to: "trial-balance", label: "Trial Balance" },
-  { to: "gst", label: "GST Report" },
+  { to: "trial-balance", label: "Trial balance" },
+  { to: "gst", label: "GST" },
 ];
 
 const tabClass = ({ isActive }) =>
-  `rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-    isActive ? "bg-zinc-200 text-black" : "border border-gray-700 text-gray-300 hover:bg-gray-800"
+  `press rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+    isActive
+      ? "bg-primary text-primary-foreground"
+      : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
   }`;
 
 export default function ReportsLayout() {
   return (
-    <div className="h-full w-full">
-      <div className="sticky top-0 z-10 border-b border-gray-800 bg-black/50 px-4 py-3 backdrop-blur md:px-6">
-        <div className="mx-auto flex max-w-screen-xl flex-wrap gap-2">
+    <div className="flex h-full min-h-0 flex-col">
+      <nav
+        aria-label="Reports"
+        className="shrink-0 border-b border-border bg-surface px-4 py-2 md:px-6"
+      >
+        <div className="mx-auto flex max-w-[1400px] flex-wrap gap-1">
           {REPORT_TABS.map((tab) => (
             <NavLink key={tab.to} to={tab.to} className={tabClass}>
               {tab.label}
             </NavLink>
           ))}
         </div>
-      </div>
-      <div className="mx-auto max-w-screen-xl">
+      </nav>
+
+      <div className="mx-auto min-h-0 w-full max-w-[1400px] flex-1 overflow-y-auto">
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>
