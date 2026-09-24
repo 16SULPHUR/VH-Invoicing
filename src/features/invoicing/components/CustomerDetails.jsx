@@ -27,7 +27,7 @@ function CustomerCombobox({ customers, value, onSelect, id }) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-9 w-full justify-between font-normal"
+          className="h-10 w-full justify-between rounded-xl bg-surface-elevated font-medium hover:bg-surface"
         >
           <span className={cn("truncate", !value && "text-muted-foreground")}>
             {value || "Select customer"}
@@ -35,7 +35,7 @@ function CustomerCombobox({ customers, value, onSelect, id }) {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[18rem] overflow-hidden rounded-2xl p-0" align="start">
         <Command>
           <CommandInput placeholder="Search customers…" value={search} onValueChange={setSearch} />
           <CommandEmpty>No customers found.</CommandEmpty>
@@ -94,7 +94,7 @@ export function CustomerDetails({
   const [isTyping, setIsTyping] = useState(false);
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-[1.3fr_1fr] gap-3">
       <Field
         label="Customer"
         htmlFor="customer-name"
@@ -106,7 +106,7 @@ export function CustomerDetails({
               id={id}
               value={customerName}
               onChange={(event) => setCustomerName(event.target.value)}
-              className="h-9"
+              className="h-10"
               autoComplete="name"
               /* Focus follows the explicit "type a new name" action, so it is expected. */
               autoFocus
@@ -123,7 +123,7 @@ export function CustomerDetails({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-10 w-10 shrink-0"
                 onClick={() => setIsTyping(true)}
                 aria-label="Type a new customer name"
               >
@@ -142,7 +142,7 @@ export function CustomerDetails({
             inputMode="tel"
             value={customerNumber}
             onChange={(event) => setCustomerNumber(event.target.value)}
-            className="h-9"
+            className="h-10"
             autoComplete="tel"
           />
         )}

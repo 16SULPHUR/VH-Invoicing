@@ -1,15 +1,13 @@
-import { Field } from "@/components/common/Field";
-
 export function NoteField({ note, setNote }) {
   return (
-    <Field label="Note" htmlFor="invoice-note">
-      <textarea
-        id="invoice-note"
-        rows={2}
-        value={note}
-        onChange={(event) => setNote(event.target.value)}
-        className="flex w-full rounded-md border border-input bg-surface px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      />
-    </Field>
+    <textarea
+      id="invoice-note"
+      aria-label="Note"
+      rows={2}
+      value={note}
+      onChange={(event) => setNote(event.target.value)}
+      placeholder="Note for this bill…"
+      className="flex w-full resize-none rounded-2xl border-[1.5px] border-border bg-surface-elevated px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:border-rani/50 focus-visible:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rani/20 focus-visible:ring-offset-0"
+    />
   );
 }

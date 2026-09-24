@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Field } from "@/components/common/Field";
 import { cn } from "@/lib/utils";
-import { formatAmount } from "@/utils/formatters";
+import { formatRupees } from "@/utils/formatters";
 import { ICON_STROKE } from "@/config/navigation";
 
 function CatalogCombobox({ catalog, selectedId, onSelect, onTypeName, typedName, id }) {
@@ -30,15 +30,15 @@ function CatalogCombobox({ catalog, selectedId, onSelect, onTypeName, typedName,
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-9 w-full justify-between font-normal"
+          className="h-10 w-full justify-between rounded-xl bg-surface-elevated font-medium hover:bg-surface"
         >
           <span className={cn("truncate", !shown && "text-muted-foreground")}>
-            {shown || "Select product"}
+            {shown || "Search a product or scan its barcode…"}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[18rem] overflow-hidden rounded-2xl p-0" align="start">
         <Command>
           <CommandInput placeholder="Search products…" value={search} onValueChange={setSearch} />
           <CommandEmpty>No products found.</CommandEmpty>
@@ -63,7 +63,7 @@ function CatalogCombobox({ catalog, selectedId, onSelect, onTypeName, typedName,
                   <span className="flex w-full justify-between gap-2">
                     <span className="truncate">{product.name}</span>
                     <span className="shrink-0 tabular-nums text-muted-foreground">
-                      {formatAmount(product.sellingPrice)}
+                      {formatRupees(product.sellingPrice)}
                     </span>
                   </span>
                 </CommandItem>
@@ -116,9 +116,9 @@ export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, o
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid items-end gap-3 rounded-lg border border-border bg-surface p-3 sm:grid-cols-[1fr_5rem_7rem_auto]"
+      className="grid grid-cols-[1fr_1fr_auto] items-end gap-3 sm:grid-cols-[minmax(0,1fr)_5rem_7rem_auto]"
     >
-      <Field label="Product" htmlFor="line-product">
+      <Field label="Product" htmlFor="line-product" className="col-span-3 sm:col-span-1">
         {(id) => (
           <CatalogCombobox
             id={id}
@@ -141,7 +141,7 @@ export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, o
             min="1"
             value={lineForm.quantity}
             onChange={setField("quantity")}
-            className="h-9 text-right tabular-nums"
+            className="h-10 text-right font-semibold tabular-nums"
             required
           />
         )}
@@ -158,13 +158,13 @@ export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, o
             step="0.01"
             value={lineForm.price}
             onChange={setField("price")}
-            className="h-9 text-right tabular-nums"
+            className="h-10 text-right font-semibold tabular-nums"
             required
           />
         )}
       </Field>
 
-      <Button type="submit" className="press h-9">
+      <Button type="submit" className="block-shadow mb-1 h-10">
         <Plus size={16} strokeWidth={ICON_STROKE} className="mr-1.5" aria-hidden />
         {isEditingLine ? "Update" : "Add"}
       </Button>
