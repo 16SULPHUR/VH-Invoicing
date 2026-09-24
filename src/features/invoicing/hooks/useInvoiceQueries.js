@@ -13,6 +13,9 @@ import {
   startOfDay,
   toISODate,
 } from "@/utils/date";
+import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
+
+const NO_COLLECTIONS = { cash: 0, upi: 0, credit: 0 };
 
 const DAILY_SALES_WINDOW = 7;
 
@@ -25,17 +28,26 @@ export function useRecentInvoices() {
     queryFn: () => invoiceService.getInvoicesByFinancialYear(startDate, endDate),
   });
 
+  // New invoices are always numbered in today's financial year, whichever year is being viewed.
+  const current = financialYearRange(currentFinancialYear());
+  const currentYearQuery = useQuery({
+    queryKey: queryKeys.invoices.financialYear(current.startDate, current.endDate),
+    queryFn: () => invoiceService.getInvoicesByFinancialYear(current.startDate, current.endDate),
+  });
+
   const invoices = useMemo(() => query.data ?? [], [query.data]);
-  const nextInvoiceId = useMemo(() => invoiceService.getNextInvoiceId(invoices), [invoices]);
+  const nextInvoiceId = useMemo(
+    () => invoiceService.getNextInvoiceId(currentYearQuery.data),
+    [currentYearQuery.data]
+  );
 
   return { invoices, nextInvoiceId, financialYear, setFinancialYear, ...query };
 }
 
 export function useDailySales() {
-  return useQuery({
+  return useQueryWithDefault({
     queryKey: queryKeys.invoices.dailySales(DAILY_SALES_WINDOW),
     queryFn: () => invoiceService.getDailySales(DAILY_SALES_WINDOW),
-    initialData: [],
   });
 }
 
@@ -53,11 +65,13 @@ export function useSalesSummary() {
   });
 
   const today = toISODate();
-  const collections = useQuery({
-    queryKey: queryKeys.accounting.collections(startOfDay(today), endOfDay(today)),
-    queryFn: () => getCollectionsByDateRange(startOfDay(today), endOfDay(today)),
-    initialData: { cash: 0, upi: 0, credit: 0 },
-  });
+  const collections = useQueryWithDefault(
+    {
+      queryKey: queryKeys.accounting.collections(startOfDay(today), endOfDay(today)),
+      queryFn: () => getCollectionsByDateRange(startOfDay(today), endOfDay(today)),
+    },
+    NO_COLLECTIONS
+  );
 
   return {
     period,
@@ -72,8 +86,8 @@ export function useSalesSummary() {
 
 /** Catalog of every product, served from IndexedDB first so the till works offline. */
 export function useProductCatalog() {
-  return useQuery({
-    queryKey: queryKeys.products.all,
+  return useQueryWithDefault({
+    queryKey: queryKeys.products.catalog,
     queryFn: async () => {
       const cached = await cacheManager.getCachedProducts();
       if (!isOnline()) return cached;
@@ -81,12 +95,11 @@ export function useProductCatalog() {
       const refreshed = await cacheManager.getCachedProducts();
       return refreshed.length > 0 ? refreshed : cached;
     },
-    initialData: [],
   });
 }
 
 export function useCustomerDirectory() {
-  return useQuery({
+  return useQueryWithDefault({
     queryKey: queryKeys.customers.all,
     queryFn: async () => {
       const cached = await cacheManager.getCachedCustomers();
@@ -95,12 +108,16 @@ export function useCustomerDirectory() {
       const refreshed = await cacheManager.getCachedCustomers();
       return refreshed.length > 0 ? refreshed : cached;
     },
-    initialData: [],
   });
 }
 
 /** One place to invalidate everything an invoice write affects. */
 export function useInvalidateInvoiceData() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
+  return () =>
+    Promise.all(
+      [queryKeys.invoices.all, queryKeys.customers.credit, queryKeys.products.all].map((queryKey) =>
+        queryClient.invalidateQueries({ queryKey })
+      )
+    );
 }

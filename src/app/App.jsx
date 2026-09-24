@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { syncManager } from "@/lib/offline/syncManager";
 import { cacheManager } from "@/lib/offline/cacheManager";
 import { isOnline } from "@/lib/offline/network";
+import { queryClient, queryKeys } from "@/lib/queryClient";
 
 function AuthenticatedApp({ onSignOut }) {
   const router = useMemo(() => createRouter({ onSignOut }), [onSignOut]);
@@ -21,7 +22,15 @@ export default function App() {
   useEffect(() => {
     const teardown = syncManager.setupConnectivityListeners();
     if (isOnline()) cacheManager.refreshAll();
-    return teardown;
+    const unsubscribe = syncManager.subscribe((event) => {
+      if (event.type === "sync_completed") {
+        queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
+      }
+    });
+    return () => {
+      unsubscribe();
+      teardown();
+    };
   }, []);
 
   const handleSignOut = async () => {

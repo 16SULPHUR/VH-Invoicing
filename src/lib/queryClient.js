@@ -7,6 +7,8 @@ export const queryClient = new QueryClient({
       gcTime: 5 * 60_000,
       retry: (failureCount, error) => {
         if (error?.status === 401 || error?.status === 403) return false;
+        // PostgREST auth/RLS failures carry a code, not an HTTP status.
+        if (error?.code === "PGRST301" || error?.code === "42501") return false;
         return failureCount < 2;
       },
       refetchOnWindowFocus: false,
@@ -29,6 +31,8 @@ export const queryKeys = {
   },
   products: {
     all: ["products"],
+    full: ["products", "full"],
+    catalog: ["products", "catalog"],
     detail: (id) => ["products", id],
   },
   suppliers: { all: ["suppliers"] },

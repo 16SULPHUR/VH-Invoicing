@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { authService } from "@/services/authService";
+import { queryClient } from "@/lib/queryClient";
 
 const LOADING_FALLBACK_MS = 3000;
 
@@ -34,6 +35,7 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     await authService.signOut();
+    queryClient.clear();
     setIsAuthenticated(false);
   }, []);
 

@@ -30,7 +30,7 @@ export const scannedProductService = {
 
   subscribe(onChange) {
     const channel = supabase
-      .channel("scanned-products-changes")
+      .channel(`scanned-products-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "scanned_products" }, onChange)
       .subscribe();
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefreshCw, RotateCcw, Wifi, WifiOff, X } from "lucide-react";
+import { RefreshCw, RotateCcw, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,7 +24,7 @@ function formatLastSync(timestamp) {
 
 export function SyncStatusBar() {
   const { isOnline, pendingSyncCount, lastSyncTime, syncStatus } = useOnlineStatus();
-  const { triggerSync, isSyncing, syncErrors, dismissError, retryFailed } = useSyncManager();
+  const { triggerSync, isSyncing, syncErrors, retryFailed } = useSyncManager();
   const [open, setOpen] = useState(false);
 
   const outstanding = pendingSyncCount + syncErrors.length;
@@ -120,14 +120,6 @@ export function SyncStatusBar() {
                       <span className="font-semibold capitalize">{entry.type}</span> {entry.table}:{" "}
                       {entry.error || "Unknown error"} (retries: {entry.retryCount})
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => dismissError(entry.id)}
-                      aria-label="Dismiss this failure"
-                      className="press shrink-0 text-destructive hover:opacity-80"
-                    >
-                      <X className="h-3.5 w-3.5" aria-hidden />
-                    </button>
                   </div>
                 ))}
               </div>

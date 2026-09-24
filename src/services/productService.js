@@ -88,6 +88,23 @@ export const productService = {
   restoreStock(lines) {
     return this.applyStockDelta(lines, 1);
   },
+
+  /** Editing an invoice only moves the difference between the old and new lines. */
+  adjustStockForEdit(previousLines, nextLines) {
+    const quantities = new Map();
+    const add = (lines, sign) => {
+      for (const line of lines ?? []) {
+        if (!line?.name) continue;
+        const key = line.name.trim().toLowerCase();
+        const entry = quantities.get(key) ?? { name: line.name, quantity: 0 };
+        entry.quantity += sign * (Number(line.quantity) || 0);
+        quantities.set(key, entry);
+      }
+    };
+    add(nextLines, 1);
+    add(previousLines, -1);
+    return this.deductStock([...quantities.values()]);
+  },
 };
 
 /**

@@ -36,12 +36,7 @@ export function useSyncManager() {
     }
   }, [isSyncing, refreshErrors]);
 
-  const dismissError = useCallback(async (queueId) => {
-    await syncManager.dismissError(queueId);
-    setSyncErrors((previous) => previous.filter((entry) => entry.id !== queueId));
-  }, []);
-
   const retryFailed = useCallback(() => syncManager.retryFailed(), []);
 
-  return { triggerSync, isSyncing, syncErrors, dismissError, retryFailed };
+  return { triggerSync, isSyncing, syncErrors, retryFailed };
 }

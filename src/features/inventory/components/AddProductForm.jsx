@@ -35,7 +35,7 @@ export default function AddProductForm() {
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        form.submit.mutate();
+        form.submit.mutate(undefined, { onSuccess: () => firstFieldRef.current?.focus() });
       }}
       className="space-y-4"
     >

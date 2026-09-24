@@ -61,6 +61,7 @@ export function useReportTable({
   return {
     rows: pageRows,
     allRows: filtered,
+    sourceRows: rows,
     isLoading,
     error,
     search,

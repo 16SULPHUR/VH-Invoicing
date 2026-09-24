@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { codeGenerator, productService } from "@/services/productService";
@@ -15,12 +15,14 @@ const EMPTY_PRODUCT = {
   newSupplierName: "",
 };
 
-/** Object URLs for the local file previews; revoked whenever the list changes. */
+/** Object URLs for the local file previews; revoked on discard, reset and unmount. */
 export function useImagePreviews() {
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
 
-  useEffect(() => () => previews.forEach(URL.revokeObjectURL), [previews]);
+  const previewsRef = useRef(previews);
+  previewsRef.current = previews;
+  useEffect(() => () => previewsRef.current.forEach(URL.revokeObjectURL), []);
 
   const addFiles = (fileList) => {
     const added = Array.from(fileList);
@@ -87,10 +89,11 @@ export function useAddProduct() {
         images: imageUrls,
       });
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
-      setProduct(EMPTY_PRODUCT);
+      // Keep the supplier so a batch from one supplier can be entered quickly.
+      setProduct({ ...EMPTY_PRODUCT, supplier: created?.[0]?.supplier ?? product.supplier });
       setIsAddingNewSupplier(false);
       images.reset();
       toast({ title: "Success", description: "Product added successfully." });

@@ -1,7 +1,7 @@
 import { lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
-import { ErrorBoundary } from "./ErrorBoundary";
+import { RouteError } from "./ErrorBoundary";
 
 // Every screen is code-split so the initial bundle only carries the shell.
 const InvoicingPage = lazy(() => import("@/features/invoicing/InvoicingPage"));
@@ -16,11 +16,16 @@ const TrialBalancePage = lazy(() => import("@/features/reports/pages/TrialBalanc
 const GstReportPage = lazy(() => import("@/features/reports/pages/GstReportPage"));
 
 export function createRouter({ onSignOut }) {
+  // Phones open on the scanner, as before the router existed.
+  if (window.location.pathname === "/" && window.matchMedia("(max-width: 767px)").matches) {
+    window.history.replaceState(null, "", "/scan");
+  }
+
   return createBrowserRouter([
     {
       path: "/",
       element: <AppLayout onSignOut={onSignOut} />,
-      errorElement: <ErrorBoundary />,
+      errorElement: <RouteError />,
       children: [
         { index: true, element: <InvoicingPage /> },
         { path: "scan", element: <ScannerPage /> },

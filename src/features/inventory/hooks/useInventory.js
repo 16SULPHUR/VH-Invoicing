@@ -1,22 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { productService } from "@/services/productService";
 import { supplierService } from "@/services/supplierService";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 
 export function useProducts() {
-  return useQuery({
-    queryKey: queryKeys.products.all,
+  return useQueryWithDefault({
+    queryKey: queryKeys.products.full,
     queryFn: () => productService.list(),
-    initialData: [],
   });
 }
 
 export function useSuppliers() {
-  return useQuery({
+  return useQueryWithDefault({
     queryKey: queryKeys.suppliers.all,
     queryFn: () => supplierService.list(),
-    initialData: [],
   });
 }
 
