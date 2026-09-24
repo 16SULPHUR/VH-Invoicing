@@ -20,6 +20,14 @@ function asSynced(invoice) {
   return { ...invoice, _syncStatus: SYNC_STATUS.SYNCED, _offlineId: null };
 }
 
+function isQueuedLocally(invoice) {
+  return Boolean(invoice) && invoice._syncStatus !== SYNC_STATUS.SYNCED;
+}
+
+function isUnsyncedCreate(invoice) {
+  return Boolean(invoice?._offlineId) && invoice._syncStatus !== SYNC_STATUS.SYNCED;
+}
+
 function stripLocalFields(invoice) {
   const payload = { ...invoice };
   delete payload._syncStatus;
@@ -74,14 +82,17 @@ export const invoiceService = {
           .order("date", { ascending: false });
         if (error) throw error;
 
-        const serverInvoices = (data || []).map(asSynced);
-        await this._replaceSyncedRange(startDate, endDate, serverInvoices);
-
         const localPending = await db.invoices
           .where("_syncStatus")
           .anyOf(SYNC_STATUS.PENDING, SYNC_STATUS.FAILED)
           .filter((inv) => inv.date >= startDate && inv.date <= endDate)
           .toArray();
+        const pendingDates = new Set(localPending.map((inv) => inv.date));
+
+        const serverInvoices = (data || [])
+          .filter((inv) => !pendingDates.has(inv.date))
+          .map(asSynced);
+        await this._replaceSyncedRange(startDate, endDate, serverInvoices);
 
         return [...localPending, ...serverInvoices].sort((a, b) => (a.date < b.date ? 1 : -1));
       },
@@ -160,44 +171,72 @@ export const invoiceService = {
     return numericIds.length === 0 ? 1 : Math.max(...numericIds) + 1;
   },
 
-  updateInvoice(date, changes) {
+  async updateInvoice(date, changes) {
+    const local = await db.invoices.get(date);
+    // Anything already queued for this invoice must sync first, so queue behind it.
+    if (isQueuedLocally(local)) return this._updateOffline(date, changes);
+
     return withOfflineFallback(
       async () => {
-        const { data, error } = await supabase
+        const previous = await this.getInvoiceByDate(date);
+
+        const { error } = await supabase
           .from(TABLE)
           .update(stripLocalFields(changes))
           .eq("date", date);
         if (error) throw error;
 
-        await db.invoices.put(asSynced({ ...changes, date }));
-        await productService.deductStock(parseLines(changes.products));
-        return data;
+        const saved = asSynced({ ...previous, ...changes, date });
+        await db.invoices.put(saved);
+        await productService.adjustStockForEdit(
+          parseLines(previous.products),
+          parseLines(changes.products)
+        );
+        return saved;
       },
       () => this._updateOffline(date, changes)
     );
   },
 
   async _updateOffline(date, changes) {
-    await db.invoices.put({ ...changes, date, _syncStatus: SYNC_STATUS.PENDING });
+    const local = await db.invoices.get(date);
+    const updated = { ...local, ...changes, date, _syncStatus: SYNC_STATUS.PENDING };
+    await db.invoices.put(updated);
+
+    // Fold edits of a never-synced invoice into its queued create.
+    if (isUnsyncedCreate(local)) {
+      const queuedCreate = await db.syncQueue
+        .filter((entry) => entry.type === "create" && entry.originalDate === date)
+        .first();
+      if (queuedCreate) {
+        await db.syncQueue.update(queuedCreate.id, { data: updated });
+        return updated;
+      }
+    }
+
     await syncManager.addToQueue({
       type: "update",
       table: TABLE,
       data: changes,
       originalDate: date,
+      previousProducts: local?.products ?? null,
     });
-    return changes;
+    return updated;
   },
 
-  deleteInvoice(date) {
+  async deleteInvoice(date) {
+    const local = await db.invoices.get(date);
+    if (isQueuedLocally(local)) return this._deleteOffline(date);
+
     return withOfflineFallback(
       async () => {
         const invoice = await this.getInvoiceByDate(date);
-        await productService.restoreStock(parseLines(invoice.products));
 
         const { error } = await supabase.from(TABLE).delete().eq("date", date);
         if (error) throw error;
 
         await db.invoices.delete(date);
+        await productService.restoreStock(parseLines(invoice.products));
       },
       () => this._deleteOffline(date)
     );
@@ -209,9 +248,9 @@ export const invoiceService = {
 
     await db.invoices.delete(date);
 
-    // An invoice that never synced can just be dropped along with its queued create.
-    if (invoice._offlineId && invoice._syncStatus === SYNC_STATUS.PENDING) {
-      const queued = await db.syncQueue.where("originalDate").equals(date).toArray();
+    // An invoice that never synced can just be dropped along with its queued writes.
+    if (isUnsyncedCreate(invoice)) {
+      const queued = await db.syncQueue.filter((entry) => entry.originalDate === date).toArray();
       await db.syncQueue.bulkDelete(queued.map((entry) => entry.id));
       return;
     }

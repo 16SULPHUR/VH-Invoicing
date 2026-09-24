@@ -116,13 +116,14 @@ export function useInvoiceWorkspace() {
 
     const date = draft.currentDate.toISOString();
     try {
-      await invoiceService.updateInvoice(date, toPayload(draft, { date }));
+      const saved = await invoiceService.updateInvoice(date, toPayload(draft, { date }));
       refreshAll();
       draft.reset();
 
+      const synced = saved?._syncStatus === "synced";
       toast({
-        title: isOnline ? "Invoice updated" : "Saved offline",
-        description: isOnline
+        title: synced ? "Invoice updated" : "Saved offline",
+        description: synced
           ? "The invoice has been updated."
           : "Invoice update saved offline. It will sync when you are back online.",
       });
@@ -133,7 +134,7 @@ export function useInvoiceWorkspace() {
         variant: "destructive",
       });
     }
-  }, [draft, isOnline, refreshAll, toast]);
+  }, [draft, refreshAll, toast]);
 
   const printAndSaveInvoice = useCallback(async () => {
     if (draft.lines.length === 0) {

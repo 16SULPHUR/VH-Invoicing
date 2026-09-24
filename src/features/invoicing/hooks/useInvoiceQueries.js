@@ -25,8 +25,18 @@ export function useRecentInvoices() {
     queryFn: () => invoiceService.getInvoicesByFinancialYear(startDate, endDate),
   });
 
+  // New invoices are always numbered in today's financial year, whichever year is being viewed.
+  const current = financialYearRange(currentFinancialYear());
+  const currentYearQuery = useQuery({
+    queryKey: queryKeys.invoices.financialYear(current.startDate, current.endDate),
+    queryFn: () => invoiceService.getInvoicesByFinancialYear(current.startDate, current.endDate),
+  });
+
   const invoices = useMemo(() => query.data ?? [], [query.data]);
-  const nextInvoiceId = useMemo(() => invoiceService.getNextInvoiceId(invoices), [invoices]);
+  const nextInvoiceId = useMemo(
+    () => invoiceService.getNextInvoiceId(currentYearQuery.data),
+    [currentYearQuery.data]
+  );
 
   return { invoices, nextInvoiceId, financialYear, setFinancialYear, ...query };
 }

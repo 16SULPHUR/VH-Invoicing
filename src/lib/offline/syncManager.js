@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { productService } from "@/services/productService";
+import { currentFinancialYear, financialYearRange } from "@/utils/date";
 import { db, SYNC_STATUS } from "./db";
 
 const MAX_RETRIES = 3;
@@ -48,12 +49,13 @@ class SyncManager {
     }
   }
 
-  async addToQueue({ type, table, data, originalDate }) {
+  async addToQueue({ type, table, data, originalDate, previousProducts = null }) {
     await db.syncQueue.add({
       type,
       table,
       data,
       originalDate,
+      previousProducts,
       timestamp: Date.now(),
       status: SYNC_STATUS.PENDING,
       retryCount: 0,
@@ -142,9 +144,13 @@ class SyncManager {
   async _createInvoice(entry) {
     const invoice = entry.data;
 
+    // Invoice numbers restart every financial year, so only look within the invoice's own year.
+    const { startDate, endDate } = financialYearRange(currentFinancialYear(new Date(invoice.date)));
     const { data: maxRow, error: maxError } = await supabase
       .from("invoices")
       .select("id")
+      .gte("date", startDate)
+      .lte("date", endDate)
       .order("id", { ascending: false })
       .limit(1);
     if (maxError) throw maxError;
@@ -190,6 +196,13 @@ class SyncManager {
       .eq("date", entry.originalDate);
     if (error) throw error;
 
+    if (entry.previousProducts && payload.products) {
+      await productService.adjustStockForEdit(
+        parseLines(entry.previousProducts),
+        parseLines(payload.products)
+      );
+    }
+
     await db.invoices
       .where("date")
       .equals(entry.originalDate)
@@ -200,7 +213,7 @@ class SyncManager {
     const invoice = entry.data;
 
     // Never reached the server, so there is nothing to delete remotely.
-    if (invoice._offlineId && invoice._syncStatus === SYNC_STATUS.PENDING) {
+    if (invoice._offlineId && invoice._syncStatus !== SYNC_STATUS.SYNCED) {
       await db.invoices.where("date").equals(entry.originalDate).delete();
       return;
     }
@@ -230,7 +243,11 @@ class SyncManager {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
+    // Drain anything left in the queue from a previous session.
+    const startupSync = setTimeout(() => this.processQueue(), RECONNECT_SETTLE_MS);
+
     this._teardown = () => {
+      clearTimeout(startupSync);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
       this._teardown = null;
