@@ -13,6 +13,9 @@ import {
   startOfDay,
   toISODate,
 } from "@/utils/date";
+import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
+
+const NO_COLLECTIONS = { cash: 0, upi: 0, credit: 0 };
 
 const DAILY_SALES_WINDOW = 7;
 
@@ -42,10 +45,9 @@ export function useRecentInvoices() {
 }
 
 export function useDailySales() {
-  return useQuery({
+  return useQueryWithDefault({
     queryKey: queryKeys.invoices.dailySales(DAILY_SALES_WINDOW),
     queryFn: () => invoiceService.getDailySales(DAILY_SALES_WINDOW),
-    placeholderData: [],
   });
 }
 
@@ -63,11 +65,13 @@ export function useSalesSummary() {
   });
 
   const today = toISODate();
-  const collections = useQuery({
-    queryKey: queryKeys.accounting.collections(startOfDay(today), endOfDay(today)),
-    queryFn: () => getCollectionsByDateRange(startOfDay(today), endOfDay(today)),
-    placeholderData: { cash: 0, upi: 0, credit: 0 },
-  });
+  const collections = useQueryWithDefault(
+    {
+      queryKey: queryKeys.accounting.collections(startOfDay(today), endOfDay(today)),
+      queryFn: () => getCollectionsByDateRange(startOfDay(today), endOfDay(today)),
+    },
+    NO_COLLECTIONS
+  );
 
   return {
     period,
@@ -82,7 +86,7 @@ export function useSalesSummary() {
 
 /** Catalog of every product, served from IndexedDB first so the till works offline. */
 export function useProductCatalog() {
-  return useQuery({
+  return useQueryWithDefault({
     queryKey: queryKeys.products.catalog,
     queryFn: async () => {
       const cached = await cacheManager.getCachedProducts();
@@ -91,12 +95,11 @@ export function useProductCatalog() {
       const refreshed = await cacheManager.getCachedProducts();
       return refreshed.length > 0 ? refreshed : cached;
     },
-    placeholderData: [],
   });
 }
 
 export function useCustomerDirectory() {
-  return useQuery({
+  return useQueryWithDefault({
     queryKey: queryKeys.customers.all,
     queryFn: async () => {
       const cached = await cacheManager.getCachedCustomers();
@@ -105,7 +108,6 @@ export function useCustomerDirectory() {
       const refreshed = await cacheManager.getCachedCustomers();
       return refreshed.length > 0 ? refreshed : cached;
     },
-    placeholderData: [],
   });
 }
 

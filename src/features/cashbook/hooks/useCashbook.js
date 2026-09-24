@@ -1,20 +1,27 @@
 import { useCallback, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { cashbookService } from "@/services/cashbookService";
 import { parseCashbookText } from "@/utils/cashbookParser";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { computeBalances, normalizeAmount } from "../balances";
+import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
+
+const EMPTY_CASHBOOK = { accounts: [], reconciliations: [], transactions: [] };
 
 export function useCashbook() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: queryKeys.cashbook.transactions,
-    queryFn: () => cashbookService.loadAll(),
-    placeholderData: { accounts: [], reconciliations: [], transactions: [] },
-  });
+  const { data, isLoading, refetch, error } = useQueryWithDefault(
+    {
+      queryKey: queryKeys.cashbook.transactions,
+      queryFn: () => cashbookService.loadAll(),
+    },
+    EMPTY_CASHBOOK
+  );
+  useQueryErrorToast(error, "Failed to load cashbook data");
 
   const balances = useMemo(() => computeBalances(data), [data]);
 

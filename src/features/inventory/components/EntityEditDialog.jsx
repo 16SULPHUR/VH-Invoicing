@@ -20,7 +20,7 @@ export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, on
             }}
             className="space-y-4"
           >
-            {fields.map(({ key, label, type, parse }) => (
+            {fields.map(({ key, label, type }) => (
               <div key={key} className="space-y-2">
                 <Label
                   htmlFor={`edit-${key}`}
@@ -32,9 +32,7 @@ export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, on
                   id={`edit-${key}`}
                   type={type}
                   value={entity[key] ?? ""}
-                  onChange={(event) =>
-                    onChange(key, parse ? parse(event.target.value) : event.target.value)
-                  }
+                  onChange={(event) => onChange(key, event.target.value)}
                   className="border-border bg-surface text-foreground"
                   required
                 />

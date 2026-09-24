@@ -1,14 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { customerService } from "@/services/customerService";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
+import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 
 export function useCustomers() {
-  return useQuery({
+  const query = useQueryWithDefault({
     queryKey: queryKeys.customers.all,
     queryFn: () => customerService.list(),
-    placeholderData: [],
   });
+  useQueryErrorToast(query.error, "Failed to load customers");
+  return query;
 }
 
 /** Wraps a customer write so every caller gets the same toasts and cache refresh. */
@@ -41,7 +44,8 @@ export const useAddCustomer = () =>
 
 export const useUpdateCustomer = () =>
   useCustomerMutation({
-    mutationFn: ({ id, ...changes }) => customerService.update(id, changes),
+    mutationFn: ({ id, name, address, phone }) =>
+      customerService.update(id, { name, address, phone }),
     successMessage: "Customer updated successfully.",
     errorMessage: "Failed to update customer",
   });

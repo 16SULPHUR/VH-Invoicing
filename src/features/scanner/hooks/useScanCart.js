@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { productService } from "@/services/productService";
 import { scannedProductService, printCommandService } from "@/services/scannedProductService";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 
 /** Folds raw scan rows into one line per barcode, resolved against the catalog. */
 function buildCart(scannedRows, catalog) {
@@ -42,10 +43,9 @@ export function useScanCart() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: catalog = [] } = useQuery({
+  const { data: catalog = [] } = useQueryWithDefault({
     queryKey: queryKeys.products.catalog,
     queryFn: () => productService.listForCache(),
-    placeholderData: [],
   });
 
   const scanned = useQuery({
@@ -59,6 +59,9 @@ export function useScanCart() {
     () => queryClient.invalidateQueries({ queryKey: queryKeys.scannedProducts.all }),
     [queryClient]
   );
+
+  // Scans from other phones show up without pressing Refresh.
+  useEffect(() => scannedProductService.subscribe(invalidate), [invalidate]);
 
   const notifyError = (title) => (error) =>
     toast({ title, description: error.message, variant: "destructive" });

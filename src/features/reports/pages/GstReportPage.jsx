@@ -43,7 +43,7 @@ export default function GstReportPage() {
   });
 
   const pageSubtotal = table.rows.reduce((sum, row) => sum + (Number(row.credit) || 0), 0);
-  const grandTotal = table.allRows.reduce((sum, row) => sum + (Number(row.credit) || 0), 0);
+  const grandTotal = table.sourceRows.reduce((sum, row) => sum + (Number(row.credit) || 0), 0);
 
   const footerRows = (
     <>

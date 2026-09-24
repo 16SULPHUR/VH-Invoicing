@@ -16,6 +16,11 @@ const TrialBalancePage = lazy(() => import("@/features/reports/pages/TrialBalanc
 const GstReportPage = lazy(() => import("@/features/reports/pages/GstReportPage"));
 
 export function createRouter({ onSignOut }) {
+  // Phones open on the scanner, as before the router existed.
+  if (window.location.pathname === "/" && window.matchMedia("(max-width: 767px)").matches) {
+    window.history.replaceState(null, "", "/scan");
+  }
+
   return createBrowserRouter([
     {
       path: "/",

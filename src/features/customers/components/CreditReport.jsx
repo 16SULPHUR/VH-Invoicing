@@ -32,6 +32,7 @@ const CSV_HEADERS = [
   "Total Amount",
   "Credit Amount",
   "Paid Amount",
+  "Payment Status",
 ];
 
 export default function CreditReport() {
@@ -53,6 +54,7 @@ export default function CreditReport() {
         invoice.total,
         invoice.credit,
         invoice.total - invoice.credit,
+        invoice.paymentStatus ?? "",
       ])
     );
     downloadCsv(`credit_report_${toISODate()}.csv`, toCsv(CSV_HEADERS, rows));

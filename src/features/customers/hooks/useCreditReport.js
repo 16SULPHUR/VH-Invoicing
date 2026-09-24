@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { invoiceService } from "@/services/invoiceService";
+import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
+import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 
 /** Credit invoices grouped by customer, with a per-customer outstanding total. */
 function groupByCustomer(invoices) {
@@ -22,11 +24,15 @@ export function useCreditReport() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: invoices, isLoading } = useQuery({
+  const {
+    data: invoices,
+    isLoading,
+    error,
+  } = useQueryWithDefault({
     queryKey: queryKeys.customers.credit,
     queryFn: () => invoiceService.getCreditInvoices(),
-    placeholderData: [],
   });
+  useQueryErrorToast(error, "Failed to fetch credit data");
 
   const customers = useMemo(() => groupByCustomer(invoices), [invoices]);
 

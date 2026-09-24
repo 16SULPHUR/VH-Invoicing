@@ -89,10 +89,11 @@ export function useAddProduct() {
         images: imageUrls,
       });
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
-      setProduct(EMPTY_PRODUCT);
+      // Keep the supplier so a batch from one supplier can be entered quickly.
+      setProduct({ ...EMPTY_PRODUCT, supplier: created?.[0]?.supplier ?? product.supplier });
       setIsAddingNewSupplier(false);
       images.reset();
       toast({ title: "Success", description: "Product added successfully." });

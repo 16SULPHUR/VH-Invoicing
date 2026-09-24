@@ -146,16 +146,25 @@ class SyncManager {
 
     // Invoice numbers restart every financial year, so only look within the invoice's own year.
     const { startDate, endDate } = financialYearRange(currentFinancialYear(new Date(invoice.date)));
-    const { data: maxRow, error: maxError } = await supabase
-      .from("invoices")
-      .select("id")
-      .gte("date", startDate)
-      .lte("date", endDate)
-      .order("id", { ascending: false })
-      .limit(1);
-    if (maxError) throw maxError;
+    const inYear = () =>
+      supabase.from("invoices").select("id").gte("date", startDate).lte("date", endDate);
 
-    const nextId = maxRow?.length ? maxRow[0].id + 1 : 1;
+    // Keep the number printed on the customer's bill unless another device has taken it.
+    let nextId = null;
+    if (Number.isInteger(invoice._printedId)) {
+      const { data: taken, error: takenError } = await inYear()
+        .eq("id", invoice._printedId)
+        .limit(1);
+      if (takenError) throw takenError;
+      if (!taken?.length) nextId = invoice._printedId;
+    }
+    if (nextId === null) {
+      const { data: maxRow, error: maxError } = await inYear()
+        .order("id", { ascending: false })
+        .limit(1);
+      if (maxError) throw maxError;
+      nextId = maxRow?.length ? maxRow[0].id + 1 : 1;
+    }
 
     const { data, error } = await supabase
       .from("invoices")
@@ -262,11 +271,6 @@ class SyncManager {
       .modify({ status: SYNC_STATUS.PENDING, retryCount: 0, error: null });
     this._notify({ type: "queue_updated" });
     return this.processQueue();
-  }
-
-  async dismissError(queueId) {
-    await db.syncQueue.delete(queueId);
-    this._notify({ type: "queue_updated" });
   }
 
   async listFailed() {

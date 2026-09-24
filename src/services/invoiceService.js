@@ -57,6 +57,7 @@ export const invoiceService = {
       ...invoice,
       id: offlineId,
       _offlineId: offlineId,
+      _printedId: invoice.id,
       _syncStatus: SYNC_STATUS.PENDING,
     };
 

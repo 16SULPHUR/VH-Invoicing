@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { BatchEditDialog } from "./components/BatchEditDialog";
 import { EntityEditDialog } from "./components/EntityEditDialog";
-import { PRODUCT_FIELDS, SUPPLIER_FIELDS } from "./entityFields";
+import { PRODUCT_FIELDS, SUPPLIER_FIELDS, pickFields } from "./entityFields";
 import { ImageGalleryDialog } from "./components/ImageGalleryDialog";
 import { ImageUploadDialog } from "./components/ImageUploadDialog";
 import { InventoryAnalytics, StockAlerts } from "./components/InventoryAnalytics";
@@ -194,7 +194,9 @@ export default function ManageProducts() {
           setEditingProduct((previous) => ({ ...previous, [field]: value }))
         }
         onSubmit={() =>
-          updateProduct.mutate(editingProduct, { onSuccess: () => setEditingProduct(null) })
+          updateProduct.mutate(pickFields(editingProduct, PRODUCT_FIELDS), {
+            onSuccess: () => setEditingProduct(null),
+          })
         }
         onClose={() => setEditingProduct(null)}
       />
@@ -208,7 +210,9 @@ export default function ManageProducts() {
           setEditingSupplier((previous) => ({ ...previous, [field]: value }))
         }
         onSubmit={() =>
-          updateSupplier.mutate(editingSupplier, { onSuccess: () => setEditingSupplier(null) })
+          updateSupplier.mutate(pickFields(editingSupplier, SUPPLIER_FIELDS), {
+            onSuccess: () => setEditingSupplier(null),
+          })
         }
         onClose={() => setEditingSupplier(null)}
       />
