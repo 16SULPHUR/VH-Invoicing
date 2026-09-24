@@ -13,7 +13,7 @@ export function useCashbook() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: queryKeys.cashbook.transactions,
     queryFn: () => cashbookService.loadAll(),
-    initialData: { accounts: [], reconciliations: [], transactions: [] },
+    placeholderData: { accounts: [], reconciliations: [], transactions: [] },
   });
 
   const balances = useMemo(() => computeBalances(data), [data]);

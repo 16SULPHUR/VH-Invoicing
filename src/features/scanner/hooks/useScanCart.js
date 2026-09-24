@@ -43,9 +43,9 @@ export function useScanCart() {
   const { toast } = useToast();
 
   const { data: catalog = [] } = useQuery({
-    queryKey: queryKeys.products.all,
+    queryKey: queryKeys.products.catalog,
     queryFn: () => productService.listForCache(),
-    initialData: [],
+    placeholderData: [],
   });
 
   const scanned = useQuery({

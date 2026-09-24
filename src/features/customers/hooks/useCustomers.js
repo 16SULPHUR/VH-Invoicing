@@ -7,7 +7,7 @@ export function useCustomers() {
   return useQuery({
     queryKey: queryKeys.customers.all,
     queryFn: () => customerService.list(),
-    initialData: [],
+    placeholderData: [],
   });
 }
 

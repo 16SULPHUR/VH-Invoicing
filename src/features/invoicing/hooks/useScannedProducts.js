@@ -73,8 +73,10 @@ export function useScannedProducts({ catalog, setLines, enabled = true }) {
 
   const applyScan = useCallback(
     (payload) => {
-      const row = payload?.new;
-      if (!row) return;
+      // Deletes (e.g. clearing the list after a save) and edits must not add lines.
+      if (payload?.eventType !== "INSERT") return;
+      const row = payload.new;
+      if (!row?.name) return;
 
       const barcode = String(row.name);
       const product = findByBarcode(catalog, barcode);

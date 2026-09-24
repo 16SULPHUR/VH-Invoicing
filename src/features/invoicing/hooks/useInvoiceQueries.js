@@ -45,7 +45,7 @@ export function useDailySales() {
   return useQuery({
     queryKey: queryKeys.invoices.dailySales(DAILY_SALES_WINDOW),
     queryFn: () => invoiceService.getDailySales(DAILY_SALES_WINDOW),
-    initialData: [],
+    placeholderData: [],
   });
 }
 
@@ -66,7 +66,7 @@ export function useSalesSummary() {
   const collections = useQuery({
     queryKey: queryKeys.accounting.collections(startOfDay(today), endOfDay(today)),
     queryFn: () => getCollectionsByDateRange(startOfDay(today), endOfDay(today)),
-    initialData: { cash: 0, upi: 0, credit: 0 },
+    placeholderData: { cash: 0, upi: 0, credit: 0 },
   });
 
   return {
@@ -83,7 +83,7 @@ export function useSalesSummary() {
 /** Catalog of every product, served from IndexedDB first so the till works offline. */
 export function useProductCatalog() {
   return useQuery({
-    queryKey: queryKeys.products.all,
+    queryKey: queryKeys.products.catalog,
     queryFn: async () => {
       const cached = await cacheManager.getCachedProducts();
       if (!isOnline()) return cached;
@@ -91,7 +91,7 @@ export function useProductCatalog() {
       const refreshed = await cacheManager.getCachedProducts();
       return refreshed.length > 0 ? refreshed : cached;
     },
-    initialData: [],
+    placeholderData: [],
   });
 }
 
@@ -105,7 +105,7 @@ export function useCustomerDirectory() {
       const refreshed = await cacheManager.getCachedCustomers();
       return refreshed.length > 0 ? refreshed : cached;
     },
-    initialData: [],
+    placeholderData: [],
   });
 }
 

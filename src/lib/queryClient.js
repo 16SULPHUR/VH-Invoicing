@@ -29,6 +29,8 @@ export const queryKeys = {
   },
   products: {
     all: ["products"],
+    full: ["products", "full"],
+    catalog: ["products", "catalog"],
     detail: (id) => ["products", id],
   },
   suppliers: { all: ["suppliers"] },

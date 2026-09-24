@@ -6,9 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 
 export function useProducts() {
   return useQuery({
-    queryKey: queryKeys.products.all,
+    queryKey: queryKeys.products.full,
     queryFn: () => productService.list(),
-    initialData: [],
+    placeholderData: [],
   });
 }
 
@@ -16,7 +16,7 @@ export function useSuppliers() {
   return useQuery({
     queryKey: queryKeys.suppliers.all,
     queryFn: () => supplierService.list(),
-    initialData: [],
+    placeholderData: [],
   });
 }
 

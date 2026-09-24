@@ -25,7 +25,7 @@ export function useCreditReport() {
   const { data: invoices, isLoading } = useQuery({
     queryKey: queryKeys.customers.credit,
     queryFn: () => invoiceService.getCreditInvoices(),
-    initialData: [],
+    placeholderData: [],
   });
 
   const customers = useMemo(() => groupByCustomer(invoices), [invoices]);
