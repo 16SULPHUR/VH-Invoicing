@@ -1,7 +1,7 @@
 import {
   Download,
   Image as ImageIcon,
-  MoreVertical,
+  MoreHorizontal,
   Pencil,
   Share2,
   Trash2,
@@ -31,7 +31,7 @@ export function ProductRowActions({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" aria-label={`Actions for ${product.name}`}>
-          <MoreVertical className="h-4 w-4" />
+          <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

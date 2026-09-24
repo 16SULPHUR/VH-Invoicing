@@ -14,13 +14,13 @@ import { useAddProduct } from "../hooks/useAddProduct";
 import { useSuppliers } from "../hooks/useInventory";
 
 const FIELDS = [
-  { key: "name", label: "Product Name", type: "text" },
+  { key: "name", label: "Product name", type: "text", wide: true },
   { key: "quantity", label: "Quantity", type: "number" },
-  { key: "cost", label: "Cost", type: "number" },
-  { key: "sellingPrice", label: "Selling Price", type: "number" },
+  { key: "cost", label: "Cost ₹", type: "number" },
+  { key: "sellingPrice", label: "Selling price ₹", type: "number" },
 ];
 
-const inputClass = "border-border bg-surface text-foreground";
+const labelClass = "text-xs font-semibold text-muted-foreground";
 
 export default function AddProductForm() {
   const { data: suppliers } = useSuppliers();
@@ -37,29 +37,33 @@ export default function AddProductForm() {
         event.preventDefault();
         form.submit.mutate(undefined, { onSuccess: () => firstFieldRef.current?.focus() });
       }}
-      className="space-y-4"
+      className="max-w-2xl space-y-5 rounded-2xl border border-border/70 bg-surface p-5"
     >
-      <div className="flex w-full items-center gap-5">
-        <div className="flex items-center space-x-2">
+      <div>
+        <h2 className="font-display text-xl font-bold">Add a product</h2>
+        <p className="text-sm text-muted-foreground">It gets a barcode and shows up in billing straight away.</p>
+      </div>
+
+      <div className="flex w-full items-center gap-4">
+        <div className="flex items-center gap-2">
           <Switch
             id="add-supplier"
-
             checked={form.isAddingNewSupplier}
             onCheckedChange={form.setIsAddingNewSupplier}
           />
-          <Label htmlFor="add-supplier" className="text-nowrap text-sm text-muted-foreground">
-            New Supplier
+          <Label htmlFor="add-supplier" className="text-nowrap text-sm font-semibold">
+            New supplier
           </Label>
         </div>
 
-        <div className="w-full space-y-2">
+        <div className="w-full">
           {form.isAddingNewSupplier ? (
             <Input
               id="newSupplierName"
               value={form.product.newSupplierName}
               onChange={(event) => form.setField("newSupplierName", event.target.value)}
-              className={inputClass}
-              placeholder="New Supplier Name"
+             
+              placeholder="New supplier name"
               required
             />
           ) : (
@@ -67,7 +71,7 @@ export default function AddProductForm() {
               value={form.product.supplier}
               onValueChange={(value) => form.setField("supplier", value)}
             >
-              <SelectTrigger className={inputClass}>
+              <SelectTrigger>
                 <SelectValue placeholder="Select a supplier" />
               </SelectTrigger>
               <SelectContent>
@@ -82,13 +86,11 @@ export default function AddProductForm() {
         </div>
       </div>
 
-      {FIELDS.map(({ key, label, type }, index) => (
-        <div key={key} className="space-y-2">
-          <Label
-            htmlFor={key}
-            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-          >
-            {label}:
+      <div className="grid grid-cols-3 gap-3">
+      {FIELDS.map(({ key, label, type, wide }, index) => (
+        <div key={key} className={wide ? "col-span-3 space-y-1.5" : "space-y-1.5"}>
+          <Label htmlFor={key} className={labelClass}>
+            {label}
           </Label>
           <Input
             id={key}
@@ -96,18 +98,16 @@ export default function AddProductForm() {
             ref={index === 0 ? firstFieldRef : undefined}
             value={form.product[key]}
             onChange={(event) => form.setField(key, event.target.value)}
-            className={inputClass}
+           
             required
           />
         </div>
       ))}
+      </div>
 
-      <div className="space-y-2">
-        <Label
-          htmlFor="images"
-          className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-        >
-          Product Images:
+      <div className="space-y-1.5">
+        <Label htmlFor="images" className={labelClass}>
+          Photos
         </Label>
         <Input
           id="images"
@@ -118,7 +118,7 @@ export default function AddProductForm() {
           onClick={(event) => {
             event.target.value = null;
           }}
-          className={inputClass}
+         
         />
         <div className="flex flex-wrap gap-2">
           {form.images.previews.map((preview, index) => (
@@ -129,13 +129,13 @@ export default function AddProductForm() {
                 width={96}
                 height={96}
                 loading="lazy"
-                className="h-24 w-24 rounded object-cover"
+                className="h-24 w-24 rounded-xl object-cover"
               />
               <button
                 type="button"
                 aria-label={`Remove image ${index + 1}`}
                 onClick={() => form.images.discard(index)}
-                className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-destructive "
+                className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white"
               >
                 &times;
               </button>
@@ -147,9 +147,10 @@ export default function AddProductForm() {
       <Button
         type="submit"
         disabled={form.submit.isPending}
-        className="w-full bg-primary hover:bg-primary"
+        variant="rani"
+        className="block-shadow h-11 w-full text-base"
       >
-        {form.submit.isPending ? "Adding…" : "Add Product"}
+        {form.submit.isPending ? "Adding…" : "Add product"}
       </Button>
     </form>
   );

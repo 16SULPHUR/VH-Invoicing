@@ -24,7 +24,6 @@ const PDF_OPTIONS = {
   overrides: { pdf: { compress: true }, canvas: { useCORS: true } },
 };
 
-const inputClass = "border-border bg-surface text-foreground";
 
 export default function GenerateStickers() {
   const { data: suppliers } = useSuppliers();
@@ -60,14 +59,11 @@ export default function GenerateStickers() {
   };
 
   return (
-    <div className="flex w-full justify-between gap-10 space-y-4">
-      <div className="w-3/5 space-y-2">
-        <div className="space-y-2">
-          <Label
-            htmlFor="supplier"
-            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-          >
-            Select Supplier:
+    <div className="flex w-full flex-col gap-5 md:flex-row">
+      <div className="space-y-4 rounded-2xl border border-border/70 bg-surface p-5 md:w-3/5">
+        <div className="space-y-1.5">
+          <Label htmlFor="supplier" className="text-xs font-semibold text-muted-foreground">
+            Select supplier
           </Label>
           <Select
             value={supplierId}
@@ -76,7 +72,7 @@ export default function GenerateStickers() {
               setProductId("");
             }}
           >
-            <SelectTrigger id="supplier" className={inputClass}>
+            <SelectTrigger id="supplier">
               <SelectValue placeholder="Select a supplier" />
             </SelectTrigger>
             <SelectContent>
@@ -89,15 +85,12 @@ export default function GenerateStickers() {
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="product"
-            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-          >
-            Select Product:
+        <div className="space-y-1.5">
+          <Label htmlFor="product" className="text-xs font-semibold text-muted-foreground">
+            Select product
           </Label>
           <Select value={productId} onValueChange={setProductId} disabled={!supplierId}>
-            <SelectTrigger id="product" className={inputClass}>
+            <SelectTrigger id="product">
               <SelectValue placeholder="Select a product" />
             </SelectTrigger>
             <SelectContent>
@@ -105,7 +98,7 @@ export default function GenerateStickers() {
                 <SelectItem key={candidate.id} value={candidate.id}>
                   <div className="flex gap-2">
                     <span>{candidate.name}</span>
-                    <span>₹ {candidate.sellingPrice}</span>
+                    <span className="text-muted-foreground">₹{candidate.sellingPrice}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -113,12 +106,9 @@ export default function GenerateStickers() {
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="quantity"
-            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-          >
-            Quantity:
+        <div className="space-y-1.5">
+          <Label htmlFor="quantity" className="text-xs font-semibold text-muted-foreground">
+            Quantity
           </Label>
           <Input
             id="quantity"
@@ -126,16 +116,16 @@ export default function GenerateStickers() {
             min="1"
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
-            className={inputClass}
+           
           />
         </div>
 
-        <Button type="button" className="w-full bg-primary hover:bg-primary" onClick={handlePrint}>
-          <Printer className="mr-2 h-4 w-4" /> Generate Stickers
+        <Button type="button" variant="rani" className="block-shadow h-11 w-full" onClick={handlePrint}>
+          <Printer className="mr-2 h-4 w-4" /> Print stickers
         </Button>
       </div>
 
-      <div className="paper mb-6 h-40 overflow-auto rounded-md p-4" ref={targetRef}>
+      <div className="paper h-40 overflow-auto rounded-2xl border border-border/70 p-4 md:flex-1" ref={targetRef}>
         <PrintableSticker
           sku={product?.name ?? "SAMPLE SKU"}
           price={product?.sellingPrice ?? "0"}

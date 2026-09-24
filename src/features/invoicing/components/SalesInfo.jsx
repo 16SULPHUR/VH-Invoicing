@@ -1,8 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/common/Field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StatTile } from "@/components/common/StatTile";
-import { formatAmount } from "@/utils/formatters";
+import { formatRupees } from "@/utils/formatters";
 import { PAYMENT_METHODS } from "../paymentMethods";
 
 const SALES_PERIODS = [
@@ -20,18 +27,18 @@ export function SalesInfo({ period, setPeriod, customRange, setCustomRange, summ
     <section className="space-y-3">
       <Field label="Period" htmlFor="sales-period">
         {(id) => (
-          <select
-            id={id}
-            value={period}
-            onChange={(event) => setPeriod(event.target.value)}
-            className="h-9 w-full rounded-md border border-input bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {SALES_PERIODS.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger id={id}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SALES_PERIODS.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
       </Field>
 
@@ -44,7 +51,6 @@ export function SalesInfo({ period, setPeriod, customRange, setCustomRange, summ
                 type="date"
                 value={customRange.start}
                 onChange={setRangeField("start")}
-                className="h-9"
               />
             )}
           </Field>
@@ -55,7 +61,6 @@ export function SalesInfo({ period, setPeriod, customRange, setCustomRange, summ
                 type="date"
                 value={customRange.end}
                 onChange={setRangeField("end")}
-                className="h-9"
               />
             )}
           </Field>
@@ -70,15 +75,20 @@ export function SalesInfo({ period, setPeriod, customRange, setCustomRange, summ
         </div>
       )}
 
-      <StatTile label="Total sales" value={`₹${formatAmount(summary.total)}`} />
+      <div className="motif-overlay rounded-2xl bg-rani px-4 py-3.5 text-white">
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">Total sales</p>
+        <p className="mt-1.5 font-display text-3xl font-extrabold tabular-nums leading-none tracking-tight">
+          {formatRupees(summary.total)}
+        </p>
+      </div>
 
       <div className="grid grid-cols-3 gap-2">
         {PAYMENT_METHODS.map(({ key, label, text }) => (
           <StatTile
             key={key}
             label={label}
-            value={`₹${formatAmount(summary[key])}`}
-            accent={`${text} text-lg`}
+            value={formatRupees(summary[key])}
+            accent={`${text} text-xl`}
           />
         ))}
       </div>

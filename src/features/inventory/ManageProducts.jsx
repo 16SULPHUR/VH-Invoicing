@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Filter, TrendingUp } from "lucide-react";
+import { Filter, Search, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,27 +82,59 @@ export default function ManageProducts() {
   return (
     <div className="space-y-4">
       <Tabs defaultValue="products" className="w-full">
-        <TabsList className="w-fit">
+        <TabsList className="h-9 w-fit">
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="products">
-          <div className="mb-4 flex justify-end gap-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters((current) => !current)}
-              className="flex items-center gap-2 "
+        <TabsContent value="products" className="mt-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[14rem] flex-1">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                placeholder="Search products, supplier, barcode…"
+                value={filters.search}
+                onChange={(event) => filters.setSearch(event.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <Select value={filters.supplierId} onValueChange={filters.setSupplierId}>
+              <SelectTrigger className="w-[190px]">
+                <SelectValue placeholder="Select a supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All suppliers</SelectItem>
+                {suppliers.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Label
+              htmlFor="showCost"
+              className="flex h-10 cursor-pointer items-center gap-2 rounded-xl border-[1.5px] border-border bg-surface px-3 text-sm font-semibold"
             >
-              <Filter className="h-4 w-4" /> {showFilters ? "Hide Filters" : "Show Filters"}
+              Show cost
+              <Switch id="showCost" checked={showCost} onCheckedChange={setShowCost} />
+            </Label>
+
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              onClick={() => setShowFilters((current) => !current)}
+            >
+              <Filter className="mr-1.5 h-4 w-4" /> Filters
             </Button>
             <Button
-              variant="outline"
+              variant={showAnalytics ? "default" : "outline"}
               onClick={() => setShowAnalytics((current) => !current)}
-              className="flex items-center gap-2 "
             >
-              <TrendingUp className="h-4 w-4" />
-              {showAnalytics ? "Hide Analytics" : "Show Analytics"}
+              <TrendingUp className="mr-1.5 h-4 w-4" /> Analytics
             </Button>
           </div>
 
@@ -118,51 +150,23 @@ export default function ManageProducts() {
           )}
 
           {selection.selectedIds.size > 0 && (
-            <div className="mb-4 flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                {selection.selectedIds.size} items selected
+            <div className="flex items-center gap-3 rounded-2xl bg-indigo px-4 py-2.5 text-white">
+              <span className="text-sm font-semibold">
+                {selection.selectedIds.size} selected
               </span>
-              <Button variant="outline" onClick={() => setIsBatchDialogOpen(true)}>
-                Edit Selected
+              <Button variant="marigold" size="sm" className="ml-auto" onClick={() => setIsBatchDialogOpen(true)}>
+                Edit selected
               </Button>
-              <Button variant="outline" onClick={selection.clear}>
-                Clear Selection
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-indigo-foreground hover:bg-indigo-raised hover:text-white"
+                onClick={selection.clear}
+              >
+                Clear
               </Button>
             </div>
           )}
-
-          <Input
-            placeholder="Search products, supplier, barcode…"
-            value={filters.search}
-            onChange={(event) => filters.setSearch(event.target.value)}
-            className="border-border bg-surface text-foreground"
-          />
-
-          <div className="mb-4 mt-2 flex w-full items-center justify-around gap-5">
-            <div className="flex items-center space-x-2">
-              <Label
-                htmlFor="showCost"
-                className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-              >
-                Cost
-              </Label>
-              <Switch id="showCost" checked={showCost} onCheckedChange={setShowCost} />
-            </div>
-
-            <Select value={filters.supplierId} onValueChange={filters.setSupplierId}>
-              <SelectTrigger className="h-9 w-[200px]">
-                <SelectValue placeholder="Select a supplier" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Suppliers</SelectItem>
-                {suppliers.map((supplier) => (
-                  <SelectItem key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           <ProductTable
             products={filters.visibleProducts}
@@ -174,7 +178,7 @@ export default function ManageProducts() {
           />
         </TabsContent>
 
-        <TabsContent value="suppliers">
+        <TabsContent value="suppliers" className="mt-3">
           <SupplierTable
             suppliers={suppliers}
             onEdit={setEditingSupplier}

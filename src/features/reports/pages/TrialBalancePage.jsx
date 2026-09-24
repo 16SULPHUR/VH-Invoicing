@@ -41,7 +41,7 @@ export default function TrialBalancePage() {
   );
 
   const footerRows = (
-    <TableRow className="font-semibold ">
+    <TableRow className="bg-marigold/10 font-bold hover:bg-marigold/10">
       <TableCell className="text-right">Total</TableCell>
       <TableCell>{formatINR(totals.debit)}</TableCell>
       <TableCell>{formatINR(totals.credit)}</TableCell>
@@ -50,10 +50,10 @@ export default function TrialBalancePage() {
 
   return (
     <ReportTable
-      title="Trial Balance"
+      title="Trial balance"
       table={table}
       columns={COLUMNS}
-      searchPlaceholder="Search account..."
+      searchPlaceholder="Search account…"
       rowKey={(row) => row.account}
       footerRows={footerRows}
     />

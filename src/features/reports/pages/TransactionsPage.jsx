@@ -43,7 +43,7 @@ export default function TransactionsPage() {
       title="Transactions"
       table={table}
       columns={COLUMNS}
-      searchPlaceholder="Search description or ref..."
+      searchPlaceholder="Search description or ref…"
       emptyMessage="No transactions found."
     />
   );

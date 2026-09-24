@@ -47,13 +47,13 @@ export default function GstReportPage() {
 
   const footerRows = (
     <>
-      <TableRow className="font-semibold ">
+      <TableRow className="bg-marigold/10 font-bold hover:bg-marigold/10">
         <TableCell colSpan={4} className="text-right">
           Subtotal (page)
         </TableCell>
         <TableCell>{formatINR(pageSubtotal)}</TableCell>
       </TableRow>
-      <TableRow className="font-semibold ">
+      <TableRow className="bg-marigold/10 font-bold hover:bg-marigold/10">
         <TableCell colSpan={4} className="text-right">
           Total GST
         </TableCell>
@@ -64,10 +64,10 @@ export default function GstReportPage() {
 
   return (
     <ReportTable
-      title="GST Output"
+      title="GST output"
       table={table}
       columns={COLUMNS}
-      searchPlaceholder="Search description or ref..."
+      searchPlaceholder="Search description or ref…"
       rowKey={(row, index) => `${row.transaction_id}-${index}`}
       footerRows={footerRows}
     />

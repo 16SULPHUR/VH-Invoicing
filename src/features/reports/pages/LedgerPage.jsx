@@ -52,7 +52,7 @@ export default function LedgerPage() {
   );
 
   const footerRows = (
-    <TableRow className="font-semibold ">
+    <TableRow className="bg-marigold/10 font-bold hover:bg-marigold/10">
       <TableCell colSpan={4} className="text-right">
         Total
       </TableCell>
@@ -66,7 +66,7 @@ export default function LedgerPage() {
       title="Ledger"
       table={table}
       columns={COLUMNS}
-      searchPlaceholder="Search account, description, reference..."
+      searchPlaceholder="Search account, description, reference…"
       rowKey={(row, index) => `${row.transaction_id}-${index}`}
       footerRows={footerRows}
     />

@@ -19,7 +19,7 @@ export default function InventoryPage() {
       <PageHeader title="Inventory" subtitle="Products, suppliers and shelf labels" />
 
       <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col gap-4">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-fit max-w-full justify-start overflow-x-auto">
           {TABS.map(({ value, label }) => (
             <TabsTrigger key={value} value={value}>
               {label}

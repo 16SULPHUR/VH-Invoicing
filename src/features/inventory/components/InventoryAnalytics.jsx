@@ -1,11 +1,12 @@
 import { AlertTriangle } from "lucide-react";
 import { StatTile } from "@/components/common/StatTile";
 import { ICON_STROKE } from "@/config/navigation";
+import { formatRupees } from "@/utils/formatters";
 
 const TILES = [
   { label: "Unique products", value: (a) => a.totalUniqueProducts.toLocaleString() },
   { label: "Items in stock", value: (a) => a.totalItemsInStock.toLocaleString() },
-  { label: "Stock value", value: (a) => `₹${a.totalInventoryValue.toLocaleString()}` },
+  { label: "Stock value", value: (a) => formatRupees(a.totalInventoryValue) },
 ];
 
 export function InventoryAnalytics({ analytics }) {
@@ -28,9 +29,9 @@ export function StockAlerts({ analytics }) {
   return (
     <div
       role="status"
-      className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
+      className="flex items-center gap-2 rounded-2xl border border-marigold/50 bg-marigold/15 px-4 py-2.5 text-sm font-semibold text-foreground"
     >
-      <AlertTriangle size={16} strokeWidth={ICON_STROKE} className="mt-0.5 shrink-0" aria-hidden />
+      <AlertTriangle size={16} strokeWidth={ICON_STROKE} className="shrink-0 text-warning" aria-hidden />
       <span>
         {out > 0 && `${out} out of stock`}
         {out > 0 && low > 0 && ", "}
