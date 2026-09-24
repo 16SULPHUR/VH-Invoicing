@@ -1,7 +1,7 @@
 import { lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
-import { ErrorBoundary } from "./ErrorBoundary";
+import { RouteError } from "./ErrorBoundary";
 
 // Every screen is code-split so the initial bundle only carries the shell.
 const InvoicingPage = lazy(() => import("@/features/invoicing/InvoicingPage"));
@@ -20,7 +20,7 @@ export function createRouter({ onSignOut }) {
     {
       path: "/",
       element: <AppLayout onSignOut={onSignOut} />,
-      errorElement: <ErrorBoundary />,
+      errorElement: <RouteError />,
       children: [
         { index: true, element: <InvoicingPage /> },
         { path: "scan", element: <ScannerPage /> },

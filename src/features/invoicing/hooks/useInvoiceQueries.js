@@ -112,5 +112,10 @@ export function useCustomerDirectory() {
 /** One place to invalidate everything an invoice write affects. */
 export function useInvalidateInvoiceData() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
+  return () =>
+    Promise.all(
+      [queryKeys.invoices.all, queryKeys.customers.credit, queryKeys.products.all].map((queryKey) =>
+        queryClient.invalidateQueries({ queryKey })
+      )
+    );
 }

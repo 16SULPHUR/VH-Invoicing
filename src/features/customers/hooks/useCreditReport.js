@@ -50,6 +50,15 @@ export function useCreditReport() {
     isLoading,
     searchTerm,
     setSearchTerm,
-    refresh: () => queryClient.invalidateQueries({ queryKey: queryKeys.customers.credit }),
+    // Invoice edits here also move stock and feed the till and reports.
+    refresh: () =>
+      Promise.all(
+        [
+          queryKeys.customers.credit,
+          queryKeys.invoices.all,
+          queryKeys.products.all,
+          ["accounting"],
+        ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))
+      ),
   };
 }
