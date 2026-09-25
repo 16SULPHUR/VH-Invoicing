@@ -5,12 +5,14 @@ import ManageProducts from "./ManageProducts";
 import AddProductForm from "./components/AddProductForm";
 import GenerateStickers from "./components/GenerateStickers";
 import StockCountTab from "./count/StockCountTab";
+import OldStockTab from "./oldstock/OldStockTab";
 
 const TABS = [
   { value: "manage", label: "Products", Component: ManageProducts },
   { value: "add", label: "Add product", Component: AddProductForm },
   { value: "stickers", label: "Stickers", Component: GenerateStickers },
   { value: "count", label: "Stock count", Component: StockCountTab },
+  { value: "old", label: "Old stock", Component: OldStockTab },
 ];
 
 export default function InventoryPage() {
