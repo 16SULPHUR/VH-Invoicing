@@ -1,8 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoiceService } from "@/services/invoiceService";
+import { printCommandService } from "@/services/scannedProductService";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { paymentsBalance, paymentsTotal } from "@/utils/invoice";
+import {
+  creditCustomerError,
+  normalizePhone,
+  paymentsBalance,
+  paymentsTotal,
+  stockWarningToast,
+} from "@/utils/invoice";
+import { customerService } from "@/services/customerService";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryClient";
 import { toNumber } from "@/utils/formatters";
 import { formatInvoiceDate } from "@/utils/date";
 import { PrintableInvoice } from "../components/PrintableInvoice";
@@ -37,13 +47,14 @@ function toPayload(draft, { id, date }) {
  * Single source of truth for the invoicing screen. Both the desktop and mobile
  * layouts render from this; they differ only in how they arrange the panels.
  */
-export function useInvoiceWorkspace() {
+export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
   const { toast } = useToast();
   const { isOnline } = useOnlineStatus();
   const printDocument = usePrintDocument();
   const invalidateInvoices = useInvalidateInvoiceData();
+  const queryClient = useQueryClient();
 
-  const draft = useInvoiceDraft();
+  const draft = useInvoiceDraft({ persistKey: "vh-till-draft" });
   const { data: catalog } = useProductCatalog();
   const { data: customers } = useCustomerDirectory();
   const { data: dailySales } = useDailySales();
@@ -51,12 +62,70 @@ export function useInvoiceWorkspace() {
   const sales = useSalesSummary();
 
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const lastIssuedIdRef = useRef(null);
 
-  const { clearScannedProducts } = useScannedProducts({
+  const { loadScannedProducts, clearScannedProducts } = useScannedProducts({
     catalog,
     setLines: draft.setLines,
     enabled: catalog.length > 0,
+    paused: draft.isEditing,
   });
+
+  // The invoice list refetches after a save; until it does, don't hand out the same number again.
+  const lastIssued = lastIssuedIdRef.current;
+  const nextInvoiceId =
+    lastIssued !== null && lastIssued >= recentInvoices.nextInvoiceId
+      ? lastIssued + 1
+      : recentInvoices.nextInvoiceId;
+
+  const blockedByCredit = useCallback(
+    (bill) => {
+      const message = creditCustomerError(bill);
+      if (!message) return false;
+      toast({ title: "Customer needed", description: message, variant: "destructive" });
+      return true;
+    },
+    [toast]
+  );
+
+  // Credit customers become saved customers so their phone is there next time.
+  const rememberCreditCustomer = useCallback(
+    async ({ payments, customerName, customerNumber }) => {
+      if (toNumber(payments.credit) <= 0 || !isOnline) return;
+      const phone = normalizePhone(customerNumber);
+      if (customers.some((customer) => normalizePhone(customer.phone) === phone)) return;
+      try {
+        await customerService.create({ name: customerName.trim(), phone: Number(phone) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
+      } catch (error) {
+        console.error("Could not save the credit customer:", error);
+      }
+    },
+    [customers, isOnline, queryClient]
+  );
+
+  const notifyStock = useCallback(
+    (failures) => {
+      const warning = stockWarningToast(failures);
+      if (warning) toast(warning);
+    },
+    [toast]
+  );
+
+  // One bill at a time: a second F1 or tap while saving would save it twice.
+  const runExclusive = useCallback(async (task) => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    try {
+      await task();
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
+  }, []);
 
   const refreshAll = useCallback(() => {
     invalidateInvoices();
@@ -81,10 +150,11 @@ export function useInvoiceWorkspace() {
   const deleteInvoice = useCallback(
     async (invoiceDate) => {
       try {
-        await invoiceService.deleteInvoice(invoiceDate);
+        const result = await invoiceService.deleteInvoice(invoiceDate);
         setSelectedInvoice(null);
         refreshAll();
         toast({ title: "Invoice deleted", description: "Stock has been restored." });
+        notifyStock(result?.stockFailures);
       } catch (error) {
         toast({
           title: "Error",
@@ -93,7 +163,7 @@ export function useInvoiceWorkspace() {
         });
       }
     },
-    [refreshAll, toast]
+    [refreshAll, notifyStock, toast]
   );
 
   const editInvoice = useCallback(
@@ -104,6 +174,11 @@ export function useInvoiceWorkspace() {
     [draft]
   );
 
+  const cancelEdit = useCallback(() => {
+    draft.reset();
+    loadScannedProducts();
+  }, [draft, loadScannedProducts]);
+
   const updateInvoice = useCallback(async () => {
     if (!paymentsBalance(draft.payments, draft.total)) {
       toast({
@@ -113,12 +188,17 @@ export function useInvoiceWorkspace() {
       });
       return;
     }
+    if (blockedByCredit(draft)) return;
 
-    const date = draft.currentDate.toISOString();
+    // The stored date string is the bill's key; re-formatting it can miss the row.
+    const date = draft.editingInvoice.date;
     try {
       const saved = await invoiceService.updateInvoice(date, toPayload(draft, { date }));
+      rememberCreditCustomer(draft);
       refreshAll();
       draft.reset();
+      loadScannedProducts();
+      notifyStock(saved?.stockFailures);
 
       const synced = saved?._syncStatus === "synced";
       toast({
@@ -134,74 +214,144 @@ export function useInvoiceWorkspace() {
         variant: "destructive",
       });
     }
-  }, [draft, refreshAll, toast]);
+  }, [
+    draft,
+    blockedByCredit,
+    rememberCreditCustomer,
+    refreshAll,
+    loadScannedProducts,
+    notifyStock,
+    toast,
+  ]);
 
-  const printAndSaveInvoice = useCallback(async () => {
-    if (draft.lines.length === 0) {
-      toast({
-        title: "Nothing to print",
-        description: "Add at least one product before generating the invoice.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // An unpaid invoice is allowed; a partially-filled one is almost always a typo.
-    if (!paymentsBalance(draft.payments, draft.total, { allowUnpaid: true })) {
-      toast({
-        title: "Payments do not match",
-        description: `Cash + UPI + Credit (₹${paymentsTotal(draft.payments).toFixed(
-          2
-        )}) must equal ₹${draft.total}, or be left blank.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const invoiceId = recentInvoices.nextInvoiceId;
-    const printed = printDocument(
-      <PrintableInvoice
-        invoiceId={invoiceId}
-        invoiceDate={formatInvoiceDate(new Date())}
-        customerName={draft.customerName}
-        customerContact={draft.customerNumber}
-        products={draft.lines}
-        total={draft.total}
-      />
-    );
-
-    if (!printed) {
-      toast({
-        title: "Print blocked",
-        description: "Allow pop-ups for this site to print invoices.",
-        variant: "destructive",
-      });
-    }
-
-    const date = new Date().toISOString();
-    try {
-      const saved = await invoiceService.createInvoice(toPayload(draft, { id: invoiceId, date }));
-
-      if (saved._syncStatus === "pending") {
+  const printAndSaveInvoice = useCallback(
+    async ({ customerName = draft.customerName, customerNumber = draft.customerNumber } = {}) => {
+      if (draft.lines.length === 0) {
         toast({
-          title: "Saved offline",
-          description: "Invoice saved offline. It will sync when you are back online.",
+          title: "Nothing to print",
+          description: "Add at least one product before generating the invoice.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Left blank means the customer owes it all; partly filled is almost always a typo.
+      if (!paymentsBalance(draft.payments, draft.total, { allowUnpaid: true })) {
+        toast({
+          title: "Payments do not match",
+          description: `Cash + UPI + Credit (₹${paymentsTotal(draft.payments).toFixed(
+            2
+          )}) must equal ₹${draft.total}, or be left blank to put it all on credit.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      const unpaid = paymentsTotal(draft.payments) === 0;
+      const bill = {
+        ...draft,
+        customerName,
+        customerNumber,
+        payments: unpaid ? { cash: "", upi: "", credit: draft.total } : draft.payments,
+      };
+      if (blockedByCredit(bill)) return;
+
+      const invoiceId = nextInvoiceId;
+      const printed = printDocument(
+        <PrintableInvoice
+          invoiceId={invoiceId}
+          invoiceDate={formatInvoiceDate(new Date())}
+          customerName={customerName}
+          customerContact={customerNumber}
+          products={draft.lines}
+          total={draft.total}
+          payments={bill.payments}
+          note={draft.note}
+        />
+      );
+
+      if (!printed) {
+        toast({
+          title: "Print blocked",
+          description: "Allow pop-ups for this site to print invoices.",
+          variant: "destructive",
         });
       }
 
-      refreshAll();
-      draft.reset();
-      await clearScannedProducts();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: `Failed to save invoice: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  }, [draft, recentInvoices.nextInvoiceId, printDocument, refreshAll, clearScannedProducts, toast]);
+      const date = new Date().toISOString();
+      try {
+        const saved = await invoiceService.createInvoice(toPayload(bill, { id: invoiceId, date }));
+        const savedAsOther = saved._syncStatus === "synced" && Number(saved.id) !== invoiceId;
+        lastIssuedIdRef.current = savedAsOther ? Number(saved.id) : invoiceId;
+        if (savedAsOther) {
+          toast({
+            title: `Saved as bill #${saved.id}`,
+            description: `Another device already used #${invoiceId}. Write #${saved.id} on the printed copy.`,
+          });
+        }
+        rememberCreditCustomer(bill);
 
-  const submitInvoice = draft.isEditing ? updateInvoice : printAndSaveInvoice;
+        if (saved._syncStatus === "pending") {
+          toast({
+            title: "Saved offline",
+            description: "Invoice saved offline. It will sync when you are back online.",
+          });
+        }
+
+        draft.reset();
+        await clearScannedProducts();
+        refreshAll();
+        notifyStock(saved.stockFailures);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: `Failed to save invoice: ${error.message}`,
+          variant: "destructive",
+        });
+      }
+    },
+    [
+      draft,
+      nextInvoiceId,
+      blockedByCredit,
+      printDocument,
+      rememberCreditCustomer,
+      refreshAll,
+      clearScannedProducts,
+      notifyStock,
+      toast,
+    ]
+  );
+
+  const submitInvoice = useCallback(
+    (options) =>
+      runExclusive(() => (draft.isEditing ? updateInvoice() : printAndSaveInvoice(options))),
+    [draft.isEditing, updateInvoice, printAndSaveInvoice, runExclusive]
+  );
+
+  // The phone's Print button asks the till to print whatever has been scanned.
+  const submitRef = useRef(submitInvoice);
+  submitRef.current = submitInvoice;
+  const isEditingRef = useRef(draft.isEditing);
+  isEditingRef.current = draft.isEditing;
+  useEffect(() => {
+    if (!acceptRemotePrint) return undefined;
+    return printCommandService.subscribe((payload) => {
+      if (payload?.eventType !== "INSERT") return;
+      if (isEditingRef.current) {
+        toast({
+          title: "Print from phone ignored",
+          description: "Finish or cancel the bill you are editing, then print again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const { customer_name: customerName, customer_phone: customerNumber } = payload.new ?? {};
+      submitRef.current({
+        ...(customerName && { customerName }),
+        ...(customerNumber && { customerNumber }),
+      });
+    });
+  }, [acceptRemotePrint, toast]);
 
   // F1 is the till's "print bill" key.
   useEffect(() => {
@@ -220,6 +370,12 @@ export function useInvoiceWorkspace() {
     customers,
     dailySales,
     recentInvoices,
+    nextInvoiceId,
+    displayedInvoiceId: draft.editingInvoice
+      ? draft.editingInvoice._offlineId
+        ? draft.editingInvoice._printedId
+        : draft.editingInvoice.id
+      : nextInvoiceId,
     sales,
     isOnline,
     selectedInvoice,
@@ -228,5 +384,7 @@ export function useInvoiceWorkspace() {
     editInvoice,
     deleteInvoice,
     submitInvoice,
+    cancelEdit,
+    isSubmitting,
   };
 }

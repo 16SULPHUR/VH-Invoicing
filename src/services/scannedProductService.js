@@ -39,8 +39,15 @@ export const scannedProductService = {
 };
 
 export const printCommandService = {
-  async requestPrint(customerName) {
-    return unwrap(await supabase.from("print_command").insert([{ customer_name: customerName }]));
+  async requestPrint({ customerName, customerPhone }) {
+    const result = await supabase
+      .from("print_command")
+      .insert([{ customer_name: customerName, customer_phone: customerPhone }]);
+    // Until print_command_phone.sql is run the column is missing; print without it.
+    if (result.error?.code === "PGRST204") {
+      return unwrap(await supabase.from("print_command").insert([{ customer_name: customerName }]));
+    }
+    return unwrap(result);
   },
 
   subscribe(onChange) {

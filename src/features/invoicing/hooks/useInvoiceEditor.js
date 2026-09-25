@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { invoiceService } from "@/services/invoiceService";
 import { useToast } from "@/hooks/use-toast";
 import { toNumber } from "@/utils/formatters";
-import { paymentsBalance } from "@/utils/invoice";
+import { paymentsBalance, stockWarningToast } from "@/utils/invoice";
 import { useInvoiceDraft } from "./useInvoiceDraft";
 
 /**
@@ -30,7 +30,7 @@ export function useInvoiceEditor({ invoice, onSaved }) {
     }
 
     try {
-      await invoiceService.updateInvoice(invoice.date, {
+      const saved = await invoiceService.updateInvoice(invoice.date, {
         customerName: draft.customerName,
         customerNumber: draft.customerNumber,
         products: JSON.stringify(draft.lines),
@@ -43,6 +43,8 @@ export function useInvoiceEditor({ invoice, onSaved }) {
       });
 
       toast({ title: "Invoice updated" });
+      const warning = stockWarningToast(saved?.stockFailures);
+      if (warning) toast(warning);
       onSaved?.();
     } catch (error) {
       toast({

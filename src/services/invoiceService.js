@@ -8,6 +8,7 @@ import {
   withOfflineFallback,
 } from "@/lib/offline/network";
 import { productService } from "./productService";
+import { callBillFunction } from "./billFunctions";
 
 const TABLE = "invoices";
 
@@ -39,13 +40,20 @@ export const invoiceService = {
   createInvoice(invoice) {
     return withOfflineFallback(
       async () => {
+        const result = await callBillFunction("create_bill", { p_bill: invoice });
+        if (result) {
+          const saved = asSynced(result.invoice);
+          await db.invoices.put(saved);
+          return { ...saved, stockFailures: result.stock_failures };
+        }
+
         const { data, error } = await supabase.from(TABLE).insert([invoice]).select();
         if (error) throw error;
 
         const saved = asSynced(data[0]);
         await db.invoices.put(saved);
-        await productService.deductStock(parseLines(saved.products));
-        return saved;
+        const stockFailures = await productService.deductStock(parseLines(saved.products));
+        return { ...saved, stockFailures };
       },
       () => this._createOffline(invoice)
     );
@@ -162,10 +170,10 @@ export const invoiceService = {
     );
   },
 
-  /** Offline IDs are strings like OFFLINE-123-abcd and must not seed the counter. */
+  /** Offline bills carry a temporary id, but the number printed on them is still taken. */
   getNextInvoiceId(invoices) {
     const numericIds = (invoices || [])
-      .map((invoice) => invoice.id)
+      .map((invoice) => (isUnsyncedCreate(invoice) ? invoice._printedId : invoice.id))
       .filter((id) => typeof id === "number" || /^\d+$/.test(String(id)))
       .map(Number);
 
@@ -179,6 +187,16 @@ export const invoiceService = {
 
     return withOfflineFallback(
       async () => {
+        const result = await callBillFunction("update_bill", {
+          p_date: date,
+          p_changes: stripLocalFields(changes),
+        });
+        if (result) {
+          const saved = asSynced({ ...result.invoice, date });
+          await db.invoices.put(saved);
+          return { ...saved, stockFailures: result.stock_failures };
+        }
+
         const previous = await this.getInvoiceByDate(date);
 
         const { error } = await supabase
@@ -189,11 +207,11 @@ export const invoiceService = {
 
         const saved = asSynced({ ...previous, ...changes, date });
         await db.invoices.put(saved);
-        await productService.adjustStockForEdit(
+        const stockFailures = await productService.adjustStockForEdit(
           parseLines(previous.products),
           parseLines(changes.products)
         );
-        return saved;
+        return { ...saved, stockFailures };
       },
       () => this._updateOffline(date, changes)
     );
@@ -231,13 +249,20 @@ export const invoiceService = {
 
     return withOfflineFallback(
       async () => {
+        const result = await callBillFunction("delete_bill", { p_date: date });
+        if (result) {
+          await db.invoices.delete(date);
+          return { stockFailures: result.stock_failures };
+        }
+
         const invoice = await this.getInvoiceByDate(date);
 
         const { error } = await supabase.from(TABLE).delete().eq("date", date);
         if (error) throw error;
 
         await db.invoices.delete(date);
-        await productService.restoreStock(parseLines(invoice.products));
+        const stockFailures = await productService.restoreStock(parseLines(invoice.products));
+        return { stockFailures };
       },
       () => this._deleteOffline(date)
     );
