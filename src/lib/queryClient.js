@@ -53,6 +53,12 @@ export const queryKeys = {
     consent: ["whatsapp", "consent"],
   },
   labelDesigns: ["label-designs"],
+  shopTools: {
+    setup: ["shop-tools", "setup"],
+    records: (table) => ["shop-tools", table],
+    scans: (countId) => ["shop-tools", "scans", countId],
+    lastSold: (since) => ["shop-tools", "last-sold", since],
+  },
   cashbook: {
     accounts: ["cashbook", "accounts"],
     transactions: ["cashbook", "transactions"],
