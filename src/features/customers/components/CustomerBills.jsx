@@ -5,6 +5,7 @@ import { PAYMENT_METHODS } from "@/features/invoicing/paymentMethods";
 import { formatDateDDMMMYYYY } from "@/utils/date";
 import { formatRupees } from "@/utils/formatters";
 import { invoiceItemCount, parseInvoiceLines } from "@/utils/invoice";
+import { BillWhatsAppButton } from "@/features/whatsapp/components/BillWhatsApp";
 
 export function CustomerBills({ invoices, onEdit }) {
   if (invoices.length === 0) {
@@ -43,6 +44,7 @@ export function CustomerBills({ invoices, onEdit }) {
                 </div>
               )}
             </div>
+            <BillWhatsAppButton invoice={invoice} compact className="-mr-2" />
             <Button
               variant="ghost"
               size="sm"

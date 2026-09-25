@@ -23,6 +23,7 @@ import { usePrintDocument } from "../hooks/useInvoicePrinting";
 import { useShareInvoicePdf } from "../hooks/useInvoiceSharing";
 import { ICON_STROKE } from "@/config/navigation";
 import { formatInvoiceDate } from "@/utils/date";
+import { BillWhatsAppButton, OffersSwitch } from "@/features/whatsapp/components/BillWhatsApp";
 
 export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -108,6 +109,8 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
               </dl>
 
               <div className="grid gap-2">
+                <BillWhatsAppButton invoice={invoice} />
+                <OffersSwitch name={invoice.customerName} phone={invoice.customerNumber} />
                 <Button variant="outline" className="press" onClick={() => setShowQR((v) => !v)}>
                   <QrCode size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
                   {showQR ? "Hide QR" : "Payment QR"}
