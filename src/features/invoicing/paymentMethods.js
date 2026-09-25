@@ -10,7 +10,7 @@ export const PAYMENT_METHODS = [
     label: "Cash",
     icon: Banknote,
     text: "text-cash",
-    tint: "bg-cash/10 border-cash/30",
+    tint: "bg-cash/10 border-cash",
     dot: "bg-cash",
   },
   {
@@ -18,7 +18,7 @@ export const PAYMENT_METHODS = [
     label: "UPI",
     icon: Smartphone,
     text: "text-upi",
-    tint: "bg-upi/10 border-upi/30",
+    tint: "bg-upi/10 border-upi",
     dot: "bg-upi",
   },
   {
@@ -26,7 +26,7 @@ export const PAYMENT_METHODS = [
     label: "Credit",
     icon: CreditCard,
     text: "text-credit",
-    tint: "bg-credit/10 border-credit/30",
+    tint: "bg-credit/10 border-credit",
     dot: "bg-credit",
   },
 ];

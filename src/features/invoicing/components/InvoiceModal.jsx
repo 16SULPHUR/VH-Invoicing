@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OfflineBadge } from "@/components/common/OfflineBadge";
 import { useToast } from "@/hooks/use-toast";
-import { formatAmount } from "@/utils/formatters";
+import { formatRupees } from "@/utils/formatters";
 import { parseInvoiceLines } from "@/utils/invoice";
 import { PAYMENT_METHODS } from "../paymentMethods";
 import { PrintableInvoice } from "./PrintableInvoice";
@@ -23,6 +23,7 @@ import { usePrintDocument } from "../hooks/useInvoicePrinting";
 import { useShareInvoicePdf } from "../hooks/useInvoiceSharing";
 import { ICON_STROKE } from "@/config/navigation";
 import { formatInvoiceDate } from "@/utils/date";
+import { BillWhatsAppButton, OffersSwitch } from "@/features/whatsapp/components/BillWhatsApp";
 
 export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -42,6 +43,7 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
       customerContact={invoice.customerNumber}
       products={parseInvoiceLines(invoice.products)}
       total={invoice.total}
+      payments={invoice}
       note={invoice.note}
     />
   );
@@ -74,8 +76,8 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
       <Dialog open onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="max-h-[92dvh] max-w-5xl overflow-y-auto p-0">
           <DialogHeader className="flex-row items-center justify-between gap-3 border-b border-border p-4">
-            <DialogTitle className="flex items-center gap-2">
-              Invoice #{invoice.id}
+            <DialogTitle className="flex items-center gap-2 text-2xl font-extrabold">
+              Bill #{invoice.id}
               {invoice._syncStatus && invoice._syncStatus !== "synced" && (
                 <OfflineBadge syncStatus={invoice._syncStatus} />
               )}
@@ -83,30 +85,32 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
           </DialogHeader>
 
           <div className="grid gap-4 p-4 lg:grid-cols-[1fr_16rem]">
-            <div className="paper max-h-[60dvh] overflow-auto rounded-lg p-3">{printable}</div>
+            <div className="max-h-[68dvh] overflow-auto rounded-2xl bg-secondary p-4">{printable}</div>
 
             <div className="space-y-4">
               <dl className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-                <div className="rounded-md border border-border bg-surface px-3 py-2">
-                  <dt className="text-xs text-muted-foreground">Total</dt>
-                  <dd className="text-lg font-semibold tabular-nums">
-                    ₹{formatAmount(invoice.total)}
+                <div className="motif-overlay col-span-2 rounded-2xl bg-rani px-4 py-3 text-white lg:col-span-1">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">Total</dt>
+                  <dd className="font-display text-3xl font-extrabold tabular-nums">
+                    {formatRupees(invoice.total)}
                   </dd>
                 </div>
                 {PAYMENT_METHODS.map(({ key, label, icon: Icon, text }) => (
-                  <div key={key} className="rounded-md border border-border bg-surface px-3 py-2">
+                  <div key={key} className="rounded-xl border border-border/70 bg-surface px-3 py-2">
                     <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Icon size={13} strokeWidth={ICON_STROKE} className={text} aria-hidden />
                       {label}
                     </dt>
-                    <dd className="text-lg font-semibold tabular-nums">
-                      ₹{formatAmount(invoice[key])}
+                    <dd className={`font-display text-lg font-bold tabular-nums ${text}`}>
+                      {formatRupees(invoice[key])}
                     </dd>
                   </div>
                 ))}
               </dl>
 
               <div className="grid gap-2">
+                <BillWhatsAppButton invoice={invoice} />
+                <OffersSwitch name={invoice.customerName} phone={invoice.customerNumber} />
                 <Button variant="outline" className="press" onClick={() => setShowQR((v) => !v)}>
                   <QrCode size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
                   {showQR ? "Hide QR" : "Payment QR"}
@@ -124,13 +128,13 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
                   <Printer size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
                   Print
                 </Button>
-                <Button className="press" onClick={() => onEdit(invoice)}>
+                <Button variant="rani" className="press" onClick={() => onEdit(invoice)}>
                   <Pencil size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
                   Edit
                 </Button>
                 <Button
-                  variant="destructive"
-                  className="press"
+                  variant="outline"
+                  className="press text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => setShowDeleteDialog(true)}
                 >
                   <Trash2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
@@ -154,7 +158,7 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
             <AlertDialogTitle>Delete invoice #{invoice.id}?</AlertDialogTitle>
             <AlertDialogDescription>
               This cannot be undone. The invoice for {invoice.customerName || "this customer"},
-              totalling ₹{formatAmount(invoice.total)}, is removed and its items return to stock.
+              totalling {formatRupees(invoice.total)}, is removed and its items return to stock.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

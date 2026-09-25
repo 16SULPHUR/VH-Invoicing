@@ -5,6 +5,7 @@ import { formatDateDDMMMYYYY } from "@/utils/date";
 import { formatINR } from "@/utils/formatters";
 import { ReportTable } from "../components/ReportTable";
 import { useReportTable } from "../hooks/useReportTable";
+import { useReportRange } from "../range/useReportRange";
 
 const SEARCH_FIELDS = ["description", "reference_table", "reference_id"];
 
@@ -34,9 +35,10 @@ const COLUMNS = [
 ];
 
 export default function GstReportPage() {
+  const { range } = useReportRange();
   const table = useReportTable({
-    queryKey: queryKeys.accounting.gst,
-    queryFn: getGSTOutput,
+    queryKey: [...queryKeys.accounting.gst, range.from, range.to],
+    queryFn: () => getGSTOutput(range),
     select: (data) => data.transactions,
     searchFields: SEARCH_FIELDS,
     initialSort: { key: "date", type: "date", asc: false },
@@ -47,13 +49,13 @@ export default function GstReportPage() {
 
   const footerRows = (
     <>
-      <TableRow className="font-semibold ">
+      <TableRow className="bg-marigold/10 font-bold hover:bg-marigold/10">
         <TableCell colSpan={4} className="text-right">
           Subtotal (page)
         </TableCell>
         <TableCell>{formatINR(pageSubtotal)}</TableCell>
       </TableRow>
-      <TableRow className="font-semibold ">
+      <TableRow className="bg-marigold/10 font-bold hover:bg-marigold/10">
         <TableCell colSpan={4} className="text-right">
           Total GST
         </TableCell>
@@ -64,10 +66,10 @@ export default function GstReportPage() {
 
   return (
     <ReportTable
-      title="GST Output"
+      title="GST output"
       table={table}
       columns={COLUMNS}
-      searchPlaceholder="Search description or ref..."
+      searchPlaceholder="Search description or ref…"
       rowKey={(row, index) => `${row.transaction_id}-${index}`}
       footerRows={footerRows}
     />

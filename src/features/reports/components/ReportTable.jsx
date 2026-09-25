@@ -1,4 +1,4 @@
-import { FileSearch } from "lucide-react";
+import { FileSearch, Search } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ function Pagination({ page, totalPages, setPage }) {
   return (
     <nav
       aria-label="Pagination"
-      className="flex items-center justify-between border-t border-border px-3 py-2 text-sm text-muted-foreground"
+      className="flex items-center justify-between border-t border-border px-3 py-2.5 text-sm text-muted-foreground"
     >
       <span className="tabular-nums">
         Page {page} of {totalPages}
@@ -24,7 +24,7 @@ function Pagination({ page, totalPages, setPage }) {
       <div className="flex gap-2">
         <button
           type="button"
-          className="press rounded-md border border-border px-3 py-1 hover:bg-surface-elevated disabled:opacity-40"
+          className="press h-8 rounded-xl border-[1.5px] border-border bg-surface px-3 font-semibold text-foreground hover:bg-secondary disabled:opacity-40"
           onClick={() => setPage((current) => Math.max(1, current - 1))}
           disabled={page === 1}
         >
@@ -32,7 +32,7 @@ function Pagination({ page, totalPages, setPage }) {
         </button>
         <button
           type="button"
-          className="press rounded-md border border-border px-3 py-1 hover:bg-surface-elevated disabled:opacity-40"
+          className="press h-8 rounded-xl border-[1.5px] border-border bg-surface px-3 font-semibold text-foreground hover:bg-secondary disabled:opacity-40"
           onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
           disabled={page === totalPages}
         >
@@ -59,14 +59,20 @@ export function ReportTable({
       <PageHeader
         title={title}
         actions={
-          <Input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
-            className="h-9 w-full sm:w-72"
-          />
+          <div className="relative w-full sm:w-72">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
+              className="pl-9"
+            />
+          </div>
         }
       />
 
@@ -75,7 +81,7 @@ export function ReportTable({
       {error && (
         <p
           role="alert"
-          className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          className="rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
         >
           {error.message}
         </p>
@@ -86,11 +92,11 @@ export function ReportTable({
       )}
 
       {!isLoading && !error && (rows.length > 0 || footerRows) && (
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-surface shadow-[0_1px_2px_hsl(var(--indigo)/0.05)]">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-surface hover:bg-surface">
+                <TableRow className="bg-surface-elevated hover:bg-surface-elevated">
                   {columns.map((column) => (
                     <TableHead
                       key={column.key}
@@ -101,16 +107,15 @@ export function ReportTable({
                             : "descending"
                           : undefined
                       }
-                      className="text-xs uppercase tracking-wide text-muted-foreground"
                     >
                       {column.sortable ? (
                         <button
                           type="button"
                           onClick={() => table.toggleSort(column.key, column.sortType)}
-                          className="press inline-flex items-center gap-1 hover:text-foreground"
+                          className="press inline-flex items-center gap-1 uppercase hover:text-foreground"
                         >
                           {column.header}
-                          <span aria-hidden>
+                          <span aria-hidden className="text-rani">
                             {sort.key === column.key ? (sort.asc ? "▲" : "▼") : ""}
                           </span>
                         </button>

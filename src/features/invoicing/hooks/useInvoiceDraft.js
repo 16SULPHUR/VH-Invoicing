@@ -73,6 +73,16 @@ export function useInvoiceDraft() {
     [lines]
   );
 
+  const changeLineQuantity = useCallback((index, delta) => {
+    setLines((prev) =>
+      prev.map((line, i) => {
+        if (i !== index) return line;
+        const quantity = Math.max(1, line.quantity + delta);
+        return { ...line, quantity, amount: lineAmount({ price: line.price, quantity }) };
+      })
+    );
+  }, []);
+
   const deleteLine = useCallback((index) => {
     setLines((prev) => prev.filter((_, i) => i !== index));
     setEditingLineIndex((current) => (current === index ? null : current));
@@ -123,6 +133,7 @@ export function useInvoiceDraft() {
     editingLineIndex,
     submitLineForm,
     startEditingLine,
+    changeLineQuantity,
     deleteLine,
     total,
     itemCount,

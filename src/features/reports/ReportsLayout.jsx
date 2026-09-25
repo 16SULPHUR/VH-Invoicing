@@ -1,6 +1,7 @@
 import { Suspense } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { PageLoader } from "@/components/common/PageLoader";
+import { ReportRangePicker } from "./range/ReportRangePicker";
 
 const REPORT_TABS = [
   { to: "transactions", label: "Transactions" },
@@ -10,25 +11,24 @@ const REPORT_TABS = [
 ];
 
 const tabClass = ({ isActive }) =>
-  `press rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-    isActive
-      ? "bg-primary text-primary-foreground"
-      : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
+  `press inline-flex h-full items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors ${
+    isActive ? "bg-indigo text-white" : "text-muted-foreground hover:text-foreground"
   }`;
 
 export default function ReportsLayout() {
+  const location = useLocation();
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <nav
-        aria-label="Reports"
-        className="shrink-0 border-b border-border bg-surface px-4 py-2 md:px-6"
-      >
-        <div className="mx-auto flex max-w-[1400px] flex-wrap gap-1">
-          {REPORT_TABS.map((tab) => (
-            <NavLink key={tab.to} to={tab.to} className={tabClass}>
-              {tab.label}
-            </NavLink>
-          ))}
+      <nav aria-label="Reports" className="shrink-0 px-4 pt-4 md:px-6">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex h-11 max-w-full gap-1 overflow-x-auto rounded-full border border-border bg-surface p-1">
+            {REPORT_TABS.map((tab) => (
+              <NavLink key={tab.to} to={{ pathname: tab.to, search: location.search }} className={tabClass}>
+                {tab.label}
+              </NavLink>
+            ))}
+          </div>
+          <ReportRangePicker />
         </div>
       </nav>
 

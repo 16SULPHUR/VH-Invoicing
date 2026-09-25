@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { WhatsAppFields } from "./WhatsAppFields";
 
 const FIELDS = [
   { key: "name", label: "Name" },
@@ -20,7 +21,7 @@ export function CustomerEditDialog({ customer, onChange, onSubmit, open, onOpenC
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Customer</DialogTitle>
+          <DialogTitle>Edit customer</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={(event) => {
@@ -28,20 +29,20 @@ export function CustomerEditDialog({ customer, onChange, onSubmit, open, onOpenC
             onSubmit();
           }}
         >
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-3 py-3">
             {FIELDS.map(({ key, label }) => (
-              <div key={key} className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor={`edit-${key}`} className="text-right">
+              <div key={key} className="space-y-1.5">
+                <Label htmlFor={`edit-${key}`} className="text-xs font-semibold text-muted-foreground">
                   {label}
                 </Label>
                 <Input
                   id={`edit-${key}`}
                   value={customer?.[key] ?? ""}
                   onChange={(event) => onChange(key, event.target.value)}
-                  className="col-span-3"
                 />
               </div>
             ))}
+            <WhatsAppFields idPrefix="edit" customer={customer} onChange={onChange} />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isSaving}>

@@ -5,6 +5,7 @@ import { formatDateDDMMMYYYY } from "@/utils/date";
 import { formatINR } from "@/utils/formatters";
 import { ReportTable } from "../components/ReportTable";
 import { useReportTable } from "../hooks/useReportTable";
+import { useReportRange } from "../range/useReportRange";
 
 const SEARCH_FIELDS = ["account_name", "description", "reference_table", "reference_id"];
 
@@ -36,9 +37,10 @@ const COLUMNS = [
 ];
 
 export default function LedgerPage() {
+  const { range } = useReportRange();
   const table = useReportTable({
-    queryKey: queryKeys.accounting.ledger,
-    queryFn: getLedger,
+    queryKey: [...queryKeys.accounting.ledger, range.from, range.to],
+    queryFn: () => getLedger(range),
     searchFields: SEARCH_FIELDS,
     initialSort: { key: "date", type: "date", asc: true },
   });
@@ -52,7 +54,7 @@ export default function LedgerPage() {
   );
 
   const footerRows = (
-    <TableRow className="font-semibold ">
+    <TableRow className="bg-marigold/10 font-bold hover:bg-marigold/10">
       <TableCell colSpan={4} className="text-right">
         Total
       </TableCell>
@@ -66,7 +68,7 @@ export default function LedgerPage() {
       title="Ledger"
       table={table}
       columns={COLUMNS}
-      searchPlaceholder="Search account, description, reference..."
+      searchPlaceholder="Search account, description, reference…"
       rowKey={(row, index) => `${row.transaction_id}-${index}`}
       footerRows={footerRows}
     />

@@ -30,8 +30,8 @@ export const manifestForPlugIn = {
       purpose:'any maskable',
     }
   ],
-  theme_color:'#171717',
-  background_color:'#f0e7db',
+  theme_color:'#1d2b4f',
+  background_color:'#eef0f5',
   display:"standalone",
   scope:'/',
   start_url:"/",

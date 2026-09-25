@@ -4,10 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /** One dialog shape for both products and suppliers; `fields` decides the form. */
-export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, onClose, isSaving }) {
+export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, onClose, isSaving, children }) {
   return (
     <Dialog open={entity !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-surface text-foreground">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto bg-surface text-foreground">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -38,6 +38,7 @@ export function EntityEditDialog({ title, fields, entity, onChange, onSubmit, on
                 />
               </div>
             ))}
+            {children}
             <Button
               type="submit"
               disabled={isSaving}
