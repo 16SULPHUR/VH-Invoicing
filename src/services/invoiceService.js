@@ -44,8 +44,8 @@ export const invoiceService = {
 
         const saved = asSynced(data[0]);
         await db.invoices.put(saved);
-        await productService.deductStock(parseLines(saved.products));
-        return saved;
+        const stockFailures = await productService.deductStock(parseLines(saved.products));
+        return { ...saved, stockFailures };
       },
       () => this._createOffline(invoice)
     );
@@ -162,10 +162,10 @@ export const invoiceService = {
     );
   },
 
-  /** Offline IDs are strings like OFFLINE-123-abcd and must not seed the counter. */
+  /** Offline bills carry a temporary id, but the number printed on them is still taken. */
   getNextInvoiceId(invoices) {
     const numericIds = (invoices || [])
-      .map((invoice) => invoice.id)
+      .map((invoice) => (isUnsyncedCreate(invoice) ? invoice._printedId : invoice.id))
       .filter((id) => typeof id === "number" || /^\d+$/.test(String(id)))
       .map(Number);
 
@@ -189,11 +189,11 @@ export const invoiceService = {
 
         const saved = asSynced({ ...previous, ...changes, date });
         await db.invoices.put(saved);
-        await productService.adjustStockForEdit(
+        const stockFailures = await productService.adjustStockForEdit(
           parseLines(previous.products),
           parseLines(changes.products)
         );
-        return saved;
+        return { ...saved, stockFailures };
       },
       () => this._updateOffline(date, changes)
     );
@@ -237,7 +237,8 @@ export const invoiceService = {
         if (error) throw error;
 
         await db.invoices.delete(date);
-        await productService.restoreStock(parseLines(invoice.products));
+        const stockFailures = await productService.restoreStock(parseLines(invoice.products));
+        return { stockFailures };
       },
       () => this._deleteOffline(date)
     );

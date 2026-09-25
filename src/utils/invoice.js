@@ -44,3 +44,14 @@ export function buildUpiLink({ upiId, businessName, amount, merchantCode, transa
   params.set("cu", "INR");
   return `upi://pay?${params.toString()}`;
 }
+
+/** Toast for products whose stock could not be moved, or null when all moved. */
+export function stockWarningToast(failures) {
+  if (!failures?.length) return null;
+  const names = failures.map((failure) => failure.name).join(", ");
+  return {
+    title: "Stock not updated",
+    description: `The bill was saved, but stock did not change for: ${names}. Fix these in Inventory.`,
+    variant: "destructive",
+  };
+}

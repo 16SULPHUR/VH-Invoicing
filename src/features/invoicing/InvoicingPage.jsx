@@ -6,7 +6,7 @@ import { InvoiceModal } from "./components/InvoiceModal";
 
 export default function InvoicingPage() {
   const isMobile = useIsMobile();
-  const workspace = useInvoiceWorkspace();
+  const workspace = useInvoiceWorkspace({ acceptRemotePrint: !isMobile });
   const Layout = isMobile ? MobileInvoicing : DesktopInvoicing;
 
   return (
