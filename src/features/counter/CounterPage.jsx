@@ -5,10 +5,12 @@ import { SetupNotice } from "./components/SetupNotice";
 import { useShopToolsSetup } from "./hooks/useShopTools";
 import AlterationsTab from "./alterations/AlterationsTab";
 import ApprovalsTab from "./approvals/ApprovalsTab";
+import BookingsTab from "./bookings/BookingsTab";
 
 const TABS = [
   { value: "alterations", label: "Alterations", what: "Alterations", Component: AlterationsTab },
   { value: "approval", label: "On approval", what: "Goods on approval", Component: ApprovalsTab },
+  { value: "bookings", label: "Bookings", what: "Advance bookings", Component: BookingsTab },
 ];
 
 export default function CounterPage() {
