@@ -1,4 +1,5 @@
 import {
+  MessageCircle,
   ReceiptIndianRupee,
   PackageSearch,
   ScanBarcode,
@@ -14,6 +15,7 @@ export const NAV_ITEMS = [
   { label: "Scan", short: "Scan", to: "/scan", icon: ScanBarcode, primary: true },
   { label: "Inventory", short: "Stock", to: "/inventory", icon: PackageSearch, primary: true },
   { label: "Customers", short: "Customers", to: "/customers", icon: Users, primary: true },
+  { label: "WhatsApp", short: "WhatsApp", to: "/whatsapp", icon: MessageCircle, primary: false },
   { label: "Cashbook", short: "Cashbook", to: "/cashbook", icon: Wallet, primary: false },
   { label: "Reports", short: "Reports", to: "/reports", icon: FileChartColumn, primary: false },
 ];
