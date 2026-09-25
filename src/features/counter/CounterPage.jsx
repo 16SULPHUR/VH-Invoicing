@@ -4,9 +4,11 @@ import { useTabParam } from "@/hooks/useTabParam";
 import { SetupNotice } from "./components/SetupNotice";
 import { useShopToolsSetup } from "./hooks/useShopTools";
 import AlterationsTab from "./alterations/AlterationsTab";
+import ApprovalsTab from "./approvals/ApprovalsTab";
 
 const TABS = [
   { value: "alterations", label: "Alterations", what: "Alterations", Component: AlterationsTab },
+  { value: "approval", label: "On approval", what: "Goods on approval", Component: ApprovalsTab },
 ];
 
 export default function CounterPage() {
