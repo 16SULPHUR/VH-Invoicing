@@ -43,6 +43,9 @@ export function TillHandoff(props) {
 function HandoffDialog({ handoff, onClose, onRetry, onBillNo, retrying }) {
   const [billNo, setBillNo] = useState("");
   const { sent = [], manual = [], failed, customer, note, paidBefore = 0, paidLabel } = handoff;
+  const tillParams = new URLSearchParams(
+    Object.entries({ name: customer?.name, phone: customer?.phone, note }).filter(([, value]) => value)
+  ).toString();
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -126,7 +129,7 @@ function HandoffDialog({ handoff, onClose, onRetry, onBillNo, retrying }) {
 
         <div className="flex gap-2 pt-1">
           <Button asChild variant="outline" className="flex-1">
-            <Link to="/">Open the till</Link>
+            <Link to={tillParams ? `/?${tillParams}` : "/"}>Open the till</Link>
           </Button>
           <Button className="flex-1" onClick={onClose}>
             Done
