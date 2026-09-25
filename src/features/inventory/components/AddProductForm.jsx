@@ -10,8 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useShopSettings } from "@/features/settings/useShopSettings";
 import { useAddProduct } from "../hooks/useAddProduct";
-import { useSuppliers } from "../hooks/useInventory";
+import { useProducts, useSuppliers } from "../hooks/useInventory";
+import { hasAttributesColumn } from "../productAttributes";
+import { ProductDetailsFields } from "./ProductDetailsFields";
 
 const FIELDS = [
   { key: "name", label: "Product name", type: "text", wide: true },
@@ -24,7 +27,10 @@ const labelClass = "text-xs font-semibold text-muted-foreground";
 
 export default function AddProductForm() {
   const { data: suppliers } = useSuppliers();
-  const form = useAddProduct();
+  const { data: products } = useProducts();
+  const { settings } = useShopSettings();
+  const attributesAvailable = hasAttributesColumn(products);
+  const form = useAddProduct({ attributesAvailable });
   const firstFieldRef = useRef(null);
 
   useEffect(() => {
@@ -104,6 +110,13 @@ export default function AddProductForm() {
         </div>
       ))}
       </div>
+
+      <ProductDetailsFields
+        fields={settings.product_fields}
+        value={form.product.attributes}
+        available={attributesAvailable}
+        onChange={(attributes) => form.setField("attributes", attributes)}
+      />
 
       <div className="space-y-1.5">
         <Label htmlFor="images" className={labelClass}>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Minus, Plus, Printer, ScanLine, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Crosshair, Eye, Minus, PenTool, Plus, Printer, ScanLine, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,13 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { usePrintDocument } from "@/features/invoicing/hooks/useInvoicePrinting";
 import { formatRupees } from "@/utils/formatters";
 import { swatchFor } from "@/utils/swatch";
+import { useShopSettings } from "@/features/settings/useShopSettings";
 import { useProducts, useSuppliers } from "../hooks/useInventory";
-import { StickerLabel, StickerSheet, StickerStyles } from "../stickers/StickerLabel";
-import { STICKER_STYLES, stickerQueue, useStickerQueue } from "../stickers/stickerQueue";
+import { LabelFace } from "../stickers/LabelRenderer";
+import { PrinterDialog } from "../stickers/PrinterDialog";
+import { RunDialog } from "../stickers/RunDialog";
+import { describeSize } from "../stickers/labelStock";
+import { advanceCounters, buildRun, runPrompts } from "../stickers/printRun";
+import { stickerQueue, useStickerQueue } from "../stickers/stickerQueue";
+import { designFor, useLabelDesigns, useSaveDesigns } from "../stickers/useLabelDesigns";
+import { useLabelPrinter } from "../stickers/useLabelPrinter";
+import { SAMPLE_PRODUCT, createScope } from "../stickers/variables";
+
+const EACH = "each";
 
 const isToday = (date) => date && new Date(date).toDateString() === new Date().toDateString();
 const stockCount = (product) => Math.max(1, Number(product.quantity) || 1);
@@ -88,32 +97,65 @@ function ProductSearch({ products, onPick }) {
   );
 }
 
-/** A print queue of 2 x 1 inch QR stickers, one per piece in stock unless changed. */
+/** A print queue of QR stickers, one per piece in stock unless changed, each printed with its design. */
 export default function GenerateStickers() {
   const { data: products } = useProducts();
   const { data: suppliers } = useSuppliers();
-  const { queue, style } = useStickerQueue();
-  const printDocument = usePrintDocument();
-  const { toast } = useToast();
+  const { queue, design: override } = useStickerQueue();
+  const { designs } = useLabelDesigns();
+  const saveDesigns = useSaveDesigns();
+  const { settings } = useShopSettings();
+  const { printLabels, printTest, printer } = useLabelPrinter();
+  const [runOpen, setRunOpen] = useState(false);
+  const [printerOpen, setPrinterOpen] = useState(false);
 
   const byId = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
-  const rows = queue.map((item) => ({ ...item, product: byId.get(item.id) })).filter((row) => row.product);
+  const rows = useMemo(
+    () => queue.map((item) => ({ ...item, product: byId.get(item.id) })).filter((row) => row.product),
+    [queue, byId]
+  );
   const total = rows.reduce((sum, row) => sum + row.count, 0);
   const addedToday = products.filter((product) => isToday(product.created_at));
+  const batchDesign = designs.some((design) => design.id === override) ? override : "";
+
+  const usage = useMemo(() => {
+    const counts = new Map();
+    rows.forEach(({ product, count }) => {
+      const design = designFor(product, designs, batchDesign);
+      if (design) counts.set(design.id, { design, count: (counts.get(design.id)?.count ?? 0) + count });
+    });
+    return [...counts.values()];
+  }, [rows, designs, batchDesign]);
+  const needsQuestions = usage.some(({ design }) => design.size.stock === "sheet") || runPrompts(usage.map(({ design }) => design)).length > 0;
+
+  const previewProduct = rows[0]?.product ?? SAMPLE_PRODUCT;
+  const previewDesign = designFor(previewProduct, designs, batchDesign);
+  const previewScope = useMemo(
+    () =>
+      previewDesign &&
+      createScope({
+        design: previewDesign,
+        product: previewProduct,
+        supplier: suppliers.find((supplier) => String(supplier.id) === String(previewProduct.supplier)),
+        settings,
+      }),
+    [previewDesign, previewProduct, suppliers, settings]
+  );
+
+  const run = async (labels, options) => {
+    const opened = await printLabels(labels, options);
+    if (!opened) return;
+    setRunOpen(false);
+    const advanced = advanceCounters(labels);
+    if (advanced.length > 0) saveDesigns.mutate(advanced);
+  };
 
   const print = () => {
-    const labels = rows.flatMap(({ product, count }) => Array.from({ length: count }, () => product));
-    const opened = printDocument(<StickerSheet labels={labels} style={style} />, {
-      title: "Variety Heaven stickers",
-      pageSize: "50.8mm 25.4mm",
-    });
-    if (!opened) {
-      toast({
-        title: "Print blocked",
-        description: "Allow pop-ups for this site to print stickers.",
-        variant: "destructive",
-      });
+    if (needsQuestions) {
+      setRunOpen(true);
+      return;
     }
+    run(buildRun({ rows, designs, override: batchDesign, suppliers, settings }));
   };
 
   return (
@@ -169,6 +211,7 @@ export default function GenerateStickers() {
                   <div className="truncate text-sm font-bold">{product.name}</div>
                   <div className="truncate text-xs tabular-nums text-muted-foreground">
                     {product.barcode} · {formatRupees(product.sellingPrice)} · stock {product.quantity ?? 0}
+                    {usage.length > 1 && ` · ${designFor(product, designs, batchDesign)?.name ?? ""}`}
                   </div>
                 </div>
                 <div className="flex h-9 shrink-0 items-center rounded-xl border-[1.5px] border-border bg-surface">
@@ -225,39 +268,81 @@ export default function GenerateStickers() {
       </section>
 
       <section className="space-y-3 rounded-3xl bg-indigo p-4 text-white sm:p-5">
-        <StickerStyles />
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-xl font-extrabold tracking-tight">Sticker</h2>
-          <div className="flex max-w-full gap-1 overflow-x-auto rounded-full bg-white/10 p-1" role="radiogroup" aria-label="Sticker style">
-            {STICKER_STYLES.map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={style === value}
-                onClick={() => stickerQueue.setStyle(value)}
-                className={`press h-8 shrink-0 rounded-full px-3 text-xs font-bold transition-colors ${
-                  style === value ? "bg-white text-indigo" : "text-indigo-foreground hover:text-white"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <Link
+            to={`/inventory/stickers/designer/${previewDesign?.id ?? ""}`}
+            className="press flex h-8 items-center gap-1.5 rounded-full bg-marigold px-3 text-xs font-extrabold text-marigold-foreground"
+          >
+            <PenTool className="h-3.5 w-3.5" /> Design stickers
+          </Link>
+        </div>
+        <div className="grid gap-1.5">
+          <label htmlFor="sticker-design" className="text-xs font-semibold text-indigo-foreground">
+            Design for this batch
+          </label>
+          <Select value={batchDesign || EACH} onValueChange={(value) => stickerQueue.setDesign(value === EACH ? "" : value)}>
+            <SelectTrigger id="sticker-design" className="h-10 border-white/15 bg-white/10 text-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={EACH}>Each product&apos;s own design</SelectItem>
+              {designs.map((design) => (
+                <SelectItem key={design.id} value={design.id}>
+                  {design.name}
+                  {design.is_default ? " (default)" : ""} · {describeSize(design.size)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="grid place-items-center overflow-hidden rounded-2xl bg-[#f1e9d8] py-6">
-          <div className="rounded-[1mm] shadow-[0_1px_4px_rgba(0,0,0,.25)] [zoom:1.9] max-sm:[zoom:1.45]">
-            <StickerLabel
-              product={rows[0]?.product ?? { name: "Chakra", sellingPrice: 900, barcode: "1500487" }}
-              style={style}
-            />
-          </div>
+          {previewDesign && previewScope && (
+            <div className="shadow-[0_1px_4px_rgba(0,0,0,.25)] [zoom:1.9] max-sm:[zoom:1.45]" style={{ borderRadius: `${previewDesign.size.radius ?? 0}mm` }}>
+              <LabelFace design={previewDesign} scope={previewScope} mode="preview" />
+            </div>
+          )}
+        </div>
+        {usage.length > 1 && (
+          <ul className="flex flex-wrap gap-1.5 text-xs font-bold">
+            {usage.map(({ design, count }) => (
+              <li key={design.id} className="rounded-full bg-white/10 px-3 py-1">
+                {design.name} · {count}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="ghost" className="h-10 rounded-xl bg-white/10 text-white hover:bg-white/15 hover:text-white" onClick={() => setRunOpen(true)} disabled={total === 0}>
+            <Eye className="h-4 w-4" /> Preview all {total}
+          </Button>
+          <Button variant="ghost" className="h-10 rounded-xl text-indigo-foreground hover:bg-white/10 hover:text-white" onClick={() => setPrinterOpen(true)}>
+            <Crosshair className="h-4 w-4" /> Printer alignment
+            {(printer.x !== 0 || printer.y !== 0) && <span className="tabular-nums text-marigold">({printer.x}, {printer.y})</span>}
+          </Button>
         </div>
         <p className="text-sm leading-relaxed text-indigo-foreground">
-          Each sticker prints as its own 2 × 1 inch page (50.8 × 25.4 mm), black only. Set the label
-          printer&apos;s paper size to match, with no margins.
+          Roll stickers print one per page at the label size, black only. Set the label printer&apos;s paper size to match, with no margins.
         </p>
       </section>
+
+      <RunDialog
+        open={runOpen}
+        onOpenChange={setRunOpen}
+        rows={rows}
+        designs={designs}
+        override={batchDesign}
+        suppliers={suppliers}
+        settings={settings}
+        dpi={printer.dpi}
+        onPrint={run}
+      />
+      <PrinterDialog
+        open={printerOpen}
+        onOpenChange={setPrinterOpen}
+        printer={printer}
+        onTestPrint={() => printTest((previewDesign ?? designs[0]).size)}
+      />
     </div>
   );
 }

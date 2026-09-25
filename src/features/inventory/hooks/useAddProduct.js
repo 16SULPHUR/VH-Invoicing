@@ -6,6 +6,7 @@ import { supplierService } from "@/services/supplierService";
 import { mediaService } from "@/services/mediaService";
 import { useToast } from "@/hooks/use-toast";
 import { stickerQueue } from "../stickers/stickerQueue";
+import { cleanAttributes } from "../productAttributes";
 
 const EMPTY_PRODUCT = {
   name: "",
@@ -14,6 +15,7 @@ const EMPTY_PRODUCT = {
   quantity: "",
   supplier: "",
   newSupplierName: "",
+  attributes: {},
 };
 
 /** Object URLs for the local file previews; revoked on discard, reset and unmount. */
@@ -46,7 +48,7 @@ export function useImagePreviews() {
   return { files, previews, addFiles, discard, reset };
 }
 
-export function useAddProduct() {
+export function useAddProduct({ attributesAvailable = true } = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -88,6 +90,7 @@ export function useAddProduct() {
         barcode,
         quantity: parseInt(product.quantity, 10),
         images: imageUrls,
+        ...(attributesAvailable && { attributes: cleanAttributes(product.attributes) }),
       });
     },
     onSuccess: (created) => {

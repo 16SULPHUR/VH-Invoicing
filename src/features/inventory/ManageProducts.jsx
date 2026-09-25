@@ -34,6 +34,10 @@ import {
 import { useImageActions } from "./hooks/useProductImages";
 import { useProductFilters, useProductSelection } from "./hooks/useProductFilters";
 import { stickerQueue } from "./stickers/stickerQueue";
+import { ProductDetailsFields } from "./components/ProductDetailsFields";
+import { cleanAttributes, hasAttributesColumn } from "./productAttributes";
+import { useToast } from "@/hooks/use-toast";
+import { useShopSettings } from "@/features/settings/useShopSettings";
 
 export default function ManageProducts() {
   const { data: products } = useProducts();
@@ -57,13 +61,30 @@ export default function ManageProducts() {
   const [uploadingFor, setUploadingFor] = useState(null);
   const [galleryImages, setGalleryImages] = useState(null);
   const [isBatchDialogOpen, setIsBatchDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const { settings } = useShopSettings();
+  const attributesAvailable = hasAttributesColumn(products);
+
+  /** Stock added to an existing product gets stickers for just the new pieces. */
+  const queueNewStock = (additions) => {
+    const pieces = additions.filter(({ count }) => count > 0);
+    if (pieces.length === 0) return;
+    stickerQueue.addPieces(pieces);
+    const total = pieces.reduce((sum, { count }) => sum + count, 0);
+    toast({ title: `${total} sticker${total === 1 ? "" : "s"} queued for the new stock`, description: "Print them from the Stickers tab." });
+  };
+  const addedStock = (id, quantity) => {
+    const before = products.find((product) => product.id === id)?.quantity;
+    return { id, count: (Number(quantity) || 0) - (Number(before) || 0) };
+  };
 
   const batchEdit = useBatchEdit({
     products,
     selectedIds: selection.selectedIds,
-    onDone: () => {
+    onDone: (additions) => {
       selection.clear();
       setIsBatchDialogOpen(false);
+      queueNewStock(additions);
     },
   });
 
@@ -204,7 +225,10 @@ export default function ManageProducts() {
             showCost={showCost}
             selection={selection}
             supplierNameFor={filters.supplierNameFor}
-            onQuantityCommit={(id, quantity) => updateProduct.mutate({ id, quantity })}
+            onQuantityCommit={(id, quantity) => {
+              const addition = addedStock(id, quantity);
+              updateProduct.mutate({ id, quantity }, { onSuccess: () => queueNewStock([addition]) });
+            }}
             rowActions={rowActions}
           />
         </TabsContent>
@@ -228,13 +252,27 @@ export default function ManageProducts() {
         onChange={(field, value) =>
           setEditingProduct((previous) => ({ ...previous, [field]: value }))
         }
-        onSubmit={() =>
-          updateProduct.mutate(pickFields(editingProduct, PRODUCT_FIELDS), {
-            onSuccess: () => setEditingProduct(null),
-          })
-        }
+        onSubmit={() => {
+          const changes = pickFields(editingProduct, PRODUCT_FIELDS);
+          if (attributesAvailable) changes.attributes = cleanAttributes(editingProduct.attributes);
+          const addition = addedStock(editingProduct.id, changes.quantity);
+          updateProduct.mutate(changes, {
+            onSuccess: () => {
+              setEditingProduct(null);
+              queueNewStock([addition]);
+            },
+          });
+        }}
         onClose={() => setEditingProduct(null)}
-      />
+      >
+        <ProductDetailsFields
+          fields={settings.product_fields}
+          value={editingProduct?.attributes}
+          available={attributesAvailable}
+          idPrefix="edit-detail"
+          onChange={(attributes) => setEditingProduct((previous) => ({ ...previous, attributes }))}
+        />
+      </EntityEditDialog>
 
       <EntityEditDialog
         title="Edit Supplier"
