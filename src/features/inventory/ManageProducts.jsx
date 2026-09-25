@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Filter, Search, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import {
 } from "./hooks/useInventory";
 import { useImageActions } from "./hooks/useProductImages";
 import { useProductFilters, useProductSelection } from "./hooks/useProductFilters";
+import { stickerQueue } from "./stickers/stickerQueue";
 
 export default function ManageProducts() {
   const { data: products } = useProducts();
@@ -65,6 +67,19 @@ export default function ManageProducts() {
     },
   });
 
+  const [, setSearchParams] = useSearchParams();
+  const queueStickers = (items) => {
+    stickerQueue.add(items.map((product) => ({ id: product.id, count: product.quantity })));
+    setSearchParams(
+      (previous) => {
+        const params = new URLSearchParams(previous);
+        params.set("tab", "stickers");
+        return params;
+      },
+      { replace: true }
+    );
+  };
+
   const confirmDelete = (label, name, onConfirm) => {
     if (window.confirm(`Delete ${label} "${name}"? This cannot be undone.`)) onConfirm();
   };
@@ -75,6 +90,7 @@ export default function ManageProducts() {
     onViewImages: setGalleryImages,
     onShareImages: imageActions.shareImages,
     onDownloadImages: imageActions.downloadImages,
+    onPrintStickers: (product) => queueStickers([product]),
     onDelete: (product) =>
       confirmDelete("product", product.name, () => deleteProduct.mutate(product.id)),
   };
@@ -158,7 +174,18 @@ export default function ManageProducts() {
               <span className="text-sm font-semibold">
                 {selection.selectedIds.size} selected
               </span>
-              <Button variant="marigold" size="sm" className="ml-auto" onClick={() => setIsBatchDialogOpen(true)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto text-white hover:bg-indigo-raised hover:text-white"
+                onClick={() => {
+                  queueStickers(products.filter((product) => selection.selectedIds.has(product.id)));
+                  selection.clear();
+                }}
+              >
+                Print stickers
+              </Button>
+              <Button variant="marigold" size="sm" onClick={() => setIsBatchDialogOpen(true)}>
                 Edit selected
               </Button>
               <Button

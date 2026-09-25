@@ -5,6 +5,7 @@ import { codeGenerator, productService } from "@/services/productService";
 import { supplierService } from "@/services/supplierService";
 import { mediaService } from "@/services/mediaService";
 import { useToast } from "@/hooks/use-toast";
+import { stickerQueue } from "../stickers/stickerQueue";
 
 const EMPTY_PRODUCT = {
   name: "",
@@ -96,7 +97,8 @@ export function useAddProduct() {
       setProduct({ ...EMPTY_PRODUCT, supplier: created?.[0]?.supplier ?? product.supplier });
       setIsAddingNewSupplier(false);
       images.reset();
-      toast({ title: "Success", description: "Product added successfully." });
+      if (created?.[0]) stickerQueue.add([{ id: created[0].id, count: created[0].quantity }]);
+      toast({ title: "Product added", description: "Its stickers are waiting in the print queue." });
     },
     onError: (error) =>
       toast({
