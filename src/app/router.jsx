@@ -8,6 +8,7 @@ import { PageLoader } from "@/components/common/PageLoader";
 const InvoicingPage = lazy(() => import("@/features/invoicing/InvoicingPage"));
 const ScannerPage = lazy(() => import("@/features/scanner/ScannerPage"));
 const InventoryPage = lazy(() => import("@/features/inventory/InventoryPage"));
+const CounterPage = lazy(() => import("@/features/counter/CounterPage"));
 const CustomersPage = lazy(() => import("@/features/customers/CustomersPage"));
 const WhatsAppPage = lazy(() => import("@/features/whatsapp/WhatsAppPage"));
 const CashbookPage = lazy(() => import("@/features/cashbook/CashbookPage"));
@@ -42,6 +43,7 @@ export function createRouter({ onSignOut }) {
       children: [
         { index: true, element: <InvoicingPage /> },
         { path: "scan", element: <ScannerPage /> },
+        { path: "counter", element: <CounterPage /> },
         { path: "inventory", element: <InventoryPage /> },
         { path: "customers", element: <CustomersPage /> },
         { path: "whatsapp", element: <WhatsAppPage /> },
