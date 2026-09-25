@@ -183,6 +183,8 @@ create policy stock_moves_rw on public.stock_moves for all
 
 revoke all on public.service_jobs, public.approvals, public.bookings, public.credit_notes,
   public.stock_counts, public.stock_count_scans, public.stock_moves from anon;
+grant select, insert, update, delete on public.service_jobs, public.approvals, public.bookings, public.credit_notes,
+  public.stock_counts, public.stock_count_scans, public.stock_moves to authenticated;
 
 grant usage on sequence public.service_jobs_token_seq, public.approvals_token_seq, public.bookings_token_seq,
   public.credit_notes_token_seq, public.stock_counts_token_seq to authenticated;
