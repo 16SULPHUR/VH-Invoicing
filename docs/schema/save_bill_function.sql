@@ -23,7 +23,7 @@ begin
     if coalesce(line->>'barcode', '') <> '' then
       update public.products
         set quantity = coalesce(quantity, 0) + p_direction * qty
-        where barcode::text = line->>'barcode';
+        where barcode::text = ltrim(line->>'barcode', '0');
       get diagnostics moved = row_count;
     end if;
 

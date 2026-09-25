@@ -97,7 +97,7 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
       const phone = normalizePhone(customerNumber);
       if (customers.some((customer) => normalizePhone(customer.phone) === phone)) return;
       try {
-        await customerService.create({ name: customerName.trim(), phone: customerNumber.trim() });
+        await customerService.create({ name: customerName.trim(), phone: Number(phone) });
         queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       } catch (error) {
         console.error("Could not save the credit customer:", error);
