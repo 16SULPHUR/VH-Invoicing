@@ -8,6 +8,7 @@ import {
 export function useProductFilters({ products, suppliers }) {
   const [search, setSearch] = useState("");
   const [supplierId, setSupplierId] = useState("all");
+  const [stockLevel, setStockLevel] = useState("all");
   // Draft filters live in the panel; they only take effect on "Apply".
   const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
@@ -23,10 +24,11 @@ export function useProductFilters({ products, suppliers }) {
         products,
         search,
         supplierId,
+        stockLevel,
         filters: appliedFilters,
         supplierNameFor,
       }),
-    [products, search, supplierId, appliedFilters, supplierNameFor]
+    [products, search, supplierId, stockLevel, appliedFilters, supplierNameFor]
   );
 
   const analytics = useMemo(() => computeInventoryAnalytics(products), [products]);
@@ -36,6 +38,8 @@ export function useProductFilters({ products, suppliers }) {
     setSearch,
     supplierId,
     setSupplierId,
+    stockLevel,
+    setStockLevel,
     draftFilters,
     setDraftFilters,
     applyFilters: () => setAppliedFilters({ ...draftFilters }),

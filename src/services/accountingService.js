@@ -1,25 +1,27 @@
 import { supabase } from "@/lib/supabase";
+import { applyRange } from "@/features/reports/range/reportRange";
 
-export async function getTransactions() {
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*")
-    .order("date", { ascending: false });
+export async function getTransactions(range) {
+  const { data, error } = await applyRange(supabase.from("transactions").select("*"), range).order("date", {
+    ascending: false,
+  });
   if (error) throw error;
   return data || [];
 }
 
-export async function getLedger() {
-  const { data, error } = await supabase
-    .from("ledger_view")
-    .select("*")
-    .order("date", { ascending: true });
+export async function getLedger(range) {
+  const { data, error } = await applyRange(supabase.from("ledger_view").select("*"), range).order("date", {
+    ascending: true,
+  });
   if (error) throw error;
   return data || [];
 }
 
-export async function getTrialBalance() {
-  const { data, error } = await supabase.from("ledger_view").select("account_name, debit, credit");
+/** Balances as of the range's end date. */
+export async function getTrialBalance(range) {
+  const { data, error } = await applyRange(supabase.from("ledger_view").select("account_name, debit, credit"), {
+    to: range?.to,
+  });
   if (error) throw error;
 
   const balance = {};
@@ -38,11 +40,11 @@ export async function getTrialBalance() {
   }));
 }
 
-export async function getGSTOutput() {
-  const { data, error } = await supabase
-    .from("ledger_view")
-    .select("*")
-    .eq("account_name", "GST Output");
+export async function getGSTOutput(range) {
+  const { data, error } = await applyRange(
+    supabase.from("ledger_view").select("*").eq("account_name", "GST Output"),
+    range
+  );
   if (error) throw error;
 
   const rows = data || [];

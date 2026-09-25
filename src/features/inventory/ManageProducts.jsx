@@ -139,7 +139,11 @@ export default function ManageProducts() {
           </div>
 
           {showAnalytics && <InventoryAnalytics analytics={filters.analytics} />}
-          <StockAlerts analytics={filters.analytics} />
+          <StockAlerts
+            analytics={filters.analytics}
+            stockLevel={filters.stockLevel}
+            onChange={filters.setStockLevel}
+          />
 
           {showFilters && (
             <ProductFilterPanel

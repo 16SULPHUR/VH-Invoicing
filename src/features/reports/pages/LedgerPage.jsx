@@ -5,6 +5,7 @@ import { formatDateDDMMMYYYY } from "@/utils/date";
 import { formatINR } from "@/utils/formatters";
 import { ReportTable } from "../components/ReportTable";
 import { useReportTable } from "../hooks/useReportTable";
+import { useReportRange } from "../range/useReportRange";
 
 const SEARCH_FIELDS = ["account_name", "description", "reference_table", "reference_id"];
 
@@ -36,9 +37,10 @@ const COLUMNS = [
 ];
 
 export default function LedgerPage() {
+  const { range } = useReportRange();
   const table = useReportTable({
-    queryKey: queryKeys.accounting.ledger,
-    queryFn: getLedger,
+    queryKey: [...queryKeys.accounting.ledger, range.from, range.to],
+    queryFn: () => getLedger(range),
     searchFields: SEARCH_FIELDS,
     initialSort: { key: "date", type: "date", asc: true },
   });
