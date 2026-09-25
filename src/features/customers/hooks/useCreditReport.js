@@ -5,16 +5,30 @@ import { invoiceService } from "@/services/invoiceService";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 
-/** Credit invoices grouped by customer, with a per-customer outstanding total. */
+/** Last 10 digits of the phone, else the trimmed lowercase name. */
+export function customerKey(invoice) {
+  const digits = String(invoice.customerNumber ?? "").replace(/\D/g, "").slice(-10);
+  if (digits.length === 10) return `phone:${digits}`;
+  return `name:${String(invoice.customerName ?? "").trim().toLowerCase()}`;
+}
+
+/** Credit invoices grouped by customer, showing the most recent name used. */
 function groupByCustomer(invoices) {
   const groups = new Map();
+  const newestFirst = [...invoices].sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
-  for (const invoice of invoices) {
-    const name = String(invoice.customerName ?? "").trim() || "Unnamed";
-    const group = groups.get(name) ?? { customerName: name, totalCredit: 0, invoices: [] };
+  for (const invoice of newestFirst) {
+    const key = customerKey(invoice);
+    const group = groups.get(key) ?? {
+      key,
+      customerName: String(invoice.customerName ?? "").trim() || "Unnamed",
+      customerNumber: invoice.customerNumber ?? "",
+      totalCredit: 0,
+      invoices: [],
+    };
     group.invoices.push(invoice);
     group.totalCredit += Number(invoice.credit) || 0;
-    groups.set(name, group);
+    groups.set(key, group);
   }
 
   return Array.from(groups.values());
@@ -38,7 +52,11 @@ export function useCreditReport() {
 
   const filtered = useMemo(() => {
     const needle = searchTerm.toLowerCase();
-    return customers.filter((customer) => customer.customerName.toLowerCase().includes(needle));
+    return customers.filter(
+      (customer) =>
+        customer.customerName.toLowerCase().includes(needle) ||
+        String(customer.customerNumber).includes(needle)
+    );
   }, [customers, searchTerm]);
 
   const summary = useMemo(

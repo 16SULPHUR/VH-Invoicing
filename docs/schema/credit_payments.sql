@@ -4,6 +4,7 @@ create table if not exists public.credit_payments (
   invoice_id bigint not null,
   invoice_date text not null,
   customer_name text not null,
+  customer_phone text,
   amount numeric not null check (amount > 0),
   method text not null check (method in ('cash', 'upi')),
   paid_on date not null default current_date,
@@ -13,6 +14,7 @@ create table if not exists public.credit_payments (
 );
 
 create index if not exists credit_payments_customer_idx on public.credit_payments (customer_name);
+create index if not exists credit_payments_phone_idx on public.credit_payments (customer_phone);
 create index if not exists credit_payments_invoice_idx on public.credit_payments (invoice_id);
 
 alter table public.credit_payments enable row level security;
