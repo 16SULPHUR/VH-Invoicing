@@ -39,7 +39,8 @@ export const queryKeys = {
   customers: {
     all: ["customers"],
     credit: ["customers", "credit"],
-    payments: (name) => ["customers", "payments", name],
+    invoices: (key) => ["customers", "invoices", key],
+    payments: (key) => ["customers", "payments", key],
   },
   scannedProducts: { all: ["scanned-products"] },
   cashbook: {
