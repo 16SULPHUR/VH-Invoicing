@@ -278,7 +278,14 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
       const date = new Date().toISOString();
       try {
         const saved = await invoiceService.createInvoice(toPayload(bill, { id: invoiceId, date }));
-        lastIssuedIdRef.current = invoiceId;
+        const savedAsOther = saved._syncStatus === "synced" && Number(saved.id) !== invoiceId;
+        lastIssuedIdRef.current = savedAsOther ? Number(saved.id) : invoiceId;
+        if (savedAsOther) {
+          toast({
+            title: `Saved as bill #${saved.id}`,
+            description: `Another device already used #${invoiceId}. Write #${saved.id} on the printed copy.`,
+          });
+        }
         rememberCreditCustomer(bill);
 
         if (saved._syncStatus === "pending") {

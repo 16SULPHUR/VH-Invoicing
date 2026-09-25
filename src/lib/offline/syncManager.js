@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { productService } from "@/services/productService";
+import { callBillFunction } from "@/services/billFunctions";
 import { currentFinancialYear, financialYearRange } from "@/utils/date";
 import { db, SYNC_STATUS } from "./db";
 
@@ -143,6 +144,29 @@ class SyncManager {
 
   async _createInvoice(entry) {
     const invoice = entry.data;
+    const fields = {
+      customerName: invoice.customerName,
+      customerNumber: invoice.customerNumber,
+      products: invoice.products,
+      total: invoice.total,
+      cash: invoice.cash,
+      upi: invoice.upi,
+      credit: invoice.credit,
+      note: invoice.note,
+      date: invoice.date,
+    };
+
+    const result = await callBillFunction("create_bill", {
+      p_bill: { ...fields, id: Number.isInteger(invoice._printedId) ? invoice._printedId : null },
+    });
+    if (result) {
+      await db.invoices.where("date").equals(invoice.date).modify({
+        id: result.invoice.id,
+        _syncStatus: SYNC_STATUS.SYNCED,
+        _offlineId: null,
+      });
+      return;
+    }
 
     // Invoice numbers restart every financial year, so only look within the invoice's own year.
     const { startDate, endDate } = financialYearRange(currentFinancialYear(new Date(invoice.date)));
@@ -168,20 +192,7 @@ class SyncManager {
 
     const { data, error } = await supabase
       .from("invoices")
-      .insert([
-        {
-          id: nextId,
-          customerName: invoice.customerName,
-          customerNumber: invoice.customerNumber,
-          products: invoice.products,
-          total: invoice.total,
-          cash: invoice.cash,
-          upi: invoice.upi,
-          credit: invoice.credit,
-          note: invoice.note,
-          date: invoice.date,
-        },
-      ])
+      .insert([{ id: nextId, ...fields }])
       .select();
     if (error) throw error;
 
@@ -198,6 +209,18 @@ class SyncManager {
     const payload = { ...entry.data };
     delete payload._syncStatus;
     delete payload._offlineId;
+
+    const result = await callBillFunction("update_bill", {
+      p_date: entry.originalDate,
+      p_changes: payload,
+    });
+    if (result) {
+      await db.invoices
+        .where("date")
+        .equals(entry.originalDate)
+        .modify({ _syncStatus: SYNC_STATUS.SYNCED });
+      return;
+    }
 
     const { error } = await supabase
       .from("invoices")
@@ -223,6 +246,11 @@ class SyncManager {
 
     // Never reached the server, so there is nothing to delete remotely.
     if (invoice._offlineId && invoice._syncStatus !== SYNC_STATUS.SYNCED) {
+      await db.invoices.where("date").equals(entry.originalDate).delete();
+      return;
+    }
+
+    if (await callBillFunction("delete_bill", { p_date: entry.originalDate })) {
       await db.invoices.where("date").equals(entry.originalDate).delete();
       return;
     }

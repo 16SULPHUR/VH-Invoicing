@@ -8,6 +8,7 @@ import {
   withOfflineFallback,
 } from "@/lib/offline/network";
 import { productService } from "./productService";
+import { callBillFunction } from "./billFunctions";
 
 const TABLE = "invoices";
 
@@ -39,6 +40,13 @@ export const invoiceService = {
   createInvoice(invoice) {
     return withOfflineFallback(
       async () => {
+        const result = await callBillFunction("create_bill", { p_bill: invoice });
+        if (result) {
+          const saved = asSynced(result.invoice);
+          await db.invoices.put(saved);
+          return { ...saved, stockFailures: result.stock_failures };
+        }
+
         const { data, error } = await supabase.from(TABLE).insert([invoice]).select();
         if (error) throw error;
 
@@ -179,6 +187,16 @@ export const invoiceService = {
 
     return withOfflineFallback(
       async () => {
+        const result = await callBillFunction("update_bill", {
+          p_date: date,
+          p_changes: stripLocalFields(changes),
+        });
+        if (result) {
+          const saved = asSynced({ ...result.invoice, date });
+          await db.invoices.put(saved);
+          return { ...saved, stockFailures: result.stock_failures };
+        }
+
         const previous = await this.getInvoiceByDate(date);
 
         const { error } = await supabase
@@ -231,6 +249,12 @@ export const invoiceService = {
 
     return withOfflineFallback(
       async () => {
+        const result = await callBillFunction("delete_bill", { p_date: date });
+        if (result) {
+          await db.invoices.delete(date);
+          return { stockFailures: result.stock_failures };
+        }
+
         const invoice = await this.getInvoiceByDate(date);
 
         const { error } = await supabase.from(TABLE).delete().eq("date", date);
