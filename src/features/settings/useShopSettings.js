@@ -20,6 +20,7 @@ export const SHOP_DEFAULTS = {
   upi_id: BUSINESS.upiId,
   cost_code_word: "",
   product_fields: DEFAULT_PRODUCT_FIELDS,
+  wa_channel: "",
 };
 
 export const SHOP_FIELDS = [

@@ -8,7 +8,7 @@ import { invoiceCustomerKey } from "../lib/customerKey";
 import { refreshCustomerData } from "./useCreditPayments";
 
 /** Credit invoices grouped by customer, showing the most recent name used. */
-function groupByCustomer(invoices) {
+export function groupByCustomer(invoices) {
   const groups = new Map();
   const newestFirst = [...invoices].sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
