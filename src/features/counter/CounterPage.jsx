@@ -6,11 +6,13 @@ import { useShopToolsSetup } from "./hooks/useShopTools";
 import AlterationsTab from "./alterations/AlterationsTab";
 import ApprovalsTab from "./approvals/ApprovalsTab";
 import BookingsTab from "./bookings/BookingsTab";
+import ExchangesTab from "./exchanges/ExchangesTab";
 
 const TABS = [
   { value: "alterations", label: "Alterations", what: "Alterations", Component: AlterationsTab },
   { value: "approval", label: "On approval", what: "Goods on approval", Component: ApprovalsTab },
   { value: "bookings", label: "Bookings", what: "Advance bookings", Component: BookingsTab },
+  { value: "exchanges", label: "Exchanges", what: "Exchanges and credit notes", Component: ExchangesTab },
 ];
 
 export default function CounterPage() {
