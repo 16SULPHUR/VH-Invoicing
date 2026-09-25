@@ -35,9 +35,13 @@ function CopyRow({ label, value }) {
  * What was put on the till's scan list, what the till needs typed by hand, and a place to
  * record the bill number once the bill is printed.
  */
-export function TillHandoff({ handoff, onClose, onRetry, onBillNo, retrying }) {
+export function TillHandoff(props) {
+  // Mounted per handoff, so a bill number typed for the last one never carries over.
+  return props.handoff ? <HandoffDialog {...props} /> : null;
+}
+
+function HandoffDialog({ handoff, onClose, onRetry, onBillNo, retrying }) {
   const [billNo, setBillNo] = useState("");
-  if (!handoff) return null;
   const { sent = [], manual = [], failed, customer, note, paidBefore = 0, paidLabel } = handoff;
 
   return (

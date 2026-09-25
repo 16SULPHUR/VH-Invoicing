@@ -200,7 +200,7 @@ export function CountReview({ count, scans, supplierName, onBack, onDone }) {
               </span>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">Add these as products first, then count them again.</p>
+          <p className="text-xs text-muted-foreground">Add these as products and they count here.</p>
         </section>
       )}
 

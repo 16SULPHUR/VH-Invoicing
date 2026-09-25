@@ -10,13 +10,18 @@ export function inScope(count, product) {
   return true;
 }
 
-/** Counted pieces per product id, plus codes that matched no product. */
-export function tally(scans) {
+/**
+ * Counted pieces per product id, plus codes that matched no product. A scan saved without a
+ * product (the list had not loaded, or the product was added since) is matched by its code.
+ */
+export function tally(scans, products = []) {
+  const byCode = new Map(products.filter((product) => product.barcode != null).map((product) => [String(product.barcode), String(product.id)]));
   const counted = new Map();
   const unknown = new Map();
   for (const scan of scans) {
     const quantity = Number(scan.quantity) || 0;
-    if (scan.product_id) counted.set(String(scan.product_id), (counted.get(String(scan.product_id)) ?? 0) + quantity);
+    const id = scan.product_id ? String(scan.product_id) : byCode.get(String(scan.code));
+    if (id) counted.set(id, (counted.get(id) ?? 0) + quantity);
     else unknown.set(scan.code, (unknown.get(scan.code) ?? 0) + quantity);
   }
   return { counted, unknown };
@@ -27,7 +32,7 @@ export function tally(scans) {
  * counted outside the scope, or negative in the system. `apply` is the suggested tick.
  */
 export function reviewRows(count, products, scans) {
-  const { counted, unknown } = tally(scans);
+  const { counted, unknown } = tally(scans, products);
   const rows = [];
   for (const product of products) {
     const id = String(product.id);

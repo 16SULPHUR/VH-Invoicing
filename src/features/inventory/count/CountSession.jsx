@@ -19,19 +19,21 @@ export function CountSession({ count, products, suppliers, onBack }) {
   const beep = useBeep();
 
   const byId = useMemo(() => new Map(products.map((product) => [String(product.id), product])), [products]);
+  const byCode = useMemo(() => new Map(products.filter((product) => product.barcode != null).map((product) => [String(product.barcode), product])), [products]);
   const supplierName = suppliers.find((supplier) => String(supplier.id) === String(count.supplier))?.name;
 
   const rows = useMemo(() => {
     const map = new Map();
     for (const scan of scans) {
-      const key = scan.product_id ? `p:${scan.product_id}` : `c:${scan.code}`;
-      const entry = map.get(key) ?? { key, product: scan.product_id ? byId.get(String(scan.product_id)) : null, code: scan.code, counted: 0, scans: [] };
+      const product = scan.product_id ? byId.get(String(scan.product_id)) : byCode.get(String(scan.code));
+      const key = product ? `p:${product.id}` : `c:${scan.code}`;
+      const entry = map.get(key) ?? { key, product: product ?? null, code: scan.code, counted: 0, scans: [] };
       entry.counted += Number(scan.quantity) || 0;
       entry.scans.push(scan);
       map.set(key, entry);
     }
     return [...map.values()];
-  }, [scans, byId]);
+  }, [scans, byId, byCode]);
 
   const pieces = scans.reduce((sum, scan) => sum + (Number(scan.quantity) || 0), 0);
   const unknown = rows.filter((row) => !row.product).length;

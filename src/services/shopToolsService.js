@@ -89,6 +89,9 @@ export const shopToolsService = {
         .from("invoices")
         .select("id, date, customerName, customerNumber, products, total")
         .eq("id", id)
+        // Bill numbers are not unique in the table (its key is the date): take the latest.
+        .order("date", { ascending: false })
+        .limit(1)
         .maybeSingle()
     );
   },

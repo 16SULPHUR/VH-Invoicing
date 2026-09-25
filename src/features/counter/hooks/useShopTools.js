@@ -44,12 +44,13 @@ export function useSaveTool(table) {
     mutationFn: ({ record, row, moves = [], reason }) =>
       shopToolsService.save(table, row, { id: record?.id ?? null, version: record?.version ?? null, moves, reason }),
     onSuccess: (saved, { moves = [] }) => {
-      queryClient.setQueryData(queryKeys.shopTools.records(table), (previous) => {
-        const rows = previous ?? [];
-        return rows.some((row) => row.id === saved.id)
-          ? rows.map((row) => (row.id === saved.id ? saved : row))
-          : [saved, ...rows];
-      });
+      const key = queryKeys.shopTools.records(table);
+      // A list that was never loaded must be fetched whole, not seeded with this one row.
+      if (queryClient.getQueryData(key) === undefined) queryClient.invalidateQueries({ queryKey: key });
+      else
+        queryClient.setQueryData(key, (rows) =>
+          rows.some((row) => row.id === saved.id) ? rows.map((row) => (row.id === saved.id ? saved : row)) : [saved, ...rows]
+        );
       if (moves.some((move) => move.delta)) queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
     },
     onError: (error) => {
