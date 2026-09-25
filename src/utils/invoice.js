@@ -55,3 +55,20 @@ export function stockWarningToast(failures) {
     variant: "destructive",
   };
 }
+
+/** Last 10 digits, so "+91 98765-43210" and "9876543210" match. */
+export function normalizePhone(value) {
+  return String(value ?? "")
+    .replace(/\D/g, "")
+    .slice(-10);
+}
+
+/** Credit needs someone to collect it from. Returns an error message or null. */
+export function creditCustomerError({ payments, customerName, customerNumber }) {
+  if (toNumber(payments.credit) <= 0) return null;
+  if (!String(customerName ?? "").trim()) return "Add the customer's name for a credit bill.";
+  if (normalizePhone(customerNumber).length !== 10) {
+    return "Add a 10-digit phone number for a credit bill.";
+  }
+  return null;
+}

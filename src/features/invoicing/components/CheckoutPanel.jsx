@@ -46,7 +46,7 @@ export function CheckoutPanel({ draft, onSubmit, onCancelEdit, isSubmitting, chi
               : "bg-marigold/15 text-warning"
         }`}
       >
-        <span>{unpaid ? "Not paid yet" : settled ? "Settled" : balance > 0 ? "Still to collect" : "Paid too much"}</span>
+        <span>{unpaid ? "Blank goes on credit" : settled ? "Settled" : balance > 0 ? "Still to collect" : "Paid too much"}</span>
         {settled && !unpaid ? (
           <Check size={17} strokeWidth={2.4} aria-hidden />
         ) : (

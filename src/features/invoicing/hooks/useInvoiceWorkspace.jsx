@@ -3,7 +3,16 @@ import { invoiceService } from "@/services/invoiceService";
 import { printCommandService } from "@/services/scannedProductService";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { paymentsBalance, paymentsTotal, stockWarningToast } from "@/utils/invoice";
+import {
+  creditCustomerError,
+  normalizePhone,
+  paymentsBalance,
+  paymentsTotal,
+  stockWarningToast,
+} from "@/utils/invoice";
+import { customerService } from "@/services/customerService";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryClient";
 import { toNumber } from "@/utils/formatters";
 import { formatInvoiceDate } from "@/utils/date";
 import { PrintableInvoice } from "../components/PrintableInvoice";
@@ -43,6 +52,7 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
   const { isOnline } = useOnlineStatus();
   const printDocument = usePrintDocument();
   const invalidateInvoices = useInvalidateInvoiceData();
+  const queryClient = useQueryClient();
 
   const draft = useInvoiceDraft({ persistKey: "vh-till-draft" });
   const { data: catalog } = useProductCatalog();
@@ -69,6 +79,32 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
     lastIssued !== null && lastIssued >= recentInvoices.nextInvoiceId
       ? lastIssued + 1
       : recentInvoices.nextInvoiceId;
+
+  const blockedByCredit = useCallback(
+    (bill) => {
+      const message = creditCustomerError(bill);
+      if (!message) return false;
+      toast({ title: "Customer needed", description: message, variant: "destructive" });
+      return true;
+    },
+    [toast]
+  );
+
+  // Credit customers become saved customers so their phone is there next time.
+  const rememberCreditCustomer = useCallback(
+    async ({ payments, customerName, customerNumber }) => {
+      if (toNumber(payments.credit) <= 0 || !isOnline) return;
+      const phone = normalizePhone(customerNumber);
+      if (customers.some((customer) => normalizePhone(customer.phone) === phone)) return;
+      try {
+        await customerService.create({ name: customerName.trim(), phone: customerNumber.trim() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
+      } catch (error) {
+        console.error("Could not save the credit customer:", error);
+      }
+    },
+    [customers, isOnline, queryClient]
+  );
 
   const notifyStock = useCallback(
     (failures) => {
@@ -152,11 +188,13 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
       });
       return;
     }
+    if (blockedByCredit(draft)) return;
 
     // The stored date string is the bill's key; re-formatting it can miss the row.
     const date = draft.editingInvoice.date;
     try {
       const saved = await invoiceService.updateInvoice(date, toPayload(draft, { date }));
+      rememberCreditCustomer(draft);
       refreshAll();
       draft.reset();
       loadScannedProducts();
@@ -176,10 +214,18 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
         variant: "destructive",
       });
     }
-  }, [draft, refreshAll, loadScannedProducts, notifyStock, toast]);
+  }, [
+    draft,
+    blockedByCredit,
+    rememberCreditCustomer,
+    refreshAll,
+    loadScannedProducts,
+    notifyStock,
+    toast,
+  ]);
 
   const printAndSaveInvoice = useCallback(
-    async ({ customerName = draft.customerName } = {}) => {
+    async ({ customerName = draft.customerName, customerNumber = draft.customerNumber } = {}) => {
       if (draft.lines.length === 0) {
         toast({
           title: "Nothing to print",
@@ -189,17 +235,25 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
         return;
       }
 
-      // An unpaid invoice is allowed; a partially-filled one is almost always a typo.
+      // Left blank means the customer owes it all; partly filled is almost always a typo.
       if (!paymentsBalance(draft.payments, draft.total, { allowUnpaid: true })) {
         toast({
           title: "Payments do not match",
           description: `Cash + UPI + Credit (₹${paymentsTotal(draft.payments).toFixed(
             2
-          )}) must equal ₹${draft.total}, or be left blank.`,
+          )}) must equal ₹${draft.total}, or be left blank to put it all on credit.`,
           variant: "destructive",
         });
         return;
       }
+      const unpaid = paymentsTotal(draft.payments) === 0;
+      const bill = {
+        ...draft,
+        customerName,
+        customerNumber,
+        payments: unpaid ? { cash: "", upi: "", credit: draft.total } : draft.payments,
+      };
+      if (blockedByCredit(bill)) return;
 
       const invoiceId = nextInvoiceId;
       const printed = printDocument(
@@ -207,7 +261,7 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
           invoiceId={invoiceId}
           invoiceDate={formatInvoiceDate(new Date())}
           customerName={customerName}
-          customerContact={draft.customerNumber}
+          customerContact={customerNumber}
           products={draft.lines}
           total={draft.total}
         />
@@ -223,10 +277,9 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
 
       const date = new Date().toISOString();
       try {
-        const saved = await invoiceService.createInvoice(
-          toPayload({ ...draft, customerName }, { id: invoiceId, date })
-        );
+        const saved = await invoiceService.createInvoice(toPayload(bill, { id: invoiceId, date }));
         lastIssuedIdRef.current = invoiceId;
+        rememberCreditCustomer(bill);
 
         if (saved._syncStatus === "pending") {
           toast({
@@ -247,7 +300,17 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
         });
       }
     },
-    [draft, nextInvoiceId, printDocument, refreshAll, clearScannedProducts, notifyStock, toast]
+    [
+      draft,
+      nextInvoiceId,
+      blockedByCredit,
+      printDocument,
+      rememberCreditCustomer,
+      refreshAll,
+      clearScannedProducts,
+      notifyStock,
+      toast,
+    ]
   );
 
   const submitInvoice = useCallback(
@@ -273,8 +336,11 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
         });
         return;
       }
-      const customerName = payload.new?.customer_name;
-      submitRef.current(customerName ? { customerName } : undefined);
+      const { customer_name: customerName, customer_phone: customerNumber } = payload.new ?? {};
+      submitRef.current({
+        ...(customerName && { customerName }),
+        ...(customerNumber && { customerNumber }),
+      });
     });
   }, [acceptRemotePrint, toast]);
 

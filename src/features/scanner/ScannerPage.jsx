@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { creditCustomerError } from "@/utils/invoice";
 import { CameraPanel } from "./components/CameraPanel";
 import { ScanDetailsDialog } from "./components/ScanDetailsDialog";
 import { ScannedItemsTable } from "./components/ScannedItemsTable";
@@ -16,6 +17,7 @@ export default function ScannerPage() {
   const beepRef = useRef(null);
 
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [pendingScan, setPendingScan] = useState(null);
 
   const playBeep = useCallback(() => {
@@ -78,7 +80,25 @@ export default function ScannerPage() {
       });
       return;
     }
-    cart.sendToPrinter.mutate(customerName);
+    // Nothing is paid on the phone, so the bill goes on credit at the till.
+    const customerError = creditCustomerError({
+      payments: { credit: 1 },
+      customerName,
+      customerNumber: customerPhone,
+    });
+    if (customerError) {
+      toast({ title: "Customer needed", description: customerError, variant: "destructive" });
+      return;
+    }
+    cart.sendToPrinter.mutate(
+      { customerName, customerPhone },
+      {
+        onSuccess: () => {
+          setCustomerName("");
+          setCustomerPhone("");
+        },
+      }
+    );
   };
 
   const isBusy = cart.isLoading || cart.removeItem.isPending || cart.clearAll.isPending;
@@ -98,15 +118,29 @@ export default function ScannerPage() {
         onDelete={(barcode) => cart.removeItem.mutate(barcode)}
       />
 
-      <div className="flex w-full gap-2">
+      <div className="flex w-full flex-wrap gap-2">
         <Input
           type="text"
           value={customerName}
           onChange={(event) => setCustomerName(event.target.value)}
           placeholder="Customer name"
-          className="bg-surface"
+          autoComplete="name"
+          className="min-w-[9rem] flex-1 bg-surface"
         />
-        <Button onClick={handlePrint} disabled={cart.sendToPrinter.isPending} className="block-shadow h-10">
+        <Input
+          type="tel"
+          inputMode="tel"
+          value={customerPhone}
+          onChange={(event) => setCustomerPhone(event.target.value)}
+          placeholder="Phone"
+          autoComplete="tel"
+          className="w-36 bg-surface"
+        />
+        <Button
+          onClick={handlePrint}
+          disabled={cart.sendToPrinter.isPending}
+          className="block-shadow h-10"
+        >
           <Printer className="mr-2 h-4 w-4" /> Print
         </Button>
       </div>
