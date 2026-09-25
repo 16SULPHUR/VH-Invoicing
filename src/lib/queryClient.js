@@ -46,6 +46,7 @@ export const queryKeys = {
     accounts: ["cashbook", "accounts"],
     transactions: ["cashbook", "transactions"],
     reconciliations: ["cashbook", "reconciliations"],
+    closeDay: (date) => ["cashbook", "close-day", date],
   },
   accounting: {
     transactions: ["accounting", "transactions"],
