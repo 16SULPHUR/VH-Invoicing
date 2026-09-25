@@ -105,8 +105,8 @@ export default function CreditReport() {
         <Accordion type="single" collapsible className="space-y-2">
           {report.customers.map((customer) => (
             <AccordionItem
-              key={customer.customerName}
-              value={customer.customerName}
+              key={customer.key}
+              value={customer.key}
               className="overflow-hidden rounded-2xl border-0 bg-surface shadow-[0_1px_0_hsl(var(--border))] data-[state=open]:ring-2 data-[state=open]:ring-marigold"
             >
               <AccordionTrigger className="gap-3 py-2.5 pl-2.5 pr-4 hover:no-underline">
