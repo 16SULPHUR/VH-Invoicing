@@ -32,6 +32,7 @@ export const creditPaymentService = {
               invoice_id: invoice.id,
               invoice_date: invoice.date,
               customer_name: invoice.customerName,
+              customer_phone: invoice.customerNumber || null,
               amount,
               method,
               paid_on: paidOn,
