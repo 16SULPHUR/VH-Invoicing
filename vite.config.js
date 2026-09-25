@@ -40,6 +40,10 @@ export default defineConfig({
           if (id.includes("@supabase")) return "supabase";
           if (id.includes("recharts") || id.includes("d3-")) return "charts";
           if (id.includes("@zxing")) return "scanner";
+          if (id.includes("bwip-js")) return "barcode";
+          if (/[\\/]node_modules[\\/](react-moveable|react-selecto|moveable|selecto|gesto|keycon|overlap-area|css-to-mat|css-styled|react-css-styled|framework-utils|@daybrush|@scena|@egjs)[\\/]/.test(id)) {
+            return "designer";
+          }
           return undefined;
         },
       },

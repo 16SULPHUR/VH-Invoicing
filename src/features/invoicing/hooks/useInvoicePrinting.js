@@ -36,7 +36,7 @@ function fontFaces() {
  * print dialog. Returns false when the popup was blocked.
  */
 export function usePrintDocument() {
-  return useCallback((element, { title = `${BUSINESS.name} Bill`, pageSize = "A5 portrait" } = {}) => {
+  return useCallback((element, { title = `${BUSINESS.name} Bill`, pageSize = "A5 portrait", fonts = [] } = {}) => {
     const printWindow = window.open("", "", PRINT_WINDOW_FEATURES);
     if (!printWindow) return false;
 
@@ -48,11 +48,14 @@ export function usePrintDocument() {
     printWindow.focus();
     const doc = printWindow.document;
     const ready = Promise.all([
-      ...PRINT_FONTS.map((font) => doc.fonts.load(font).catch(() => null)),
+      ...[...PRINT_FONTS, ...fonts].map((font) => doc.fonts.load(font).catch(() => null)),
       ...[...doc.images].map(
         (image) => image.complete || new Promise((resolve) => (image.onload = image.onerror = resolve))
       ),
-    ]);
+    ]).then(() => {
+      doc.body.getBoundingClientRect();
+      return doc.fonts.ready;
+    });
     Promise.race([ready, new Promise((resolve) => setTimeout(resolve, PRINT_DELAY_MS))]).then(() =>
       setTimeout(() => printWindow.print(), 150)
     );
