@@ -6,7 +6,7 @@ import { parseInvoiceLines } from "@/utils/invoice";
 import { formatInvoiceDate } from "@/utils/date";
 
 /**
- * Rasterises an invoice into a one-page PDF and hands it to the Web Share API,
+ * Rasterises each A5 page of an invoice into a PDF and hands it to the Web Share API,
  * falling back to a download where sharing files is unsupported.
  */
 export function useShareInvoicePdf() {
@@ -27,19 +27,21 @@ export function useShareInvoicePdf() {
         customerContact={invoice.customerNumber}
         products={parseInvoiceLines(invoice.products)}
         total={invoice.total}
+        payments={invoice}
         note={invoice.note}
       />
     );
     document.body.appendChild(host);
 
     try {
-      const canvas = await html2canvas(host, { scale: 2 });
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imageData = canvas.toDataURL("image/png");
-      const { width, height } = pdf.getImageProperties(imageData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-
-      pdf.addImage(imageData, "PNG", 0, 0, pdfWidth, (height * pdfWidth) / width);
+      await document.fonts.ready;
+      const pdf = new jsPDF("p", "mm", "a5");
+      const pages = [...host.querySelectorAll(".vhb-page")];
+      for (const [index, page] of pages.entries()) {
+        const canvas = await html2canvas(page, { scale: 2, backgroundColor: "#ffffff" });
+        if (index > 0) pdf.addPage("a5", "p");
+        pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, 148, 210);
+      }
 
       const fileName = `invoice-${invoice.id}.pdf`;
       const file = new File([pdf.output("blob")], fileName, { type: "application/pdf" });

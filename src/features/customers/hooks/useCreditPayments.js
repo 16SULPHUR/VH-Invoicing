@@ -1,19 +1,42 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { creditPaymentService } from "@/services/creditPaymentService";
+import { customerHistoryService } from "@/services/customerHistoryService";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 import { formatRupees } from "@/utils/formatters";
+import { customerKey } from "../lib/customerKey";
 
-export function useCreditPayments(customerName) {
-  const query = useQueryWithDefault({
-    queryKey: queryKeys.customers.payments(customerName),
-    queryFn: () => creditPaymentService.listForCustomer(customerName),
-    enabled: Boolean(customerName),
+export function useCustomerInvoices(customer) {
+  const key = customer ? customerKey(customer) : null;
+  return useQueryWithDefault({
+    queryKey: queryKeys.customers.invoices(key),
+    queryFn: () => customerHistoryService.listInvoices(customer),
+    enabled: Boolean(key),
   });
-  useQueryErrorToast(query.error, "Failed to load payment history");
-  return query;
+}
+
+export function useCreditPayments(customer) {
+  const key = customer ? customerKey(customer) : null;
+  return useQueryWithDefault({
+    queryKey: queryKeys.customers.payments(key),
+    queryFn: () => creditPaymentService.listForCustomer(customer),
+    enabled: Boolean(key),
+    retry: false,
+  });
+}
+
+export function refreshCustomerData(queryClient) {
+  return Promise.all(
+    [
+      queryKeys.customers.credit,
+      ["customers", "invoices"],
+      ["customers", "payments"],
+      queryKeys.invoices.all,
+      queryKeys.products.all,
+      ["accounting"],
+    ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))
+  );
 }
 
 export function useRecordPayment() {
@@ -29,15 +52,16 @@ export function useRecordPayment() {
     onError: (error) => {
       toast({
         title: "Payment not recorded",
-        description: error.message,
+        description: isMissingTable(error)
+          ? "The payments table isn't set up yet. Run docs/schema/credit_payments.sql in Supabase."
+          : error.message,
         variant: "destructive",
       });
     },
-    onSettled: () =>
-      Promise.all(
-        [queryKeys.customers.credit, ["customers", "payments"], queryKeys.invoices.all, ["accounting"]].map(
-          (queryKey) => queryClient.invalidateQueries({ queryKey })
-        )
-      ),
+    onSettled: () => refreshCustomerData(queryClient),
   });
+}
+
+export function isMissingTable(error) {
+  return error?.code === "42P01" || error?.code === "PGRST205";
 }

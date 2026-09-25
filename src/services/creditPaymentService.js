@@ -1,20 +1,23 @@
 import { supabase, unwrap } from "@/lib/supabase";
 import { db } from "@/lib/offline/db";
+import { phoneDigits } from "@/features/customers/lib/customerKey";
 
 const TABLE = "credit_payments";
 
-function roundPaise(value) {
-  return Math.round(value * 100) / 100;
-}
+// invoices.cash, upi and credit are whole-rupee bigint columns.
+const rupees = (value) => Math.round(Number(value) || 0);
 
 export const creditPaymentService = {
-  async listForCustomer(customerName) {
+  async listForCustomer({ name, phone }) {
+    const digits = phoneDigits(phone);
+    let query = supabase.from(TABLE).select();
+    query =
+      digits.length === 10
+        ? query.eq("customer_phone", digits)
+        : query.is("customer_phone", null).ilike("customer_name", String(name ?? "").trim());
     return (
       unwrap(
-        await supabase
-          .from(TABLE)
-          .select()
-          .eq("customer_name", customerName)
+        await query
           .order("paid_on", { ascending: false })
           .order("created_at", { ascending: false })
       ) || []
@@ -31,9 +34,9 @@ export const creditPaymentService = {
             {
               invoice_id: invoice.id,
               invoice_date: invoice.date,
-              customer_name: invoice.customerName,
-              customer_phone: invoice.customerNumber || null,
-              amount,
+              customer_name: String(invoice.customerName ?? "").trim(),
+              customer_phone: phoneDigits(invoice.customerNumber).length === 10 ? phoneDigits(invoice.customerNumber) : null,
+              amount: rupees(amount),
               method,
               paid_on: paidOn,
               note: note || null,
@@ -43,8 +46,8 @@ export const creditPaymentService = {
       );
 
       const changes = {
-        credit: roundPaise((Number(invoice.credit) || 0) - amount),
-        [method]: roundPaise((Number(invoice[method]) || 0) + amount),
+        credit: rupees(invoice.credit) - rupees(amount),
+        [method]: rupees(invoice[method]) + rupees(amount),
       };
       const { error } = await supabase.from("invoices").update(changes).eq("date", invoice.date);
       if (error) {

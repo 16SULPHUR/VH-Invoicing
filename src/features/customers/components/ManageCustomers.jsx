@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Monogram } from "@/components/common/Monogram";
 import { PageLoader } from "@/components/common/PageLoader";
 import { CustomerEditDialog } from "./CustomerEditDialog";
+import { CustomerSheet } from "./CustomerSheet";
 import { useCustomers, useDeleteCustomer, useUpdateCustomer } from "../hooks/useCustomers";
 
 function matches(customer, term) {
@@ -28,6 +29,7 @@ function matches(customer, term) {
 export default function ManageCustomers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [openCustomer, setOpenCustomer] = useState(null);
 
   const { data: customers, isLoading } = useCustomers();
   const updateCustomer = useUpdateCustomer();
@@ -83,15 +85,19 @@ export default function ManageCustomers() {
             {filtered.map((customer) => (
               <TableRow key={customer.id}>
                 <TableCell>
-                  <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setOpenCustomer({ name: customer.name, phone: customer.phone })}
+                    className="press flex w-full items-center gap-3 text-left"
+                  >
                     <Monogram name={customer.name} className="h-9 w-9 text-sm" />
                     <div className="min-w-0">
-                      <div className="truncate font-semibold">{customer.name}</div>
+                      <div className="truncate font-semibold hover:text-rani">{customer.name}</div>
                       <div className="text-xs tabular-nums text-muted-foreground">
                         {customer.phone || "No phone"}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 </TableCell>
                 <TableCell className="hidden text-muted-foreground md:table-cell">
                   {customer.address}
@@ -123,6 +129,8 @@ export default function ManageCustomers() {
         </Table>
         </div>
       )}
+
+      <CustomerSheet customer={openCustomer} initialTab="bills" onClose={() => setOpenCustomer(null)} />
 
       <CustomerEditDialog
         open={editingCustomer !== null}

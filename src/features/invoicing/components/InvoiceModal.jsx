@@ -42,6 +42,7 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
       customerContact={invoice.customerNumber}
       products={parseInvoiceLines(invoice.products)}
       total={invoice.total}
+      payments={invoice}
       note={invoice.note}
     />
   );
@@ -83,7 +84,7 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
           </DialogHeader>
 
           <div className="grid gap-4 p-4 lg:grid-cols-[1fr_16rem]">
-            <div className="paper max-h-[60dvh] overflow-auto rounded-2xl border border-border/70 p-3">{printable}</div>
+            <div className="max-h-[68dvh] overflow-auto rounded-2xl bg-secondary p-4">{printable}</div>
 
             <div className="space-y-4">
               <dl className="grid grid-cols-2 gap-2 lg:grid-cols-1">

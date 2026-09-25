@@ -2,10 +2,10 @@
 create table if not exists public.credit_payments (
   id uuid primary key default gen_random_uuid(),
   invoice_id bigint not null,
-  invoice_date text not null,
+  invoice_date timestamp with time zone not null,
   customer_name text not null,
   customer_phone text,
-  amount numeric not null check (amount > 0),
+  amount bigint not null check (amount > 0),
   method text not null check (method in ('cash', 'upi')),
   paid_on date not null default current_date,
   note text,

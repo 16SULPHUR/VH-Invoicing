@@ -4,13 +4,8 @@ import { queryKeys } from "@/lib/queryClient";
 import { invoiceService } from "@/services/invoiceService";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
-
-/** Last 10 digits of the phone, else the trimmed lowercase name. */
-export function customerKey(invoice) {
-  const digits = String(invoice.customerNumber ?? "").replace(/\D/g, "").slice(-10);
-  if (digits.length === 10) return `phone:${digits}`;
-  return `name:${String(invoice.customerName ?? "").trim().toLowerCase()}`;
-}
+import { invoiceCustomerKey } from "../lib/customerKey";
+import { refreshCustomerData } from "./useCreditPayments";
 
 /** Credit invoices grouped by customer, showing the most recent name used. */
 function groupByCustomer(invoices) {
@@ -18,7 +13,7 @@ function groupByCustomer(invoices) {
   const newestFirst = [...invoices].sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
   for (const invoice of newestFirst) {
-    const key = customerKey(invoice);
+    const key = invoiceCustomerKey(invoice);
     const group = groups.get(key) ?? {
       key,
       customerName: String(invoice.customerName ?? "").trim() || "Unnamed",
@@ -74,15 +69,6 @@ export function useCreditReport() {
     isLoading,
     searchTerm,
     setSearchTerm,
-    // Invoice edits here also move stock and feed the till and reports.
-    refresh: () =>
-      Promise.all(
-        [
-          queryKeys.customers.credit,
-          queryKeys.invoices.all,
-          queryKeys.products.all,
-          ["accounting"],
-        ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))
-      ),
+    refresh: () => refreshCustomerData(queryClient),
   };
 }
