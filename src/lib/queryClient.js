@@ -43,6 +43,8 @@ export const queryKeys = {
     payments: (key) => ["customers", "payments", key],
   },
   scannedProducts: { all: ["scanned-products"] },
+  shopSettings: ["shop-settings"],
+  labelDesigns: ["label-designs"],
   cashbook: {
     accounts: ["cashbook", "accounts"],
     transactions: ["cashbook", "transactions"],
