@@ -3,9 +3,8 @@ import { db } from "@/lib/offline/db";
 
 const TABLE = "credit_payments";
 
-function roundPaise(value) {
-  return Math.round(value * 100) / 100;
-}
+// invoices.cash, upi and credit are whole-rupee bigint columns.
+const rupees = (value) => Math.round(Number(value) || 0);
 
 export const creditPaymentService = {
   async listForCustomer(customerName) {
@@ -33,7 +32,7 @@ export const creditPaymentService = {
               invoice_date: invoice.date,
               customer_name: invoice.customerName,
               customer_phone: invoice.customerNumber || null,
-              amount,
+              amount: rupees(amount),
               method,
               paid_on: paidOn,
               note: note || null,
@@ -43,8 +42,8 @@ export const creditPaymentService = {
       );
 
       const changes = {
-        credit: roundPaise((Number(invoice.credit) || 0) - amount),
-        [method]: roundPaise((Number(invoice[method]) || 0) + amount),
+        credit: rupees(invoice.credit) - rupees(amount),
+        [method]: rupees(invoice[method]) + rupees(amount),
       };
       const { error } = await supabase.from("invoices").update(changes).eq("date", invoice.date);
       if (error) {
