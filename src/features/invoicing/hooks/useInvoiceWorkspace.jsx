@@ -264,6 +264,8 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
           customerContact={customerNumber}
           products={draft.lines}
           total={draft.total}
+          payments={bill.payments}
+          note={draft.note}
         />
       );
 
