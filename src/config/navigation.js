@@ -1,4 +1,6 @@
 import {
+  ClipboardList,
+  MessageCircle,
   ReceiptIndianRupee,
   PackageSearch,
   ScanBarcode,
@@ -12,8 +14,10 @@ import {
 export const NAV_ITEMS = [
   { label: "New bill", short: "Bill", to: "/", icon: ReceiptIndianRupee, end: true, primary: true },
   { label: "Scan", short: "Scan", to: "/scan", icon: ScanBarcode, primary: true },
+  { label: "Counter", short: "Counter", to: "/counter", icon: ClipboardList, primary: true },
   { label: "Inventory", short: "Stock", to: "/inventory", icon: PackageSearch, primary: true },
   { label: "Customers", short: "Customers", to: "/customers", icon: Users, primary: true },
+  { label: "WhatsApp", short: "WhatsApp", to: "/whatsapp", icon: MessageCircle, primary: false },
   { label: "Cashbook", short: "Cashbook", to: "/cashbook", icon: Wallet, primary: false },
   { label: "Reports", short: "Reports", to: "/reports", icon: FileChartColumn, primary: false },
 ];

@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { WhatsAppFields } from "./WhatsAppFields";
 
 const FIELDS = [
   { key: "name", label: "Name" },
@@ -41,6 +42,7 @@ export function CustomerEditDialog({ customer, onChange, onSubmit, open, onOpenC
                 />
               </div>
             ))}
+            <WhatsAppFields idPrefix="edit" customer={customer} onChange={onChange} />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isSaving}>

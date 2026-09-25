@@ -278,7 +278,7 @@ export const PrintableInvoice = ({
 
   return (
     <div className="vhb">
-      <style>{STYLES}</style>
+      <style dangerouslySetInnerHTML={{ __html: STYLES }} />
       {pages.map((page) => (
         <section key={page.number} className="vhb-page">
           <Border />

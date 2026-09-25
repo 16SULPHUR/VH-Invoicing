@@ -5,6 +5,8 @@ import { codeGenerator, productService } from "@/services/productService";
 import { supplierService } from "@/services/supplierService";
 import { mediaService } from "@/services/mediaService";
 import { useToast } from "@/hooks/use-toast";
+import { stickerQueue } from "../stickers/stickerQueue";
+import { cleanAttributes } from "../productAttributes";
 
 const EMPTY_PRODUCT = {
   name: "",
@@ -13,6 +15,7 @@ const EMPTY_PRODUCT = {
   quantity: "",
   supplier: "",
   newSupplierName: "",
+  attributes: {},
 };
 
 /** Object URLs for the local file previews; revoked on discard, reset and unmount. */
@@ -45,7 +48,7 @@ export function useImagePreviews() {
   return { files, previews, addFiles, discard, reset };
 }
 
-export function useAddProduct() {
+export function useAddProduct({ attributesAvailable = true } = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -87,6 +90,7 @@ export function useAddProduct() {
         barcode,
         quantity: parseInt(product.quantity, 10),
         images: imageUrls,
+        ...(attributesAvailable && { attributes: cleanAttributes(product.attributes) }),
       });
     },
     onSuccess: (created) => {
@@ -96,7 +100,8 @@ export function useAddProduct() {
       setProduct({ ...EMPTY_PRODUCT, supplier: created?.[0]?.supplier ?? product.supplier });
       setIsAddingNewSupplier(false);
       images.reset();
-      toast({ title: "Success", description: "Product added successfully." });
+      if (created?.[0]) stickerQueue.add([{ id: created[0].id, count: created[0].quantity }]);
+      toast({ title: "Product added", description: "Its stickers are waiting in the print queue." });
     },
     onError: (error) =>
       toast({

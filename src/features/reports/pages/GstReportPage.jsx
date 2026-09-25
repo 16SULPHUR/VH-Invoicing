@@ -5,6 +5,7 @@ import { formatDateDDMMMYYYY } from "@/utils/date";
 import { formatINR } from "@/utils/formatters";
 import { ReportTable } from "../components/ReportTable";
 import { useReportTable } from "../hooks/useReportTable";
+import { useReportRange } from "../range/useReportRange";
 
 const SEARCH_FIELDS = ["description", "reference_table", "reference_id"];
 
@@ -34,9 +35,10 @@ const COLUMNS = [
 ];
 
 export default function GstReportPage() {
+  const { range } = useReportRange();
   const table = useReportTable({
-    queryKey: queryKeys.accounting.gst,
-    queryFn: getGSTOutput,
+    queryKey: [...queryKeys.accounting.gst, range.from, range.to],
+    queryFn: () => getGSTOutput(range),
     select: (data) => data.transactions,
     searchFields: SEARCH_FIELDS,
     initialSort: { key: "date", type: "date", asc: false },

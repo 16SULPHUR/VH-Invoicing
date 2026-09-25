@@ -1,30 +1,18 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, Phone, X } from "lucide-react";
+import { Phone, X } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Monogram } from "@/components/common/Monogram";
 import { PageLoader } from "@/components/common/PageLoader";
 import { InvoiceEditDialog } from "@/features/invoicing/components/InvoiceEditDialog";
-import { BUSINESS } from "@/config/business";
-import { formatDateDDMMMYYYY } from "@/utils/date";
+import { DuesReminderLink, OffersPill } from "@/features/whatsapp/components/CustomerWhatsApp";
 import { formatRupees } from "@/utils/formatters";
 import { daysSince, phoneDigits } from "../lib/customerKey";
 import { refreshCustomerData, useCreditPayments, useCustomerInvoices } from "../hooks/useCreditPayments";
 import { CollectPayment } from "./CollectPayment";
 import { CustomerBills } from "./CustomerBills";
 import { CustomerHistory } from "./CustomerHistory";
-
-function reminderText(name, due, creditBills) {
-  const oldest = creditBills[creditBills.length - 1];
-  const lines = [
-    `Namaste ${name.split(" ")[0]} ji,`,
-    `This is a gentle reminder from ${BUSINESS.displayName}. ${formatRupees(due)} is pending on ${creditBills.length} bill${creditBills.length === 1 ? "" : "s"}${oldest ? `, the oldest from ${formatDateDDMMMYYYY(oldest.date)}` : ""}.`,
-  ];
-  if (BUSINESS.upiId) lines.push(`You can pay by UPI to ${BUSINESS.upiId}.`);
-  lines.push("Thank you!");
-  return lines.join("\n");
-}
 
 function Stat({ label, value, tone = "" }) {
   return (
@@ -88,23 +76,15 @@ export function CustomerSheet({ customer, initialTab = "collect", onClose }) {
           </div>
 
           {hasPhone && (
-            <div className="relative mt-4 flex gap-2">
+            <div className="relative mt-4 flex flex-wrap gap-2">
               <a
                 href={`tel:${digits}`}
                 className="press inline-flex h-9 items-center gap-1.5 rounded-full bg-white/10 px-3.5 text-sm font-bold hover:bg-white/20"
               >
                 <Phone className="h-4 w-4" aria-hidden /> Call
               </a>
-              {due > 0 && (
-                <a
-                  href={`https://wa.me/91${digits}?text=${encodeURIComponent(reminderText(name, due, creditBills))}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="press inline-flex h-9 items-center gap-1.5 rounded-full bg-leaf px-3.5 text-sm font-bold text-white hover:brightness-110"
-                >
-                  <MessageCircle className="h-4 w-4" aria-hidden /> Send reminder
-                </a>
-              )}
+              {due > 0 && <DuesReminderLink name={name} phone={digits} creditBills={creditBills} />}
+              <OffersPill name={name} phone={digits} />
             </div>
           )}
           <div className="motif-band absolute inset-x-0 -bottom-2.5 h-2.5" aria-hidden />

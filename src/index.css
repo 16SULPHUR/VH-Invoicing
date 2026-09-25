@@ -232,3 +232,8 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Sticker designer selection handles in the brand pink. */
+.vh-moveable.vh-moveable {
+  --moveable-color: hsl(var(--rani));
+}

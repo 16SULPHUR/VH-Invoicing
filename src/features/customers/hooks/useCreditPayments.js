@@ -3,6 +3,7 @@ import { queryKeys } from "@/lib/queryClient";
 import { creditPaymentService } from "@/services/creditPaymentService";
 import { customerHistoryService } from "@/services/customerHistoryService";
 import { useToast } from "@/hooks/use-toast";
+import { isMissingTable } from "@/lib/supabaseErrors";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 import { formatRupees } from "@/utils/formatters";
 import { customerKey } from "../lib/customerKey";
@@ -62,6 +63,4 @@ export function useRecordPayment() {
   });
 }
 
-export function isMissingTable(error) {
-  return error?.code === "42P01" || error?.code === "PGRST205";
-}
+export { isMissingTable };

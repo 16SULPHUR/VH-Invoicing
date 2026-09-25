@@ -3,6 +3,7 @@ import {
   Image as ImageIcon,
   MoreHorizontal,
   Pencil,
+  QrCode,
   Share2,
   Trash2,
   Upload,
@@ -23,6 +24,7 @@ export function ProductRowActions({
   onViewImages,
   onShareImages,
   onDownloadImages,
+  onPrintStickers,
   onDelete,
 }) {
   const images = product.images ?? [];
@@ -37,6 +39,9 @@ export function ProductRowActions({
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => onEdit(product)}>
           <Pencil className="mr-2 h-4 w-4" /> Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onPrintStickers(product)}>
+          <QrCode className="mr-2 h-4 w-4" /> Print stickers
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onUploadImages(product)}>
           <Upload className="mr-2 h-4 w-4" /> Upload Images

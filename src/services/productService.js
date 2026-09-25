@@ -1,6 +1,18 @@
 import { supabase, unwrap } from "@/lib/supabase";
+import { isMissingColumn } from "@/lib/supabaseErrors";
 
 const LIST_COLUMNS = "id, name, quantity, sellingPrice, supplier, barcode";
+
+/** Until products.attributes exists (docs/schema/sticker_designer.sql), save everything else. */
+async function withoutMissingAttributes(write, payload) {
+  try {
+    return await write(payload);
+  } catch (error) {
+    if (!isMissingColumn(error) || !payload || !("attributes" in payload)) throw error;
+    const { attributes: _skipped, ...rest } = payload;
+    return write(rest);
+  }
+}
 
 export const productService = {
   async list({ columns = "*" } = {}) {
@@ -22,11 +34,14 @@ export const productService = {
   },
 
   async create(product) {
-    return unwrap(await supabase.from("products").insert([product]).select());
+    return withoutMissingAttributes(async (row) => unwrap(await supabase.from("products").insert([row]).select()), product);
   },
 
   async update(id, changes) {
-    return unwrap(await supabase.from("products").update(changes).eq("id", id).select());
+    return withoutMissingAttributes(
+      async (row) => unwrap(await supabase.from("products").update(row).eq("id", id).select()),
+      changes
+    );
   },
 
   async updateMany(ids, changes) {
