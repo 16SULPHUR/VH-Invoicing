@@ -6,6 +6,7 @@ import { ICON_STROKE, MORE_NAV_ITEMS, NAV_ITEMS, PRIMARY_NAV_ITEMS } from "@/con
 import { SyncStatusBar } from "@/components/common/SyncStatusBar";
 import { PrintStationButton } from "@/features/printing/PrintStationButton";
 import { BUSINESS } from "@/config/business";
+import { InstallButton } from "@/features/install/InstallButton";
 
 const sideLink = ({ isActive }) =>
   `press flex items-center gap-3 rounded-full px-3.5 py-2.5 text-[14px] font-semibold transition-colors ${
@@ -40,6 +41,7 @@ export function AppRail({ onSignOut }) {
       ))}
 
       <div className="mt-auto flex flex-col gap-1">
+        <InstallButton variant="rail" className="mb-2" />
         <PrintStationButton />
         <SyncStatusBar variant="sidebar" />
         <button
@@ -106,6 +108,7 @@ export function AppTabBar({ onSignOut }) {
             <SheetTitle className="font-display text-xl font-extrabold">More</SheetTitle>
           </SheetHeader>
           <div className="mt-3 grid gap-1">
+            <InstallButton variant="sheet" className="mb-1" />
             {MORE_NAV_ITEMS.map(({ label, to, icon: Icon }) => (
               <NavLink
                 key={to}

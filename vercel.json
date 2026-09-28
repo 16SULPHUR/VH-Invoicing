@@ -1,3 +1,19 @@
 {
-  "rewrites": [{ "source": "/((?!assets/|.*\\..*).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/b/:code",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|Pinterest|Googlebot|GoogleOther|Google-PageRenderer|bingbot|Applebot|redditbot|Embedly|Iframely|Snapchat|Viber|Signal|Mastodon|Bluesky).*"
+        }
+      ],
+      "destination": "/api/bill?code=:code"
+    },
+    { "source": "/((?!assets/|api/|.*\\..*).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    { "source": "/b/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }] }
+  ]
 }

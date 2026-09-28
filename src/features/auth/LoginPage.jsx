@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BUSINESS } from "@/config/business";
 import { authService } from "@/services/authService";
+import { InstallButton } from "@/features/install/InstallButton";
 
 export default function LoginPage({ onAuthenticated }) {
   const [email, setEmail] = useState("");
@@ -119,6 +120,7 @@ export default function LoginPage({ onAuthenticated }) {
               "Sign in"
             )}
           </Button>
+          <InstallButton variant="login" />
         </form>
       </section>
     </div>

@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { AppRail, AppTabBar } from "./AppNav";
 import { PageLoader } from "@/components/common/PageLoader";
 import { PrintStationProvider } from "@/features/printing/PrintStationProvider";
+import { InstallButton } from "@/features/install/InstallButton";
 
 export function AppLayout({ onSignOut }) {
   return (
@@ -11,6 +12,7 @@ export function AppLayout({ onSignOut }) {
         <AppRail onSignOut={onSignOut} />
 
         <div className="flex min-w-0 flex-1 flex-col">
+          <InstallButton variant="banner" className="pt-[max(env(safe-area-inset-top),0.625rem)]" />
           <main className="min-h-0 flex-1 overflow-y-auto">
             <Suspense fallback={<PageLoader />}>
               <Outlet />

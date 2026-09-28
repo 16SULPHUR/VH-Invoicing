@@ -11,9 +11,16 @@ import { cacheManager } from "@/lib/offline/cacheManager";
 import { isOnline } from "@/lib/offline/network";
 import { queryClient, queryKeys } from "@/lib/queryClient";
 
-// Customers open pay links from WhatsApp without an account.
+// Customers open pay and bill links from WhatsApp without an account.
 const PayPage = lazy(() => import("@/features/whatsapp/pay/PayPage"));
-const isPayLink = () => window.location.pathname.startsWith("/pay/");
+const BillPage = lazy(() => import("@/features/bill/BillPage"));
+
+function publicPage() {
+  const { pathname } = window.location;
+  if (pathname.startsWith("/pay/")) return PayPage;
+  if (pathname.startsWith("/b/")) return BillPage;
+  return null;
+}
 
 function AuthenticatedApp({ onSignOut }) {
   const router = useMemo(() => createRouter({ onSignOut }), [onSignOut]);
@@ -21,11 +28,12 @@ function AuthenticatedApp({ onSignOut }) {
 }
 
 export default function App() {
-  if (isPayLink()) {
+  const PublicPage = publicPage();
+  if (PublicPage) {
     return (
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
-          <PayPage />
+          <PublicPage />
         </Suspense>
       </ErrorBoundary>
     );
