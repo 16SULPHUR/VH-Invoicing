@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { productService } from "@/services/productService";
-import { scannedProductService, printCommandService } from "@/services/scannedProductService";
+import { scannedProductService } from "@/services/scannedProductService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
 
@@ -23,6 +23,7 @@ function buildCart(scannedRows, catalog) {
     const existing = byBarcode.get(barcode);
 
     if (existing) {
+      existing.scanIds.push(row.id);
       existing.quantity += quantity;
       existing.amount = existing.quantity * existing.price;
     } else {
@@ -32,6 +33,7 @@ function buildCart(scannedRows, catalog) {
         quantity,
         price,
         amount: quantity * price,
+        scanIds: [row.id],
       });
     }
   }
@@ -90,12 +92,6 @@ export function useScanCart() {
     onError: notifyError("Failed to clear scanned items"),
   });
 
-  const sendToPrinter = useMutation({
-    mutationFn: (customer) => printCommandService.requestPrint(customer),
-    onSuccess: () => toast({ title: "Print sent", description: "The till is printing this bill." }),
-    onError: notifyError("Error sending to print"),
-  });
-
   const findInCatalog = useCallback(
     (barcode) => catalog.find((item) => String(item?.barcode ?? "") === String(barcode)),
     [catalog]
@@ -110,6 +106,5 @@ export function useScanCart() {
     addScan,
     removeItem,
     clearAll,
-    sendToPrinter,
   };
 }
