@@ -9,11 +9,8 @@ export function Field({ label, htmlFor, hint, error, required, children, classNa
   const id = htmlFor ?? `field-${(fieldSeq += 1)}`;
 
   return (
-    <div className={`grid gap-2 ${className}`}>
-      <Label
-        htmlFor={id}
-        className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-      >
+    <div className={`grid gap-1.5 ${className}`}>
+      <Label htmlFor={id} className="text-xs font-semibold text-muted-foreground">
         {label}
         {required && <span className="ml-1 text-destructive">*</span>}
       </Label>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -85,34 +85,31 @@ export default function ScannerPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
-      <PageHeader title="Scanner" subtitle="Scans sync to the till in real time" />
+      <PageHeader title="Scan" subtitle="Scans sync to the till in real time" />
 
-      <Card className="p-4">
-        <CameraPanel camera={camera} />
+      <CameraPanel camera={camera} />
 
-        <div className="mt-4 flex w-full gap-2">
-          <Input
-            type="text"
-            value={customerName}
-            onChange={(event) => setCustomerName(event.target.value)}
-            placeholder="Enter Customer Name"
-          />
-          <Button onClick={handlePrint} disabled={cart.sendToPrinter.isPending}>
-            Print
-          </Button>
-        </div>
-      </Card>
+      <ScannedItemsTable
+        items={cart.items}
+        isLoading={cart.isLoading}
+        isBusy={isBusy}
+        onRefresh={cart.refetch}
+        onClear={() => cart.clearAll.mutate()}
+        onDelete={(barcode) => cart.removeItem.mutate(barcode)}
+      />
 
-      <Card className="p-4">
-        <ScannedItemsTable
-          items={cart.items}
-          isLoading={cart.isLoading}
-          isBusy={isBusy}
-          onRefresh={cart.refetch}
-          onClear={() => cart.clearAll.mutate()}
-          onDelete={(barcode) => cart.removeItem.mutate(barcode)}
+      <div className="flex w-full gap-2">
+        <Input
+          type="text"
+          value={customerName}
+          onChange={(event) => setCustomerName(event.target.value)}
+          placeholder="Customer name"
+          className="bg-surface"
         />
-      </Card>
+        <Button onClick={handlePrint} disabled={cart.sendToPrinter.isPending} className="block-shadow h-10">
+          <Printer className="mr-2 h-4 w-4" /> Print
+        </Button>
+      </div>
 
       <ScanDetailsDialog
         scan={pendingScan}

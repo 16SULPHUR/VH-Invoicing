@@ -3,72 +3,77 @@
 @tailwind utilities;
 
 /*
-  VH Invoicing design tokens.
+  VH Invoicing design tokens: the "block print" look.
 
-  This is a till application: staff use it for whole shifts, often on a low-end
-  screen in a bright shop. So the system is dark-locked, high contrast, dense,
-  and deliberately unanimated. One accent (rose) carries brand and primary
-  actions; payment methods get their own semantic hues because a cashier has to
-  tell cash from UPI from credit at a glance.
-
-  Radius rule (applied everywhere): controls and inputs use --radius-sm,
-  containers use --radius-lg, badges are pill.
+  Colours and motifs come from the block-printed fabric the shop sells. Indigo
+  is the dyed ground and carries navigation and primary actions; rani pink is
+  the brand and marks the one thing that matters on a screen (the bill total,
+  the active page); marigold is the highlight used sparingly for secondary
+  emphasis. Surfaces are white on a faint lilac ground, with generous rounding
+  so everything reads as soft cloth rather than a spreadsheet.
 */
 
 @layer base {
   :root {
-    /* Neutral ramp: one cool-neutral family, never pure black or white. */
-    --background: 228 14% 8%;
-    --foreground: 220 16% 96%;
+    --background: 260 43% 98%;
+    --foreground: 250 38% 15%;
 
-    --surface: 228 13% 11%;
-    --surface-elevated: 228 12% 15%;
+    --surface: 0 0% 100%;
+    --surface-elevated: 260 40% 97%;
 
-    --card: 228 13% 11%;
-    --card-foreground: 220 16% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 250 38% 15%;
 
-    --popover: 228 12% 13%;
-    --popover-foreground: 220 16% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 250 38% 15%;
 
-    /* Brand rose. Desaturated from the old 81% so it sits on dark without buzzing. */
-    --primary: 336 72% 56%;
+    --primary: 252 47% 19%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 228 12% 18%;
-    --secondary-foreground: 220 16% 96%;
+    --secondary: 260 36% 94%;
+    --secondary-foreground: 250 38% 15%;
 
-    --muted: 228 12% 16%;
-    --muted-foreground: 222 10% 66%;
+    --muted: 260 36% 95%;
+    --muted-foreground: 252 12% 44%;
 
-    --accent: 228 12% 18%;
-    --accent-foreground: 220 16% 96%;
+    --accent: 330 80% 96%;
+    --accent-foreground: 333 72% 40%;
 
-    --destructive: 358 68% 54%;
+    --destructive: 356 72% 47%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 48% 44%;
+    --success: 154 63% 30%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 84% 54%;
-    --warning-foreground: 228 14% 8%;
+    --warning: 33 92% 37%;
+    --warning-foreground: 0 0% 100%;
 
-    --border: 228 11% 20%;
-    --input: 228 11% 22%;
-    --ring: 336 72% 56%;
+    --border: 262 33% 92%;
+    --input: 262 26% 86%;
+    --ring: 333 72% 49%;
 
-    /* Payment methods. Semantic, not decorative: these map to money movement. */
-    --cash: 152 48% 46%;
-    --upi: 210 72% 60%;
-    --credit: 38 84% 56%;
+    /* Block-print palette. */
+    --indigo: 252 47% 19%;
+    --indigo-raised: 252 45% 29%;
+    --indigo-foreground: 254 45% 86%;
+    --rani: 333 72% 49%;
+    --rani-foreground: 0 0% 100%;
+    --marigold: 37 92% 55%;
+    --marigold-foreground: 252 47% 15%;
+    --leaf: 154 63% 33%;
 
-    /* Charts inherit the same hues so a sales chart reads like the rest of the app. */
-    --chart-1: 336 72% 60%;
-    --chart-2: 210 72% 60%;
-    --chart-3: 152 48% 50%;
-    --chart-4: 38 84% 58%;
-    --chart-5: 268 56% 64%;
+    /* Payment methods: cash is leaf, UPI is indigo-blue, credit is marigold. */
+    --cash: 154 63% 30%;
+    --upi: 220 59% 45%;
+    --credit: 33 92% 40%;
 
-    --radius: 0.5rem;
+    --chart-1: 333 72% 49%;
+    --chart-2: 252 47% 35%;
+    --chart-3: 37 92% 55%;
+    --chart-4: 154 55% 38%;
+    --chart-5: 220 59% 55%;
+
+    --radius: 0.875rem;
   }
 }
 
@@ -78,13 +83,12 @@
   }
 
   html {
-    /* Tells the UA to render scrollbars and native controls dark. */
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
     font-feature-settings: "tnum" 1;
     /* Removes the 300ms double-tap delay on the touchscreen tills. */
     touch-action: manipulation;
@@ -116,6 +120,12 @@
     font-variant-numeric: tabular-nums;
   }
 
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+
   /* A visible focus ring is non-negotiable on a keyboard-driven till. */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
@@ -124,6 +134,84 @@
   /* The printed invoice is paper: it stays light regardless of app theme. */
   .paper {
     @apply bg-white text-black;
+  }
+}
+
+@layer components {
+  /* Small caps label above a value or field. */
+  .eyebrow {
+    @apply text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground;
+  }
+
+  /* Block-print dot-and-diamond border, used as a vertical strip. */
+  .motif-strip {
+    background:
+      radial-gradient(circle at 6px 6px, hsl(var(--marigold)) 2.3px, transparent 2.8px) 0 0 / 12px 16px,
+      linear-gradient(45deg, transparent 42%, hsl(var(--rani)) 42% 58%, transparent 58%) 0 8px / 12px 16px,
+      hsl(var(--indigo-raised));
+  }
+
+  /* Horizontal version for the phone header and sheet tops. */
+  .motif-band {
+    background:
+      radial-gradient(circle at 6px 6px, hsl(var(--marigold)) 2.3px, transparent 2.8px) 0 0 / 16px 12px,
+      linear-gradient(45deg, transparent 42%, hsl(var(--rani)) 42% 58%, transparent 58%) 8px 0 / 16px 12px,
+      hsl(var(--indigo-raised));
+  }
+
+  /* Faint printed pattern laid over a coloured block. */
+  .motif-overlay {
+    position: relative;
+    isolation: isolate;
+  }
+  .motif-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0.16;
+    background:
+      radial-gradient(circle at 10px 10px, #fff 3px, transparent 3.5px) 0 0 / 20px 20px,
+      radial-gradient(circle at 0 0, transparent 6px, #fff 6.5px 7.5px, transparent 8px) 10px 10px / 20px 20px;
+  }
+
+  /* A fabric swatch: coloured square with a small printed dot grid. */
+  .swatch {
+    position: relative;
+    overflow: hidden;
+  }
+  .swatch::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 5px 5px, rgb(255 255 255 / 0.45) 1.6px, transparent 2px) 0 0 / 9px 9px;
+  }
+
+  .login-pattern::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.9;
+    background:
+      radial-gradient(circle at 24px 24px, hsl(var(--marigold)) 5px, transparent 5.5px) 0 0 / 48px 48px,
+      radial-gradient(circle at 0 0, transparent 13px, hsl(var(--rani)) 13.5px 16px, transparent 16.5px) 24px 24px / 48px 48px,
+      linear-gradient(45deg, transparent 46%, rgb(255 255 255 / 0.12) 46% 54%, transparent 54%) 0 0 / 24px 24px,
+      linear-gradient(-45deg, transparent 46%, rgb(255 255 255 / 0.12) 46% 54%, transparent 54%) 0 0 / 24px 24px;
+    mask: linear-gradient(to top, transparent 0 30%, #000 75%);
+  }
+
+  .kbd {
+    @apply rounded-md border border-b-2 border-input bg-surface px-1.5 font-sans text-[11px] font-semibold text-foreground;
+  }
+
+  /* The indigo button's marigold "block" shadow. */
+  .block-shadow {
+    box-shadow: 0 4px 0 hsl(var(--marigold));
+  }
+  .block-shadow:active {
+    box-shadow: 0 1px 0 hsl(var(--marigold));
+    transform: translateY(3px);
   }
 }
 
@@ -143,4 +231,9 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Sticker designer selection handles in the brand pink. */
+.vh-moveable.vh-moveable {
+  --moveable-color: hsl(var(--rani));
 }

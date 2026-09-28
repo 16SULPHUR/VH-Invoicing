@@ -4,17 +4,26 @@ import { queryKeys } from "@/lib/queryClient";
 import { invoiceService } from "@/services/invoiceService";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
+import { invoiceCustomerKey } from "../lib/customerKey";
+import { refreshCustomerData } from "./useCreditPayments";
 
-/** Credit invoices grouped by customer, with a per-customer outstanding total. */
-function groupByCustomer(invoices) {
+/** Credit invoices grouped by customer, showing the most recent name used. */
+export function groupByCustomer(invoices) {
   const groups = new Map();
+  const newestFirst = [...invoices].sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
-  for (const invoice of invoices) {
-    const name = String(invoice.customerName ?? "").trim() || "Unnamed";
-    const group = groups.get(name) ?? { customerName: name, totalCredit: 0, invoices: [] };
+  for (const invoice of newestFirst) {
+    const key = invoiceCustomerKey(invoice);
+    const group = groups.get(key) ?? {
+      key,
+      customerName: String(invoice.customerName ?? "").trim() || "Unnamed",
+      customerNumber: invoice.customerNumber ?? "",
+      totalCredit: 0,
+      invoices: [],
+    };
     group.invoices.push(invoice);
     group.totalCredit += Number(invoice.credit) || 0;
-    groups.set(name, group);
+    groups.set(key, group);
   }
 
   return Array.from(groups.values());
@@ -38,7 +47,11 @@ export function useCreditReport() {
 
   const filtered = useMemo(() => {
     const needle = searchTerm.toLowerCase();
-    return customers.filter((customer) => customer.customerName.toLowerCase().includes(needle));
+    return customers.filter(
+      (customer) =>
+        customer.customerName.toLowerCase().includes(needle) ||
+        String(customer.customerNumber).includes(needle)
+    );
   }, [customers, searchTerm]);
 
   const summary = useMemo(
@@ -56,15 +69,6 @@ export function useCreditReport() {
     isLoading,
     searchTerm,
     setSearchTerm,
-    // Invoice edits here also move stock and feed the till and reports.
-    refresh: () =>
-      Promise.all(
-        [
-          queryKeys.customers.credit,
-          queryKeys.invoices.all,
-          queryKeys.products.all,
-          ["accounting"],
-        ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))
-      ),
+    refresh: () => refreshCustomerData(queryClient),
   };
 }

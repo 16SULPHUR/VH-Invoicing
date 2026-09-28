@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { FileChartColumn, QrCode, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BarChart3, QrCode } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,40 +7,62 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/common/Field";
+import { formatRupees } from "@/utils/formatters";
 import { UpiPaymentCard } from "./UpiPaymentCard";
+import { SalesSidebar } from "./SalesSidebar";
 import { ICON_STROKE } from "@/config/navigation";
 
-const SHORTCUTS = [
-  { to: "/cashbook", label: "Cashbook", icon: Wallet },
-  { to: "/reports", label: "Reports", icon: FileChartColumn },
-];
+const chip =
+  "press inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] px-3.5 text-[13px] font-bold transition-colors";
 
-export function QuickActions() {
+export function QuickActions({ dailySales, sales, onDark = false }) {
   const [qrAmount, setQrAmount] = useState("");
+  const collected = sales?.todayCollections ?? {};
+  const today = (Number(collected.cash) || 0) + (Number(collected.upi) || 0) + (Number(collected.credit) || 0);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {SHORTCUTS.map(({ to, label, icon: Icon }) => (
-        <Button key={to} asChild variant="outline" size="sm" className="press">
-          <Link to={to}>
-            <Icon size={15} strokeWidth={ICON_STROKE} className="mr-1.5" aria-hidden />
-            {label}
-          </Link>
-        </Button>
-      ))}
+    <div className="flex items-center gap-2">
+      {sales && (
+        <Sheet>
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              className={`${chip} ${
+                onDark
+                  ? "border-white/25 text-white hover:bg-white/10"
+                  : "border-border bg-surface hover:border-input"
+              }`}
+            >
+              <BarChart3 size={15} strokeWidth={ICON_STROKE} aria-hidden />
+              <span className={onDark ? "sr-only sm:not-sr-only" : ""}>Today</span>
+              <span className="tabular-nums">{formatRupees(today)}</span>
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-full overflow-y-auto p-0 sm:max-w-md">
+            <SheetHeader className="px-5 pb-1 pt-5 text-left">
+              <SheetTitle className="font-display text-2xl font-extrabold">Sales</SheetTitle>
+            </SheetHeader>
+            <SalesSidebar dailySales={dailySales} sales={sales} />
+          </SheetContent>
+        </Sheet>
+      )}
 
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="press">
-            <QrCode size={15} strokeWidth={ICON_STROKE} className="mr-1.5" aria-hidden />
-            Payment QR
-          </Button>
+          <button
+            type="button"
+            className={`${chip} border-marigold bg-marigold text-marigold-foreground hover:bg-marigold/90`}
+          >
+            <QrCode size={15} strokeWidth={ICON_STROKE} aria-hidden />
+            UPI QR
+          </button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="rounded-3xl sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Payment QR</DialogTitle>
+            <DialogTitle className="font-display text-2xl font-extrabold">UPI QR</DialogTitle>
           </DialogHeader>
           <Field label="Amount" htmlFor="qr-amount">
             {(id) => (
@@ -53,7 +73,7 @@ export function QuickActions() {
                 min="0"
                 value={qrAmount}
                 onChange={(event) => setQrAmount(event.target.value)}
-                className="text-2xl font-semibold tabular-nums"
+                className="h-14 font-display text-3xl font-bold tabular-nums"
               />
             )}
           </Field>

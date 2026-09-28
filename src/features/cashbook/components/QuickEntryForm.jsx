@@ -3,16 +3,23 @@ import { DatabaseZap, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { accountDisplayName } from "../balances";
 
 const ENTRY_TYPES = [
-  { value: "inflow", label: "Cash In" },
-  { value: "outflow", label: "Cash Out" },
-  { value: "bank_deposit", label: "Bank Deposit" },
-  { value: "correction", label: "Correction" },
+  { value: "inflow", label: "Cash in", tone: "border-leaf bg-leaf/10 text-leaf" },
+  { value: "outflow", label: "Cash out", tone: "border-destructive bg-destructive/10 text-destructive" },
+  { value: "bank_deposit", label: "Bank deposit", tone: "border-indigo bg-indigo/10 text-indigo" },
+  { value: "correction", label: "Correction", tone: "border-marigold bg-marigold/15 text-warning" },
 ];
 
-const selectClass = "w-full rounded border border-border bg-transparent px-2 py-1";
+const labelClass = "text-xs font-semibold text-muted-foreground";
 
 export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
   const [entry, setEntry] = useState({
@@ -23,8 +30,8 @@ export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
     date: new Date().toISOString().slice(0, 10),
   });
 
-  const setField = (field) => (event) =>
-    setEntry((previous) => ({ ...previous, [field]: event.target.value }));
+  const setValue = (field, value) => setEntry((previous) => ({ ...previous, [field]: value }));
+  const setField = (field) => (event) => setValue(field, event.target.value);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -32,58 +39,55 @@ export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded border border-border bg-surface p-4">
-      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-        <DatabaseZap className="h-4 w-4" /> Quick entry
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-2xl border border-border/70 bg-surface p-4">
+      <div className="flex items-center gap-2 font-display text-lg font-bold">
+        <DatabaseZap className="h-4 w-4 text-rani" /> Quick entry
       </div>
 
-      <div className="mb-2 grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-xs" htmlFor="quickAccount">
+      <div role="radiogroup" aria-label="Entry type" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {ENTRY_TYPES.map(({ value, label, tone }) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={entry.type === value}
+            onClick={() => setValue("type", value)}
+            className={`h-9 rounded-xl border-[1.5px] text-sm font-bold transition-colors ${
+              entry.type === value ? tone : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className={labelClass} htmlFor="quickAccount">
             Account
           </Label>
-          <select
-            id="quickAccount"
-            value={entry.account}
-            onChange={setField("account")}
-            className={selectClass}
-          >
-            {accounts.map((account) => (
-              <option key={account.id} value={account.name} className="bg-surface">
-                {accountDisplayName(account.name)}
-              </option>
-            ))}
-          </select>
+          <Select value={entry.account} onValueChange={(value) => setValue("account", value)}>
+            <SelectTrigger id="quickAccount">
+              <SelectValue placeholder="Account" />
+            </SelectTrigger>
+            <SelectContent>
+              {accounts.map((account) => (
+                <SelectItem key={account.id} value={account.name}>
+                  {accountDisplayName(account.name)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div>
-          <Label className="text-xs" htmlFor="quickDate">
+        <div className="space-y-1.5">
+          <Label className={labelClass} htmlFor="quickDate">
             Date
           </Label>
           <Input id="quickDate" type="date" value={entry.date} onChange={setField("date")} />
         </div>
-      </div>
-
-      <div className="mb-2 grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-xs" htmlFor="quickType">
-            Type
-          </Label>
-          <select
-            id="quickType"
-            value={entry.type}
-            onChange={setField("type")}
-            className={selectClass}
-          >
-            {ENTRY_TYPES.map(({ value, label }) => (
-              <option key={value} value={value} className="bg-surface">
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <Label className="text-xs" htmlFor="quickAmount">
-            Amount (₹)
+        <div className="space-y-1.5">
+          <Label className={labelClass} htmlFor="quickAmount">
+            Amount ₹
           </Label>
           <Input
             id="quickAmount"
@@ -93,23 +97,22 @@ export function QuickEntryForm({ accounts, onSubmit, isSubmitting }) {
             onChange={setField("amount")}
           />
         </div>
+        <div className="space-y-1.5">
+          <Label className={labelClass} htmlFor="quickNote">
+            Note
+          </Label>
+          <Input
+            id="quickNote"
+            type="text"
+            placeholder="Optional"
+            value={entry.note}
+            onChange={setField("note")}
+          />
+        </div>
       </div>
 
-      <div className="mb-3">
-        <Label className="text-xs" htmlFor="quickNote">
-          Note
-        </Label>
-        <Input
-          id="quickNote"
-          type="text"
-          placeholder="Optional"
-          value={entry.note}
-          onChange={setField("note")}
-        />
-      </div>
-
-      <Button type="submit" disabled={isSubmitting || !entry.amount} className="press">
-        <Upload className="mr-2 h-4 w-4" /> Save Entry
+      <Button type="submit" disabled={isSubmitting || !entry.amount} className="press w-full">
+        <Upload className="mr-2 h-4 w-4" /> Save entry
       </Button>
     </form>
   );

@@ -18,8 +18,8 @@ export function ProductFilterPanel({ filters, setFilters, onApply }) {
     }));
 
   return (
-    <div className="mb-4 flex flex-col gap-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/70 bg-surface p-3">
+      <div className="w-full sm:w-56">
         <Select
           value={filters.sortField}
           onValueChange={(value) => setFilters((previous) => ({ ...previous, sortField: value }))}
@@ -37,25 +37,25 @@ export function ProductFilterPanel({ filters, setFilters, onApply }) {
         </Select>
       </div>
 
-      <div className="grid max-w-xl grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="flex gap-4">
+      <div className="flex flex-wrap gap-3">
+        <div className="flex gap-3">
           <Input
             type="number"
-            placeholder="Min Price"
+            placeholder="Min ₹"
             value={filters.priceRange.min}
             onChange={setPriceBound("min")}
             className="w-32"
           />
           <Input
             type="number"
-            placeholder="Max Price"
+            placeholder="Max ₹"
             value={filters.priceRange.max}
             onChange={setPriceBound("max")}
             className="w-32"
           />
         </div>
         <Button onClick={onApply} className="flex items-center gap-2">
-          <Filter className="h-4 w-4" /> Apply Filters
+          <Filter className="h-4 w-4" /> Apply
         </Button>
       </div>
     </div>

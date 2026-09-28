@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useSyncManager } from "@/hooks/useSyncManager";
 import { ICON_STROKE } from "@/config/navigation";
@@ -22,7 +21,7 @@ function formatLastSync(timestamp) {
   return `${Math.floor(minutes / 60)}h ago`;
 }
 
-export function SyncStatusBar() {
+export function SyncStatusBar({ variant = "compact" }) {
   const { isOnline, pendingSyncCount, lastSyncTime, syncStatus } = useOnlineStatus();
   const { triggerSync, isSyncing, syncErrors, retryFailed } = useSyncManager();
   const [open, setOpen] = useState(false);
@@ -32,33 +31,46 @@ export function SyncStatusBar() {
 
   return (
     <>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label={`Sync status: ${statusLabel}${outstanding ? `, ${outstanding} outstanding` : ""}`}
-            className="press relative flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
-          >
-            {isOnline ? (
-              <Wifi size={20} strokeWidth={ICON_STROKE} className="text-success" aria-hidden />
-            ) : (
-              <WifiOff
-                size={20}
-                strokeWidth={ICON_STROKE}
-                className="text-destructive"
-                aria-hidden
-              />
-            )}
-            {outstanding > 0 && (
-              <span className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-warning-foreground">
-                {outstanding}
-              </span>
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right">{statusLabel}</TooltipContent>
-      </Tooltip>
+      {variant === "sidebar" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`Sync status: ${statusLabel}${outstanding ? `, ${outstanding} outstanding` : ""}`}
+          className="press flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-xs font-medium text-indigo-foreground transition-colors hover:bg-white/10"
+        >
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${
+              !isOnline ? "bg-destructive" : outstanding ? "bg-marigold" : "bg-emerald-400"
+            }`}
+            aria-hidden
+          />
+          <span className="truncate">
+            {!isOnline
+              ? "Offline"
+              : outstanding
+                ? `${outstanding} waiting to sync`
+                : `Synced ${formatLastSync(lastSyncTime).toLowerCase()}`}
+          </span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`Sync status: ${statusLabel}${outstanding ? `, ${outstanding} outstanding` : ""}`}
+          className="press relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          {isOnline ? (
+            <Wifi size={18} strokeWidth={ICON_STROKE} className="text-success" aria-hidden />
+          ) : (
+            <WifiOff size={18} strokeWidth={ICON_STROKE} className="text-destructive" aria-hidden />
+          )}
+          {outstanding > 0 && (
+            <span className="absolute right-0.5 top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-marigold px-1 text-[10px] font-bold text-marigold-foreground">
+              {outstanding}
+            </span>
+          )}
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -76,7 +88,7 @@ export function SyncStatusBar() {
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg border border-border bg-surface p-3">
+              <div className="rounded-2xl bg-secondary p-3">
                 <p className="text-xs text-muted-foreground">Pending</p>
                 <p
                   className={`text-xl font-bold tabular-nums ${
@@ -86,7 +98,7 @@ export function SyncStatusBar() {
                   {pendingSyncCount}
                 </p>
               </div>
-              <div className="rounded-lg border border-border bg-surface p-3">
+              <div className="rounded-2xl bg-secondary p-3">
                 <p className="text-xs text-muted-foreground">Failed</p>
                 <p
                   className={`text-xl font-bold tabular-nums ${

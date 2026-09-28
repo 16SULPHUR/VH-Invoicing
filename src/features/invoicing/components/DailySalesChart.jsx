@@ -2,16 +2,10 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { EmptyState } from "@/components/common/EmptyState";
 import { TrendingUp } from "lucide-react";
-import { formatAmount } from "@/utils/formatters";
+import { formatRupees } from "@/utils/formatters";
 
-/*
-  One series over seven discrete days. Days are buckets, not a continuum, so bars
-  are the honest form - an area fill would imply sales flowing between days. A
-  single series needs no legend: the heading names it. Colour is validated
-  against the dark surface (lightness band, chroma floor, 3:1 contrast).
-*/
 const CHART_CONFIG = {
-  total: { label: "Sales", color: "hsl(var(--chart-1))" },
+  total: { label: "Sales", color: "hsl(var(--rani))" },
 };
 
 function compactINR(value) {
@@ -32,8 +26,8 @@ export function DailySalesChart({ dailySales }) {
 
   return (
     <figure className="space-y-2">
-      <figcaption className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Daily sales, last 7 days
+      <figcaption className="font-display text-lg font-bold">
+        Last 7 days
       </figcaption>
 
       <ChartContainer config={CHART_CONFIG} className="h-[160px] w-full">
@@ -57,9 +51,9 @@ export function DailySalesChart({ dailySales }) {
             />
             <ChartTooltip
               content={<ChartTooltipContent />}
-              cursor={{ fill: "hsl(var(--muted))" }}
+              cursor={{ fill: "hsl(var(--accent))" }}
             />
-            <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="total" fill="var(--color-total)" radius={[6, 6, 0, 0]} maxBarSize={28} />
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
@@ -77,7 +71,7 @@ export function DailySalesChart({ dailySales }) {
           {dailySales.map((day) => (
             <tr key={day.date}>
               <th scope="row">{day.date}</th>
-              <td>₹{formatAmount(day.total)}</td>
+              <td>{formatRupees(day.total)}</td>
             </tr>
           ))}
         </tbody>

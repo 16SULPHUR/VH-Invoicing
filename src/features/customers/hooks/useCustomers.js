@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
-import { customerService } from "@/services/customerService";
+import { WA_FIELDS, customerService } from "@/services/customerService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
@@ -23,6 +23,7 @@ function useCustomerMutation({ mutationFn, successMessage, errorMessage }) {
     mutationFn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.whatsapp.consent });
       toast({ title: "Success", description: successMessage });
     },
     onError: (error) => {
@@ -44,8 +45,13 @@ export const useAddCustomer = () =>
 
 export const useUpdateCustomer = () =>
   useCustomerMutation({
-    mutationFn: ({ id, name, address, phone }) =>
-      customerService.update(id, { name, address, phone }),
+    mutationFn: ({ id, name, address, phone, ...rest }) =>
+      customerService.update(id, {
+        name,
+        address,
+        phone,
+        ...Object.fromEntries(WA_FIELDS.filter((key) => key in rest).map((key) => [key, rest[key]])),
+      }),
     successMessage: "Customer updated successfully.",
     errorMessage: "Failed to update customer",
   });

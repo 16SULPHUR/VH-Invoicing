@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/common/EmptyState";
 import { OfflineBadge } from "@/components/common/OfflineBadge";
-import { formatAmount } from "@/utils/formatters";
+import { formatRupees } from "@/utils/formatters";
 import { formatDayMonth } from "@/utils/date";
 import { usedPaymentMethods } from "../paymentMethods";
 import { ICON_STROKE } from "@/config/navigation";
@@ -41,11 +41,11 @@ export function RecentInvoices({ invoices, onInvoiceClick }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="relative p-3">
+      <div className="relative px-5 pb-3">
         <Search
           size={15}
           strokeWidth={ICON_STROKE}
-          className="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground"
+          className="pointer-events-none absolute left-8 top-1/2 -translate-y-[calc(50%+0.375rem)] text-muted-foreground"
           aria-hidden
         />
         <Input
@@ -54,11 +54,11 @@ export function RecentInvoices({ invoices, onInvoiceClick }) {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
           aria-label="Search invoices"
-          className="h-9 pl-8"
+          className="h-10 pl-9"
         />
       </div>
 
-      <ScrollArea className="min-h-0 flex-1 px-3 pb-3">
+      <ScrollArea className="min-h-0 flex-1 px-5 pb-5">
         {grouped.length === 0 ? (
           <EmptyState
             icon={ReceiptText}
@@ -70,16 +70,14 @@ export function RecentInvoices({ invoices, onInvoiceClick }) {
         ) : (
           grouped.map(([day, { invoices: dayInvoices, totalSale }]) => (
             <section key={day} className="mb-4">
-              <div className="mb-1.5 flex items-baseline justify-between border-b border-border pb-1">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {day}
-                </h3>
-                <span className="text-xs font-medium tabular-nums text-muted-foreground">
-                  ₹{formatAmount(totalSale)}
+              <div className="mb-2 flex items-baseline justify-between">
+                <h3 className="font-display text-base font-bold">{day}</h3>
+                <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-bold tabular-nums">
+                  {formatRupees(totalSale)}
                 </span>
               </div>
 
-              <ul className="space-y-1">
+              <ul className="space-y-1.5">
                 {dayInvoices.map((invoice) => {
                   const methods = usedPaymentMethods(invoice);
                   const onCredit = Number(invoice.credit) > 0;
@@ -89,16 +87,16 @@ export function RecentInvoices({ invoices, onInvoiceClick }) {
                       <button
                         type="button"
                         onClick={() => onInvoiceClick(invoice.date)}
-                        className={`press flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors ${
+                        className={`press flex w-full items-center gap-2.5 rounded-xl border-[1.5px] px-3 py-2 text-left transition-colors ${
                           onCredit
-                            ? "border-credit/30 bg-credit/5 hover:bg-credit/10"
-                            : "border-border bg-background hover:bg-surface-elevated"
+                            ? "border-credit/40 bg-credit/5 hover:bg-credit/10"
+                            : "border-border bg-surface hover:border-input"
                         }`}
                       >
-                        <span className="w-10 shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
+                        <span className="w-11 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
                           #{invoice.id}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-sm">
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                           {String(invoice.customerName ?? "").split(" ")[0] || "Walk-in"}
                         </span>
                         {invoice._syncStatus && invoice._syncStatus !== "synced" && (
@@ -109,8 +107,8 @@ export function RecentInvoices({ invoices, onInvoiceClick }) {
                             <Icon key={key} size={13} strokeWidth={ICON_STROKE} className={text} />
                           ))}
                         </span>
-                        <span className="shrink-0 text-sm font-semibold tabular-nums">
-                          ₹{formatAmount(invoice.total)}
+                        <span className="shrink-0 font-display text-[15px] font-bold tabular-nums">
+                          {formatRupees(invoice.total)}
                         </span>
                       </button>
                     </li>

@@ -12,13 +12,13 @@ import {
 export function ScanDetailsDialog({ scan, onChange, onConfirm, onOpenChange }) {
   return (
     <Dialog open={scan !== null} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>{scan?.productName ?? "Enter Product Details"}</DialogTitle>
+          <DialogTitle>{scan?.productName ?? "Product details"}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="scanQuantity" className="text-right">
+        <div className="grid grid-cols-2 gap-3 py-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="scanQuantity" className="text-xs font-semibold text-muted-foreground">
               Quantity
             </Label>
             <Input
@@ -27,24 +27,24 @@ export function ScanDetailsDialog({ scan, onChange, onConfirm, onOpenChange }) {
               min="1"
               value={scan?.quantity ?? 1}
               onChange={(event) => onChange("quantity", Number(event.target.value))}
-              className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="scanPrice" className="text-right">
-              Price
+          <div className="space-y-1.5">
+            <Label htmlFor="scanPrice" className="text-xs font-semibold text-muted-foreground">
+              Price ₹
             </Label>
             <Input
               id="scanPrice"
               type="number"
               value={scan?.price ?? 0}
               onChange={(event) => onChange("price", Number(event.target.value))}
-              className="col-span-3"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={onConfirm}>Add to Scan List</Button>
+          <Button onClick={onConfirm} variant="rani" className="block-shadow w-full">
+            Add to scan list
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

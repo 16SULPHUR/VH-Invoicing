@@ -1,84 +1,142 @@
-import { NavLink } from "react-router-dom";
-import { LogOut } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ICON_STROKE, NAV_ITEMS, PRIMARY_NAV_ITEMS } from "@/config/navigation";
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { LogOut, Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ICON_STROKE, MORE_NAV_ITEMS, NAV_ITEMS, PRIMARY_NAV_ITEMS } from "@/config/navigation";
 import { SyncStatusBar } from "@/components/common/SyncStatusBar";
+import { BUSINESS } from "@/config/business";
 
-const railLink = ({ isActive }) =>
-  `press relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
-    isActive
-      ? "bg-primary/15 text-primary after:absolute after:-left-2 after:h-6 after:w-1 after:rounded-r-full after:bg-primary"
-      : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
+const sideLink = ({ isActive }) =>
+  `press flex items-center gap-3 rounded-full px-3.5 py-2.5 text-[14px] font-semibold transition-colors ${
+    isActive ? "bg-rani text-rani-foreground" : "text-indigo-foreground hover:bg-white/10 hover:text-white"
   }`;
 
-const tabLink = ({ isActive }) =>
-  `press flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[11px] transition-colors ${
-    isActive ? "text-primary" : "text-muted-foreground"
-  }`;
+function Wordmark({ className = "" }) {
+  const [first, ...rest] = BUSINESS.displayName.split(" ");
+  return (
+    <div className={`font-display text-[23px] font-extrabold leading-[0.95] tracking-tight text-white ${className}`}>
+      {first}
+      {rest.length > 0 && <span className="block text-marigold">{rest.join(" ")}</span>}
+    </div>
+  );
+}
 
-/** Desktop: a persistent icon rail. Wide enough to hit, narrow enough to ignore. */
+/** Desktop: the indigo sidebar with its block-print border. */
 export function AppRail({ onSignOut }) {
   return (
     <nav
       aria-label="Main"
-      className="hidden w-16 shrink-0 flex-col items-center gap-1 border-r border-border bg-surface py-3 md:flex"
+      className="relative hidden w-[13.25rem] shrink-0 flex-col gap-1 bg-indigo py-5 pl-[1.6rem] pr-3.5 md:flex"
     >
-      <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-        VH
-      </div>
+      <div className="motif-strip absolute inset-y-0 left-0 w-3" aria-hidden />
+      <Wordmark className="mb-6 ml-2.5" />
 
       {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
-        <Tooltip key={to}>
-          <TooltipTrigger asChild>
-            <NavLink to={to} end={end} className={railLink} aria-label={label}>
-              <Icon size={20} strokeWidth={ICON_STROKE} aria-hidden />
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">{label}</TooltipContent>
-        </Tooltip>
+        <NavLink key={to} to={to} end={end} className={sideLink}>
+          <Icon size={18} strokeWidth={ICON_STROKE} aria-hidden />
+          {label}
+        </NavLink>
       ))}
 
-      <div className="mt-auto flex flex-col items-center gap-1">
-        <SyncStatusBar />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={onSignOut}
-              aria-label="Log out"
-              className="press flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/15 hover:text-destructive"
-            >
-              <LogOut size={20} strokeWidth={ICON_STROKE} aria-hidden />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">Log out</TooltipContent>
-        </Tooltip>
+      <div className="mt-auto flex flex-col gap-1">
+        <SyncStatusBar variant="sidebar" />
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="press flex items-center gap-3 rounded-full px-3.5 py-2.5 text-[14px] font-semibold text-indigo-foreground transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <LogOut size={18} strokeWidth={ICON_STROKE} aria-hidden />
+          Log out
+        </button>
       </div>
     </nav>
   );
 }
 
-/** Mobile: a bottom tab bar, thumb-reachable, with labels since there is room. */
-export function AppTabBar({ onSignOut }) {
+const tabClass = (isActive) =>
+  `press flex min-w-0 flex-1 flex-col items-center gap-1 pb-1 pt-1.5 text-[11px] font-bold transition-colors ${
+    isActive ? "text-rani" : "text-muted-foreground"
+  }`;
+
+function TabIcon({ icon: Icon, active }) {
   return (
-    <nav
-      aria-label="Main"
-      className="flex shrink-0 items-stretch border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+    <span
+      className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors ${
+        active ? "bg-rani text-rani-foreground" : ""
+      }`}
     >
-      {PRIMARY_NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
-        <NavLink key={to} to={to} end={end} className={tabLink}>
-          <Icon size={20} strokeWidth={ICON_STROKE} aria-hidden />
-          <span className="truncate">{label}</span>
-        </NavLink>
-      ))}
-      <button
-        type="button"
-        onClick={onSignOut}
-        className="press flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground"
+      <Icon size={19} strokeWidth={ICON_STROKE} aria-hidden />
+    </span>
+  );
+}
+
+/** Mobile: bottom tab bar, with Cashbook, Reports and sign-out under More. */
+export function AppTabBar({ onSignOut }) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const { pathname } = useLocation();
+  const moreActive = MORE_NAV_ITEMS.some((item) => pathname.startsWith(item.to));
+
+  return (
+    <>
+      <nav
+        aria-label="Main"
+        className="flex shrink-0 items-stretch border-t-[1.5px] border-border bg-surface px-1.5 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-1 md:hidden"
       >
-        <LogOut size={20} strokeWidth={ICON_STROKE} aria-hidden />
-        <span>Log out</span>
-      </button>
-    </nav>
+        {PRIMARY_NAV_ITEMS.map(({ short, to, icon, end }) => (
+          <NavLink key={to} to={to} end={end} className={({ isActive }) => tabClass(isActive)}>
+            {({ isActive }) => (
+              <>
+                <TabIcon icon={icon} active={isActive} />
+                <span className="truncate">{short}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+        <button type="button" onClick={() => setMoreOpen(true)} className={tabClass(moreActive)}>
+          <TabIcon icon={Menu} active={moreActive} />
+          <span>More</span>
+        </button>
+      </nav>
+
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-[max(env(safe-area-inset-bottom),1rem)]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display text-xl font-extrabold">More</SheetTitle>
+          </SheetHeader>
+          <div className="mt-3 grid gap-1">
+            {MORE_NAV_ITEMS.map(({ label, to, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={() => setMoreOpen(false)}
+                className={({ isActive }) =>
+                  `press flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold ${
+                    isActive ? "bg-accent text-accent-foreground" : "hover:bg-secondary"
+                  }`
+                }
+              >
+                <Icon size={19} strokeWidth={ICON_STROKE} aria-hidden />
+                {label}
+              </NavLink>
+            ))}
+            <div className="my-1 flex items-center justify-between rounded-2xl px-4 py-2 text-sm text-muted-foreground">
+              Sync status
+              <SyncStatusBar />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setMoreOpen(false);
+                onSignOut();
+              }}
+              className="press flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold text-destructive hover:bg-destructive/10"
+            >
+              <LogOut size={19} strokeWidth={ICON_STROKE} aria-hidden />
+              Log out
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

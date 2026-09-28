@@ -1,8 +1,12 @@
 import { env } from "./env";
 
+const titleCase = (text) =>
+  text.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+
 export const BUSINESS = {
   name: env.businessName,
-  documentTitle: `${env.businessName} BILLING`,
+  displayName: titleCase(env.businessName),
+  documentTitle: `${titleCase(env.businessName)} Billing`,
   upiId: env.upiId,
   upiMerchantCode: env.upiMerchantCode,
   upiTransactionRef: env.upiTransactionRef,

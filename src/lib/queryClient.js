@@ -39,8 +39,26 @@ export const queryKeys = {
   customers: {
     all: ["customers"],
     credit: ["customers", "credit"],
+    invoices: (key) => ["customers", "invoices", key],
+    payments: (key) => ["customers", "payments", key],
   },
   scannedProducts: { all: ["scanned-products"] },
+  shopSettings: ["shop-settings"],
+  whatsapp: {
+    invoices: ["whatsapp", "invoices"],
+    keyword: (keyword, since) => ["whatsapp", "keyword", keyword, since],
+    log: ["whatsapp", "log"],
+    setup: ["whatsapp", "setup"],
+    payLinks: (keys) => ["whatsapp", "pay-links", keys],
+    consent: ["whatsapp", "consent"],
+  },
+  labelDesigns: ["label-designs"],
+  shopTools: {
+    setup: ["shop-tools", "setup"],
+    records: (table) => ["shop-tools", table],
+    scans: (countId) => ["shop-tools", "scans", countId],
+    lastSold: (since) => ["shop-tools", "last-sold", since],
+  },
   cashbook: {
     accounts: ["cashbook", "accounts"],
     transactions: ["cashbook", "transactions"],

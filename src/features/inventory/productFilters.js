@@ -52,9 +52,15 @@ function withinPriceRange(product, { min, max }) {
   );
 }
 
-export function filterAndSortProducts({ products, search, supplierId, filters, supplierNameFor }) {
+export const STOCK_LEVELS = {
+  out: (quantity) => quantity <= 0,
+  low: (quantity) => quantity > 0 && quantity <= LOW_STOCK_THRESHOLD,
+};
+
+export function filterAndSortProducts({ products, search, supplierId, stockLevel, filters, supplierNameFor }) {
   const matched = products.filter((product) => {
     if (!matchesSearch(product, search, supplierNameFor(product.supplier))) return false;
+    if (STOCK_LEVELS[stockLevel] && !STOCK_LEVELS[stockLevel](Number(product.quantity) || 0)) return false;
     if (supplierId !== "all" && product.supplier !== supplierId) return false;
     if (!withinPriceRange(product, filters.priceRange)) return false;
 
@@ -81,8 +87,8 @@ export function computeInventoryAnalytics(products) {
       acc.totalInventoryValue += product.cost * product.quantity;
       acc.totalRetailValue += product.sellingPrice * product.quantity;
       acc.totalItemsInStock += product.quantity;
-      if (product.quantity === 0) acc.outOfStockItems += 1;
-      else if (product.quantity <= LOW_STOCK_THRESHOLD) acc.lowStockItems += 1;
+      if (STOCK_LEVELS.out(product.quantity)) acc.outOfStockItems += 1;
+      else if (STOCK_LEVELS.low(product.quantity)) acc.lowStockItems += 1;
       return acc;
     },
     {

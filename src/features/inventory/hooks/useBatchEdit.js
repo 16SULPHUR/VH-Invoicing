@@ -13,6 +13,7 @@ export function useBatchEdit({ products, selectedIds, onDone }) {
   const apply = useMutation({
     mutationFn: async () => {
       const updates = [];
+      const additions = [];
 
       for (const id of selectedIds) {
         const product = products.find((candidate) => candidate.id === id);
@@ -21,17 +22,20 @@ export function useBatchEdit({ products, selectedIds, onDone }) {
         const changes = buildBatchUpdate(product, batchEditData);
         if (Object.keys(changes).length > 0) {
           updates.push(productService.update(id, changes));
+          if ("quantity" in changes) {
+            additions.push({ id, count: changes.quantity - (Number(product.quantity) || 0) });
+          }
         }
       }
 
       await Promise.all(updates);
-      return updates.length;
+      return { count: updates.length, additions };
     },
-    onSuccess: (count) => {
+    onSuccess: ({ count, additions }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       setBatchEditData(EMPTY_BATCH_EDIT);
-      onDone?.();
       toast({ title: "Success", description: `Updated ${count} product(s).` });
+      onDone?.(additions);
     },
     onError: (error) =>
       toast({

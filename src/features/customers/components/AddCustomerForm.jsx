@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAddCustomer } from "../hooks/useCustomers";
+import { WhatsAppFields } from "./WhatsAppFields";
 
 const EMPTY_CUSTOMER = { name: "", address: "", phone: "" };
 const FIELDS = [
@@ -22,15 +23,17 @@ export default function AddCustomerForm() {
   };
 
   return (
-    <Card className="bg-transparent ">
+    <Card className="max-w-lg">
       <CardHeader>
-        <CardTitle>Add New Customer</CardTitle>
+        <CardTitle>Add a customer</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {FIELDS.map(({ key, label, type }) => (
-            <div key={key} className="space-y-2">
-              <Label htmlFor={key}>{label}</Label>
+            <div key={key} className="space-y-1.5">
+              <Label htmlFor={key} className="text-xs font-semibold text-muted-foreground">
+                {label}
+              </Label>
               <Input
                 id={key}
                 type={type}
@@ -42,8 +45,13 @@ export default function AddCustomerForm() {
               />
             </div>
           ))}
-          <Button type="submit" disabled={addCustomer.isPending}>
-            {addCustomer.isPending ? "Adding…" : "Add Customer"}
+          <WhatsAppFields
+            idPrefix="add"
+            customer={customer}
+            onChange={(key, value) => setCustomer((previous) => ({ ...previous, [key]: value }))}
+          />
+          <Button type="submit" variant="rani" className="block-shadow w-full" disabled={addCustomer.isPending}>
+            {addCustomer.isPending ? "Adding…" : "Add customer"}
           </Button>
         </form>
       </CardContent>

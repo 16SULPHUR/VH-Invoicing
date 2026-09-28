@@ -7,7 +7,25 @@ export default {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['"Hanken Grotesk Variable"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  			display: ['"Bricolage Grotesque Variable"', '"Hanken Grotesk Variable"', 'ui-sans-serif', 'sans-serif']
+  		},
   		colors: {
+  			indigo: {
+  				DEFAULT: 'hsl(var(--indigo))',
+  				raised: 'hsl(var(--indigo-raised))',
+  				foreground: 'hsl(var(--indigo-foreground))'
+  			},
+  			rani: {
+  				DEFAULT: 'hsl(var(--rani))',
+  				foreground: 'hsl(var(--rani-foreground))'
+  			},
+  			marigold: {
+  				DEFAULT: 'hsl(var(--marigold))',
+  				foreground: 'hsl(var(--marigold-foreground))'
+  			},
+  			leaf: 'hsl(var(--leaf))',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

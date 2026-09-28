@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { Suspense, lazy, useEffect, useMemo } from "react";
 import { RouterProvider } from "react-router-dom";
 import { AppProviders } from "./AppProviders";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -11,12 +11,29 @@ import { cacheManager } from "@/lib/offline/cacheManager";
 import { isOnline } from "@/lib/offline/network";
 import { queryClient, queryKeys } from "@/lib/queryClient";
 
+// Customers open pay links from WhatsApp without an account.
+const PayPage = lazy(() => import("@/features/whatsapp/pay/PayPage"));
+const isPayLink = () => window.location.pathname.startsWith("/pay/");
+
 function AuthenticatedApp({ onSignOut }) {
   const router = useMemo(() => createRouter({ onSignOut }), [onSignOut]);
   return <RouterProvider router={router} />;
 }
 
 export default function App() {
+  if (isPayLink()) {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <PayPage />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+  return <ShopApp />;
+}
+
+function ShopApp() {
   const { isAuthenticated, isLoading, setIsAuthenticated, signOut } = useAuth();
 
   useEffect(() => {
