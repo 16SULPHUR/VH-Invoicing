@@ -4,6 +4,7 @@ import { LogOut, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ICON_STROKE, MORE_NAV_ITEMS, NAV_ITEMS, PRIMARY_NAV_ITEMS } from "@/config/navigation";
 import { SyncStatusBar } from "@/components/common/SyncStatusBar";
+import { PrintStationButton } from "@/features/printing/PrintStationButton";
 import { BUSINESS } from "@/config/business";
 
 const sideLink = ({ isActive }) =>
@@ -39,6 +40,7 @@ export function AppRail({ onSignOut }) {
       ))}
 
       <div className="mt-auto flex flex-col gap-1">
+        <PrintStationButton />
         <SyncStatusBar variant="sidebar" />
         <button
           type="button"

@@ -38,6 +38,7 @@ export const scannedProductService = {
   },
 };
 
+// The old phone-print path, used only until print_jobs.sql is run.
 export const printCommandService = {
   async requestPrint({ customerName, customerPhone }) {
     const result = await supabase
@@ -52,7 +53,7 @@ export const printCommandService = {
 
   subscribe(onChange) {
     const channel = supabase
-      .channel("print-command-changes")
+      .channel(`print-command-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "print_command" }, onChange)
       .subscribe();
 

@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Printer } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { creditCustomerError } from "@/utils/invoice";
+import { printJobError } from "@/features/printing/printJobBill";
+import { PRINT_JOB_STATUS } from "@/services/printJobService";
 import { CameraPanel } from "./components/CameraPanel";
+import { PhonePrintPanel } from "./components/PhonePrintPanel";
 import { ScanDetailsDialog } from "./components/ScanDetailsDialog";
 import { ScannedItemsTable } from "./components/ScannedItemsTable";
 import { useBarcodeCamera } from "./hooks/useBarcodeCamera";
 import { useScanCart } from "./hooks/useScanCart";
+import { usePhonePrint } from "./hooks/usePhonePrint";
 
 export default function ScannerPage() {
   const { toast } = useToast();
@@ -18,6 +18,14 @@ export default function ScannerPage() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [paymentMode, setPaymentMode] = useState("");
+  const print = usePhonePrint();
+  const { refetch: refetchScans } = cart;
+  const printedJob = print.job?.status === PRINT_JOB_STATUS.SAVED ? print.job.id : null;
+  // The till clears the printed scans; show that even if the live update was missed.
+  useEffect(() => {
+    if (printedJob) refetchScans();
+  }, [printedJob, refetchScans]);
   const [pendingScan, setPendingScan] = useState(null);
 
   const playBeep = useCallback(() => {
@@ -71,34 +79,30 @@ export default function ScannerPage() {
     );
   };
 
-  const handlePrint = () => {
-    if (cart.items.length === 0) {
-      toast({
-        title: "Nothing to print",
-        description: "Scan at least one product first.",
-        variant: "destructive",
-      });
+  const handlePrint = async () => {
+    const job = {
+      items: cart.items.map(({ name, barcode, quantity, price, amount }) => ({
+        name,
+        barcode,
+        quantity,
+        price,
+        amount,
+      })),
+      scan_ids: cart.items.flatMap((item) => item.scanIds),
+      customer_name: customerName.trim(),
+      customer_phone: customerPhone.trim(),
+      payment_mode: paymentMode,
+    };
+    const problem = printJobError(job);
+    if (problem) {
+      toast({ title: "Can't print yet", description: problem, variant: "destructive" });
       return;
     }
-    // Nothing is paid on the phone, so the bill goes on credit at the till.
-    const customerError = creditCustomerError({
-      payments: { credit: 1 },
-      customerName,
-      customerNumber: customerPhone,
-    });
-    if (customerError) {
-      toast({ title: "Customer needed", description: customerError, variant: "destructive" });
-      return;
+    if (await print.send(job)) {
+      setCustomerName("");
+      setCustomerPhone("");
+      setPaymentMode("");
     }
-    cart.sendToPrinter.mutate(
-      { customerName, customerPhone },
-      {
-        onSuccess: () => {
-          setCustomerName("");
-          setCustomerPhone("");
-        },
-      }
-    );
   };
 
   const isBusy = cart.isLoading || cart.removeItem.isPending || cart.clearAll.isPending;
@@ -118,32 +122,16 @@ export default function ScannerPage() {
         onDelete={(barcode) => cart.removeItem.mutate(barcode)}
       />
 
-      <div className="flex w-full flex-wrap gap-2">
-        <Input
-          type="text"
-          value={customerName}
-          onChange={(event) => setCustomerName(event.target.value)}
-          placeholder="Customer name"
-          autoComplete="name"
-          className="min-w-[9rem] flex-1 bg-surface"
-        />
-        <Input
-          type="tel"
-          inputMode="tel"
-          value={customerPhone}
-          onChange={(event) => setCustomerPhone(event.target.value)}
-          placeholder="Phone"
-          autoComplete="tel"
-          className="w-36 bg-surface"
-        />
-        <Button
-          onClick={handlePrint}
-          disabled={cart.sendToPrinter.isPending}
-          className="block-shadow h-10"
-        >
-          <Printer className="mr-2 h-4 w-4" /> Print
-        </Button>
-      </div>
+      <PhonePrintPanel
+        print={print}
+        customerName={customerName}
+        customerPhone={customerPhone}
+        paymentMode={paymentMode}
+        onCustomerName={setCustomerName}
+        onCustomerPhone={setCustomerPhone}
+        onPaymentMode={setPaymentMode}
+        onPrint={handlePrint}
+      />
 
       <ScanDetailsDialog
         scan={pendingScan}
