@@ -1,4 +1,5 @@
 import { ImageResponse } from "@vercel/og";
+import { bricolage, bricolageExt, hanken400, hanken700 } from "./_lib/fonts.js";
 import { billDate, billLines, codeFrom, fetchBill, firstName, lineAmount, rupees, shopName } from "./_lib/bill.js";
 
 export const config = { runtime: "edge" };
@@ -14,23 +15,16 @@ const MAX_ROWS = 4;
 const DISPLAY = "Bricolage, BricolageExt";
 const BODY = "Hanken, BricolageExt";
 
-const fontFiles = [
-  ["Bricolage", 800, "bricolage-grotesque-latin-800-normal.woff"],
-  ["BricolageExt", 800, "bricolage-grotesque-latin-ext-800-normal.woff"],
-  ["Hanken", 400, "hanken-grotesk-latin-400-normal.woff"],
-  ["Hanken", 700, "hanken-grotesk-latin-700-normal.woff"],
-];
+const decode = (base64) => Uint8Array.from(atob(base64), (char) => char.charCodeAt(0)).buffer;
 
-let fontsPromise;
+let fonts;
 const loadFonts = () =>
-  (fontsPromise ??= Promise.all(
-    fontFiles.map(async ([name, weight, file]) => ({
-      name,
-      weight,
-      style: "normal",
-      data: await fetch(new URL(`./_fonts/${file}`, import.meta.url)).then((response) => response.arrayBuffer()),
-    }))
-  ));
+  (fonts ??= [
+    { name: "Bricolage", weight: 800, style: "normal", data: decode(bricolage) },
+    { name: "BricolageExt", weight: 800, style: "normal", data: decode(bricolageExt) },
+    { name: "Hanken", weight: 400, style: "normal", data: decode(hanken400) },
+    { name: "Hanken", weight: 700, style: "normal", data: decode(hanken700) },
+  ]);
 
 const h = (type, style, ...children) => ({ type, props: { style, children: children.flat().filter((c) => c !== null && c !== false) } });
 const div = (style, ...children) => h("div", { display: "flex", ...style }, ...children);
@@ -150,7 +144,7 @@ function billCard(data) {
 export default async function handler(request) {
   const code = codeFrom(request);
   const data = code ? await fetchBill(code) : null;
-  const fonts = await loadFonts();
+  const fonts = loadFonts();
   const tree = data?.bill ? billCard(data) : shopCard(shopName(data), data?.shop?.tagline);
   const image = new ImageResponse(tree, { width: 1200, height: 630, fonts });
   const headers = new Headers(image.headers);

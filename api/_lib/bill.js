@@ -1,8 +1,8 @@
+import { BUSINESS_NAME, SUPABASE_ANON_KEY, SUPABASE_URL } from "./publicEnv.js";
+
 const CODE = /^[A-Za-z0-9]{8,32}$/;
 
-export const SHOP_NAME = process.env.VITE_BUSINESS_NAME
-  ? process.env.VITE_BUSINESS_NAME.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase())
-  : "Variety Heaven";
+export const SHOP_NAME = BUSINESS_NAME.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 export function codeFrom(request) {
   const url = new URL(request.url);
@@ -11,8 +11,8 @@ export function codeFrom(request) {
 }
 
 export async function fetchBill(code) {
-  const base = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_ANON_KEY;
+  const base = SUPABASE_URL;
+  const key = SUPABASE_ANON_KEY;
   if (!code || !base || !key) return null;
   try {
     const response = await fetch(`${base}/rest/v1/rpc/get_public_bill`, {
