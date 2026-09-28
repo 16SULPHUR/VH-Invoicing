@@ -27,8 +27,8 @@ export function gstChecks({ gst, bills, ledgerGst, settings, period, today, cred
 
   if (gst.summary.taxable < 0) checks.push({ level: "fix", title: "Returns are larger than sales", text: "The portal does not accept negative B2C totals. Carry the extra returns into the next period's figures." });
 
-  if (!settings.rules?.length) {
-    checks.push({ level: "check", title: `Every item is filed under HSN ${settings.defaultHsn} at ${settings.defaultRate}%`, text: "Fine if you only sell sarees and dress material. If you sell stitched blouses, petticoats or other ready-made garments, add HSN rules in GST settings below." });
+  if (gst.defaultedLines > 0) {
+    checks.push({ level: "check", title: `${gst.defaultedLines} item line${gst.defaultedLines > 1 ? "s" : ""} use the default HSN ${settings.defaultHsn}`, text: "Fine for sarees and dress material. Pick another HSN for petticoats, stitched blouses or other ready-made garments under HSN for each item below." });
   }
 
   if (ledgerGst != null && Math.abs(ledgerGst - gst.summary.tax) >= 1) {

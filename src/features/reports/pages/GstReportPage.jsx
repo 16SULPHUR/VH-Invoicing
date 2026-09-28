@@ -16,8 +16,9 @@ import { iso } from "../range/reportRange";
 import { useReportData } from "../hooks/useReportData";
 import { useGstSettings } from "../hooks/useGstSettings";
 import { ReportShell } from "../components/ReportShell";
-import { CsvButton, DataTable, Kpi, Panel } from "../components/ReportUI";
+import { CsvButton, DataTable, Kpi, Panel, Pills } from "../components/ReportUI";
 import { GstSettingsPanel } from "../components/GstSettingsPanel";
+import { ItemHsnPanel } from "../components/ItemHsnPanel";
 
 const LEVEL = {
   fix: { Icon: AlertTriangle, cls: "border-destructive/40 bg-destructive/5 text-destructive" },
@@ -70,12 +71,12 @@ const money = (key, header) => ({ key, header, align: "right", render: (r) => ru
 
 export default function GstReportPage() {
   const [params, setParams] = useSearchParams();
-  const periodKey = params.get("gp") ?? defaultGstPeriod();
+  const { gst: settings, save } = useGstSettings();
+  const periodKey = params.get("gp") ?? defaultGstPeriod(settings.frequency);
   const period = resolveGstPeriod(periodKey);
   const setPeriod = (key) => setParams((p) => { const n = new URLSearchParams(p); n.set("gp", key); return n; }, { replace: true });
 
   const data = useReportData();
-  const { gst: settings, save } = useGstSettings();
   const { settings: shop } = useShopSettings();
   const range = { from: period.from, to: period.to };
 
@@ -123,12 +124,24 @@ export default function GstReportPage() {
           <h2 className="font-display text-2xl font-extrabold tracking-tight">{period.label}</h2>
           {due.gstr1 && regular && (
             <p className="text-sm text-muted-foreground">
-              GSTR-1 due {due.gstr1} · GSTR-3B due {due.gstr3b}
-              {period.kind === "month" ? " (monthly filers)" : " (quarterly filers)"}
+              {period.kind === "month" && settings.frequency === "quarterly"
+                ? "Quarterly filer: this month is filed with its quarter. Pay tax for the first two months of a quarter by the 25th with PMT-06."
+                : `GSTR-1 due ${due.gstr1} · GSTR-3B due ${due.gstr3b}`}
             </p>
           )}
         </div>
-        <PeriodPicker value={periodKey} onChange={setPeriod} />
+        <div className="flex flex-col items-end gap-2">
+          <Pills
+            label="Filing frequency"
+            options={[{ value: "quarterly", label: "Quarterly filer" }, { value: "monthly", label: "Monthly filer" }]}
+            value={settings.frequency}
+            onChange={(frequency) => {
+              save({ frequency });
+              setPeriod(defaultGstPeriod(frequency));
+            }}
+          />
+          <PeriodPicker value={periodKey} onChange={setPeriod} />
+        </div>
       </div>
 
       {regular ? (
@@ -296,6 +309,8 @@ export default function GstReportPage() {
           </Panel>
         </div>
       )}
+
+      {regular && <ItemHsnPanel bills={[...bills, ...creditNotes.filter((n) => !n.void)]} settings={settings} save={save} />}
 
       <Panel eyebrow="Every bill and credit note with its tax" title="Sales register">
         <DataTable

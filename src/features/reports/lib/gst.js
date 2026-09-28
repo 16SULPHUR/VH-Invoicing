@@ -9,6 +9,13 @@ export const GST_DEFAULTS = {
   defaultDescription: "Sarees and dress material",
   defaultRate: 5,
   uqc: "PCS",
+  frequency: "quarterly",
+  hsnCodes: [
+    { code: "5407", description: "Sarees and dress material", rate: 5 },
+    { code: "6204", description: "Petticoats and women's garments", rate: "garment" },
+    { code: "6206", description: "Blouses", rate: "garment" },
+  ],
+  itemHsn: {},
   rules: [],
   itc: {},
 };
@@ -18,15 +25,30 @@ export const CREDIT_NOTE_NATURE = "Credit Note";
 
 const round2 = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-/** The first rule whose keyword appears in the item name decides its HSN and rate. */
-export function taxFor(name, settings) {
-  const upper = normName(name);
-  const rule = (settings.rules ?? []).find((r) => r.match && upper.includes(normName(r.match)));
+const SLAB_CHANGE = new Date("2025-09-22T00:00:00+05:30");
+
+/** Ready-made garments: 5% up to a price per piece, higher above it (₹1,000 / 12% before 22 Sep 2025, ₹2,500 / 18% after). */
+export function garmentRate(unitPrice, date = new Date()) {
+  const [limit, high] = date < SLAB_CHANGE ? [1000, 12] : [2500, 18];
+  return Math.abs(unitPrice) <= limit ? 5 : high;
+}
+
+export const rateLabel = (rate) => (rate === "garment" ? "5% or 18% by price" : `${rate}%`);
+
+/** The HSN picked for the item wins, then the first keyword rule, then the default. */
+export function taxFor(line, settings, date) {
+  const upper = normName(line.name);
+  const code = settings.itemHsn?.[upper];
+  const rule = code ? null : (settings.rules ?? []).find((r) => r.match && upper.includes(normName(r.match)));
+  const hsn = String(code || rule?.hsn || settings.defaultHsn);
+  const known = (settings.hsnCodes ?? []).find((c) => String(c.code) === hsn);
+  const rawRate = rule?.rate ?? known?.rate ?? settings.defaultRate;
   return {
-    hsn: String(rule?.hsn || settings.defaultHsn),
-    description: rule?.description || settings.defaultDescription,
-    rate: Number(rule?.rate ?? settings.defaultRate) || 0,
-    ruled: Boolean(rule),
+    hsn,
+    description: rule?.description || known?.description || (hsn === String(settings.defaultHsn) ? settings.defaultDescription : ""),
+    rate: rawRate === "garment" ? garmentRate(line.price, date) : Number(rawRate) || 0,
+    ruled: Boolean(code || rule),
+    slab: rawRate === "garment",
   };
 }
 
@@ -75,7 +97,7 @@ export function creditNoteDocs(notes) {
     void: note.status === "void",
     lines: (note.lines ?? []).map((line) => {
       const quantity = Math.abs(Number(line.quantity) || 1);
-      return { name: normName(line.name), quantity: -quantity, amount: -(Number(line.price) || 0) * quantity, kind: "return" };
+      return { name: normName(line.name), price: Number(line.price) || 0, quantity: -quantity, amount: -(Number(line.price) || 0) * quantity, kind: "return" };
     }),
   }));
 }
@@ -103,7 +125,7 @@ export function computeGst(bills, settings, creditNotes = []) {
     const row = { id: bill.id, date: bill.date, customer: bill.customerName || "Walk-in", value: 0, taxable: 0, cgst: 0, sgst: 0, adjustments: bill.adjustments, total: bill.total, rates: new Set() };
     for (const line of bill.lines) {
       if (line.kind === "adjustment") continue;
-      const tax = taxFor(line.name, settings);
+      const tax = taxFor(line, settings, bill.date);
       if (!tax.ruled) defaultedLines += 1;
       const rate = composition ? 0 : tax.rate;
       const split = splitInclusive(line.amount, rate);

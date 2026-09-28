@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useGstSettings, useNonSalePatterns } from "../hooks/useGstSettings";
+import { rateLabel } from "../lib/gst";
 import { Panel } from "./ReportUI";
 
 const FIELDS = [
@@ -30,6 +31,14 @@ export function GstSettingsPanel({ nonSalePatterns, patternsShared }) {
   const patterns = useNonSalePatterns();
   const [rule, setRule] = useState({ match: "", hsn: "", description: "", rate: "" });
   const [pattern, setPattern] = useState("");
+  const [code, setCode] = useState({ code: "", description: "", rate: "5" });
+
+  const addCode = () => {
+    if (!code.code.trim()) return;
+    const rate = code.rate === "garment" ? "garment" : Number(code.rate) || 0;
+    save({ hsnCodes: [...gst.hsnCodes.filter((c) => c.code !== code.code.trim()), { code: code.code.trim(), description: code.description.trim(), rate }] });
+    setCode({ code: "", description: "", rate: "5" });
+  };
 
   const addRule = () => {
     if (!rule.match.trim() || !rule.hsn.trim()) return;
@@ -53,6 +62,33 @@ export function GstSettingsPanel({ nonSalePatterns, patternsShared }) {
             />
           </Field>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <p className="font-display font-bold">HSN codes to pick from</p>
+        <p className="text-sm text-muted-foreground">These show in the HSN picker for each item. “By price” means 5% up to ₹2,500 a piece and 18% above (₹1,000 and 12% before 22 Sep 2025), as for ready-made garments.</p>
+        <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
+          {gst.hsnCodes.map((c) => (
+            <li key={c.code} className="flex items-center gap-3 px-3 py-2 text-sm">
+              <span className="font-bold">{c.code}</span>
+              <span className="text-muted-foreground">{c.description} · {rateLabel(c.rate)}</span>
+              <button type="button" aria-label={`Remove HSN ${c.code}`} onClick={() => save({ hsnCodes: gst.hsnCodes.filter((x) => x.code !== c.code) })} className="press ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                <Trash2 className="h-4 w-4" aria-hidden />
+              </button>
+            </li>
+          ))}
+          <li className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-[7rem_1.4fr_10rem_auto]">
+            <Input className={small} placeholder="HSN" value={code.code} onChange={(e) => setCode({ ...code, code: e.target.value })} aria-label="HSN code" />
+            <Input className={small} placeholder="Description" value={code.description} onChange={(e) => setCode({ ...code, description: e.target.value })} aria-label="HSN description" />
+            <select value={code.rate} onChange={(e) => setCode({ ...code, rate: e.target.value })} aria-label="Rate" className="h-9 rounded-xl border border-input px-2 text-sm">
+              {["0", "5", "12", "18"].map((r) => <option key={r} value={r}>{r}%</option>)}
+              <option value="garment">By price (garments)</option>
+            </select>
+            <button type="button" onClick={addCode} className="press inline-flex h-9 items-center justify-center gap-1 rounded-xl bg-indigo px-3 text-sm font-bold text-white">
+              <Plus className="h-4 w-4" aria-hidden /> Add
+            </button>
+          </li>
+        </ul>
       </div>
 
       <div className="mt-6">

@@ -23,10 +23,21 @@ export function resolveGstPeriod(key) {
   return { key, kind: "month", from: iso(new Date(year, month, 1)), to: iso(new Date(year, month + 1, 0)), label: `${MONTHS[month]} ${year}` };
 }
 
-/** The month most likely being filed: last month until the 20th, when this month's return is still ahead. */
-export function defaultGstPeriod(today = new Date()) {
-  const last = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  return `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, "0")}`;
+/** The period being prepared: last month, or for quarterly filers the current quarter once in its last month, else the one before. */
+export function defaultGstPeriod(frequency = "quarterly", today = new Date()) {
+  if (frequency === "monthly") {
+    const last = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    return `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, "0")}`;
+  }
+  const fyMonth = (today.getMonth() + 9) % 12;
+  const inLastMonth = fyMonth % 3 === 2;
+  let quarter = Math.floor(fyMonth / 3) + (inLastMonth ? 1 : 0);
+  let fy = fyOf(today);
+  if (quarter === 0) {
+    quarter = 4;
+    fy -= 1;
+  }
+  return `${fy}-Q${quarter}`;
 }
 
 export function monthOptions(fyStart) {
