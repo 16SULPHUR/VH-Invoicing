@@ -5,7 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { invoiceCustomerKey, phoneDigits } from "@/features/customers/lib/customerKey";
 import { buildInvoicePdf } from "@/features/invoicing/hooks/useInvoiceSharing";
+import { useBillLink } from "@/features/invoicing/hooks/useBillLink";
+import { withBillLink } from "@/features/invoicing/billShareText";
 import { messageVars, renderTemplate } from "../lib/templates";
+import { appOrigin } from "../lib/rules";
 import { isPhone, waTarget, waUrl } from "../lib/waLink";
 import { useCustomerConsent, useSetOffers, useWaLog, useWhatsAppSettings } from "../hooks/useWhatsApp";
 
@@ -43,8 +46,10 @@ export function BillWhatsAppButton({ invoice, compact = false, className = "" })
 
   const customer = billCustomer(invoice);
   const template = templates.find(({ id }) => id === "thanks");
-  const bill = { id: invoice.id, date: invoice.date, total: Number(invoice.total) || 0 };
-  const text = renderTemplate(template?.[rules.language] || template?.hi, messageVars(customer, { settings, bill }));
+  const link = useBillLink(invoice, appOrigin(rules));
+  const bill = { id: invoice.id, date: invoice.date, total: Number(invoice.total) || 0, due: Number(invoice.credit) || 0, link };
+  const vars = messageVars(customer, { settings, bill });
+  const text = withBillLink(renderTemplate(template?.[rules.language] || template?.hi, vars), link);
   const record = () => log.record({ customer, template: "thanks", kind: "thanks", campaign: `bill:${invoice.id}`, text });
 
   const label = busy ? "Making PDF…" : prepared ? "Send PDF" : "WhatsApp";

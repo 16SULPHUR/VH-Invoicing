@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Printer, QrCode, Share2, Trash2, X } from "lucide-react";
+import { Link2, Pencil, Printer, QrCode, Share2, Trash2, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +24,10 @@ import { useShareInvoicePdf } from "../hooks/useInvoiceSharing";
 import { ICON_STROKE } from "@/config/navigation";
 import { formatInvoiceDate } from "@/utils/date";
 import { BillWhatsAppButton, OffersSwitch } from "@/features/whatsapp/components/BillWhatsApp";
+import { useWhatsAppSettings } from "@/features/whatsapp/hooks/useWhatsApp";
+import { appOrigin } from "@/features/whatsapp/lib/rules";
+import { useBillLink } from "../hooks/useBillLink";
+import { billShareText } from "../billShareText";
 
 export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -32,6 +36,8 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const printDocument = usePrintDocument();
   const shareInvoicePdf = useShareInvoicePdf();
   const { toast } = useToast();
+  const { rules } = useWhatsAppSettings();
+  const link = useBillLink(invoice, appOrigin(rules));
 
   if (!invoice) return null;
 
@@ -61,13 +67,33 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const handleShare = async () => {
     setIsSharing(true);
     try {
-      await shareInvoicePdf(invoice);
+      await shareInvoicePdf(invoice, link);
     } catch (error) {
       if (error.name !== "AbortError") {
         toast({ title: "Share failed", description: error.message, variant: "destructive" });
       }
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  const handleShareLink = async () => {
+    const text = billShareText(invoice, link);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Bill #${invoice.id}`, text });
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          toast({ title: "Share failed", description: error.message, variant: "destructive" });
+        }
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Bill link copied", description: link });
+    } catch {
+      toast({ title: "Couldn't copy", description: link, variant: "destructive" });
     }
   };
 
@@ -111,6 +137,12 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
               <div className="grid gap-2">
                 <BillWhatsAppButton invoice={invoice} />
                 <OffersSwitch name={invoice.customerName} phone={invoice.customerNumber} />
+                {link && (
+                  <Button variant="outline" className="press" onClick={handleShareLink}>
+                    <Link2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                    {navigator.share ? "Share bill link" : "Copy bill link"}
+                  </Button>
+                )}
                 <Button variant="outline" className="press" onClick={() => setShowQR((v) => !v)}>
                   <QrCode size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
                   {showQR ? "Hide QR" : "Payment QR"}

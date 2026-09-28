@@ -21,6 +21,8 @@ export const BLANKS = [
   { key: "oldest_days", label: "Days since oldest bill" },
   { key: "bill_no", label: "Latest bill number" },
   { key: "bill_total", label: "Latest bill total" },
+  { key: "bill_link", label: "Bill link (shows the bill, pay by UPI if due)" },
+  { key: "bill_due", label: "Amount due on the bill" },
   { key: "pay_link", label: "Pay-now link" },
   { key: "shop_name", label: "Shop name" },
   { key: "shop_phone", label: "Shop phone" },
@@ -79,10 +81,14 @@ If something is wrong, please call us on {shop_phone}.
     kind: "thanks",
     hi: `Namaste {first_name} ji 🙏
 {shop_name} se shopping karne ke liye dhanyavaad! Aapka bill *#{bill_no}*: *{bill_total}*.
+Bill dekhein: {bill_link}
+Is bill par *{bill_due}* baaki hai, upar ke link se UPI se pay kar sakte hain.
 Naye designs sabse pehle dekhne ke liye hamara channel follow karein: {channel_link}
 Phir milenge! 😊`,
     en: `Thank you for shopping at {shop_name}, {first_name}! 🙏
 Your bill *#{bill_no}* comes to *{bill_total}*.
+See your bill: {bill_link}
+*{bill_due}* is due on this bill, you can pay by UPI from the link above.
 Follow our channel to see new designs first: {channel_link}
 See you again! 😊`,
   },
@@ -219,6 +225,8 @@ export function messageVars(customer, { settings, payLink = "", bill = customer?
     oldest_days: oldest ? String(customer.oldestDays) : "",
     bill_no: bill?.id ?? "",
     bill_total: bill ? formatRupees(bill.total) : "",
+    bill_link: bill?.link ?? "",
+    bill_due: bill?.due > 0 ? formatRupees(bill.due) : "",
     pay_link: due > 0 ? payLink : "",
     shop_name: settings?.shop_name ?? "",
     shop_phone: settings?.phone ?? "",

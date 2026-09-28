@@ -77,7 +77,8 @@ export function TemplatesTab({ wa }) {
   const body = draft[language] ?? "";
   const unknown = unknownBlanks(`${draft.hi}\n${draft.en}`);
   const payLink = setup?.payLinks ? `${appOrigin(rules)}/pay/5b1e0c2a-7d4f-4b8e-9a31-2f6c8e0d4a17` : "";
-  const preview = customer ? renderTemplate(body, messageVars(customer, { settings, payLink })) : "";
+  const bill = customer?.latestBill && { ...customer.latestBill, link: `${appOrigin(rules)}/b/Kp7wQ2mZr9Xa` };
+  const preview = customer ? renderTemplate(body, messageVars(customer, { settings, payLink, bill })) : "";
 
   const insert = (key) => {
     const field = textRef.current;

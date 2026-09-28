@@ -5,8 +5,21 @@ import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import { manifestForPlugIn } from "./manifest";
 
+function siteUrl() {
+  const { VITE_SITE_URL, VERCEL_ENV, VERCEL_PROJECT_PRODUCTION_URL, VERCEL_BRANCH_URL, VERCEL_URL } = process.env;
+  if (VITE_SITE_URL) return VITE_SITE_URL.replace(/\/$/, "");
+  const host = VERCEL_ENV === "production" ? VERCEL_PROJECT_PRODUCTION_URL : VERCEL_BRANCH_URL || VERCEL_URL;
+  return host ? `https://${host}` : "";
+}
+
+// Link previews need absolute URLs in index.html.
+const siteUrlInHtml = () => ({
+  name: "site-url-in-html",
+  transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", siteUrl()),
+});
+
 export default defineConfig({
-  plugins: [react(), VitePWA(manifestForPlugIn)],
+  plugins: [react(), VitePWA(manifestForPlugIn), siteUrlInHtml()],
   css: {
     postcss: {
       plugins: [tailwindcss()],

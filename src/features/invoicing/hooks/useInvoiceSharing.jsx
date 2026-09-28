@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import ReactDOMServer from "react-dom/server";
 import { BUSINESS } from "@/config/business";
+import { billShareText } from "../billShareText";
 import { PrintableInvoice } from "../components/PrintableInvoice";
 import { parseInvoiceLines } from "@/utils/invoice";
 import { formatInvoiceDate } from "@/utils/date";
@@ -47,12 +48,12 @@ export async function buildInvoicePdf(invoice) {
 
 /** Hands the bill PDF to the Web Share API, falling back to a download where sharing files is unsupported. */
 export function useShareInvoicePdf() {
-  return useCallback(async (invoice) => {
+  return useCallback(async (invoice, link) => {
     const { pdf, fileName, file } = await buildInvoicePdf(invoice);
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({
-        title: `${BUSINESS.name} Invoice`,
-        text: `Invoice for ${invoice.customerName}, Amount: ₹${invoice.total}`,
+        title: `${BUSINESS.displayName} bill #${invoice.id}`,
+        text: billShareText(invoice, link),
         files: [file],
       });
     } else {
