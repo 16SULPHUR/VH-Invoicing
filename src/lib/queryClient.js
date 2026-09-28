@@ -72,4 +72,13 @@ export const queryKeys = {
     gst: ["accounting", "gst"],
     collections: (start, end) => ["accounting", "collections", start, end],
   },
+  reports: {
+    bills: (from, to) => ["reports", "bills", from, to],
+    products: ["reports", "products"],
+    suppliers: ["reports", "suppliers"],
+    collections: (from, to) => ["reports", "collections", from, to],
+    ledgerGst: (from, to) => ["reports", "ledger-gst", from, to],
+    creditNotes: (from, to) => ["reports", "credit-notes", from, to],
+    nonSale: ["reports", "non-sale-patterns"],
+  },
 };

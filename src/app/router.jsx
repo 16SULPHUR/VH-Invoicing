@@ -17,6 +17,12 @@ const TransactionsPage = lazy(() => import("@/features/reports/pages/Transaction
 const LedgerPage = lazy(() => import("@/features/reports/pages/LedgerPage"));
 const TrialBalancePage = lazy(() => import("@/features/reports/pages/TrialBalancePage"));
 const GstReportPage = lazy(() => import("@/features/reports/pages/GstReportPage"));
+const OverviewPage = lazy(() => import("@/features/reports/pages/OverviewPage"));
+const SalesPage = lazy(() => import("@/features/reports/pages/SalesPage"));
+const ProductsPage = lazy(() => import("@/features/reports/pages/ProductsPage"));
+const CustomersReportPage = lazy(() => import("@/features/reports/pages/CustomersReportPage"));
+const StockPage = lazy(() => import("@/features/reports/pages/StockPage"));
+const BooksLayout = lazy(() => import("@/features/reports/pages/BooksLayout"));
 const StickerDesignerPage = lazy(() => import("@/features/inventory/stickers/designer/DesignerPage"));
 
 export function createRouter({ onSignOut }) {
@@ -52,11 +58,26 @@ export function createRouter({ onSignOut }) {
           path: "reports",
           element: <ReportsLayout />,
           children: [
-            { index: true, element: <Navigate to="transactions" replace /> },
-            { path: "transactions", element: <TransactionsPage /> },
-            { path: "ledger", element: <LedgerPage /> },
-            { path: "trial-balance", element: <TrialBalancePage /> },
+            { index: true, element: <Navigate to="overview" replace /> },
+            { path: "overview", element: <OverviewPage /> },
+            { path: "sales", element: <SalesPage /> },
+            { path: "products", element: <ProductsPage /> },
+            { path: "customers", element: <CustomersReportPage /> },
+            { path: "stock", element: <StockPage /> },
             { path: "gst", element: <GstReportPage /> },
+            {
+              path: "books",
+              element: <BooksLayout />,
+              children: [
+                { index: true, element: <Navigate to="transactions" replace /> },
+                { path: "transactions", element: <TransactionsPage /> },
+                { path: "ledger", element: <LedgerPage /> },
+                { path: "trial-balance", element: <TrialBalancePage /> },
+              ],
+            },
+            { path: "transactions", element: <Navigate to="../books/transactions" replace /> },
+            { path: "ledger", element: <Navigate to="../books/ledger" replace /> },
+            { path: "trial-balance", element: <Navigate to="../books/trial-balance" replace /> },
           ],
         },
         { path: "*", element: <Navigate to="/" replace /> },

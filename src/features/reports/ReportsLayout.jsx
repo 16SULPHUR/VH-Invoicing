@@ -4,10 +4,13 @@ import { PageLoader } from "@/components/common/PageLoader";
 import { ReportRangePicker } from "./range/ReportRangePicker";
 
 const REPORT_TABS = [
-  { to: "transactions", label: "Transactions" },
-  { to: "ledger", label: "Ledger" },
-  { to: "trial-balance", label: "Trial balance" },
-  { to: "gst", label: "GST" },
+  { to: "overview", label: "Overview" },
+  { to: "sales", label: "Sales" },
+  { to: "products", label: "Products" },
+  { to: "customers", label: "Customers" },
+  { to: "stock", label: "Stock", noRange: true },
+  { to: "gst", label: "GST", noRange: true },
+  { to: "books", label: "Books" },
 ];
 
 const tabClass = ({ isActive }) =>
@@ -17,6 +20,7 @@ const tabClass = ({ isActive }) =>
 
 export default function ReportsLayout() {
   const location = useLocation();
+  const current = REPORT_TABS.find((tab) => location.pathname.includes(`/reports/${tab.to}`));
   return (
     <div className="flex h-full min-h-0 flex-col">
       <nav aria-label="Reports" className="shrink-0 px-4 pt-4 md:px-6">
@@ -28,7 +32,7 @@ export default function ReportsLayout() {
               </NavLink>
             ))}
           </div>
-          <ReportRangePicker />
+          {!current?.noRange && <ReportRangePicker />}
         </div>
       </nav>
 
