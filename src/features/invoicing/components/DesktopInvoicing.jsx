@@ -14,7 +14,7 @@ export function DesktopInvoicing({ workspace }) {
           draft={draft}
           catalog={catalog}
           customers={customers}
-          invoiceId={recentInvoices.nextInvoiceId}
+          invoiceId={workspace.displayedInvoiceId}
           isOnline={isOnline}
           actions={
             <div className="flex items-center gap-2">
@@ -30,12 +30,23 @@ export function DesktopInvoicing({ workspace }) {
         />
         {/* Below lg the checkout column folds into a pinned total bar. */}
         <div className="shrink-0 p-4 pt-0 lg:hidden">
-          <TotalBar draft={draft} onSubmit={workspace.submitInvoice} className="w-full" />
+          <TotalBar
+          draft={draft}
+          onSubmit={workspace.submitInvoice}
+          onCancelEdit={workspace.cancelEdit}
+          isSubmitting={workspace.isSubmitting}
+          className="w-full"
+        />
         </div>
       </div>
 
       <div className="hidden w-[22rem] shrink-0 lg:block">
-        <CheckoutPanel draft={draft} onSubmit={workspace.submitInvoice}>
+        <CheckoutPanel
+          draft={draft}
+          onSubmit={workspace.submitInvoice}
+          onCancelEdit={workspace.cancelEdit}
+          isSubmitting={workspace.isSubmitting}
+        >
           <RecentBillsStrip recentInvoices={recentInvoices} onInvoiceClick={workspace.openInvoice} />
         </CheckoutPanel>
       </div>

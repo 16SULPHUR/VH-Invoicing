@@ -10,7 +10,7 @@ import { ICON_STROKE } from "@/config/navigation";
  * The checkout column stays in view while the operator works the left side, so
  * the total, the split and the action are never more than a glance away.
  */
-export function CheckoutPanel({ draft, onSubmit, children }) {
+export function CheckoutPanel({ draft, onSubmit, onCancelEdit, isSubmitting, children }) {
   const total = toNumber(draft.total);
   const paid = paymentsTotal(draft.payments);
   const balance = total - paid;
@@ -46,7 +46,7 @@ export function CheckoutPanel({ draft, onSubmit, children }) {
               : "bg-marigold/15 text-warning"
         }`}
       >
-        <span>{unpaid ? "Not paid yet" : settled ? "Settled" : balance > 0 ? "Still to collect" : "Paid too much"}</span>
+        <span>{unpaid ? "Blank goes on credit" : settled ? "Settled" : balance > 0 ? "Still to collect" : "Paid too much"}</span>
         {settled && !unpaid ? (
           <Check size={17} strokeWidth={2.4} aria-hidden />
         ) : (
@@ -59,7 +59,8 @@ export function CheckoutPanel({ draft, onSubmit, children }) {
       <div className="mt-auto pt-2">
         <Button
           type="button"
-          onClick={onSubmit}
+          onClick={() => onSubmit()}
+          disabled={isSubmitting}
           size="lg"
           className="block-shadow h-14 w-full rounded-2xl font-display text-lg font-extrabold"
         >
@@ -73,6 +74,17 @@ export function CheckoutPanel({ draft, onSubmit, children }) {
             F1
           </kbd>
         </Button>
+        {draft.isEditing && onCancelEdit && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancelEdit}
+            disabled={isSubmitting}
+            className="mt-2 h-11 w-full rounded-2xl font-semibold"
+          >
+            Cancel edit
+          </Button>
+        )}
       </div>
 
       {children}

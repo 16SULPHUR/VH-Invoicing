@@ -44,3 +44,31 @@ export function buildUpiLink({ upiId, businessName, amount, merchantCode, transa
   params.set("cu", "INR");
   return `upi://pay?${params.toString()}`;
 }
+
+/** Toast for products whose stock could not be moved, or null when all moved. */
+export function stockWarningToast(failures) {
+  if (!failures?.length) return null;
+  const names = failures.map((failure) => failure.name).join(", ");
+  return {
+    title: "Stock not updated",
+    description: `The bill was saved, but stock did not change for: ${names}. Fix these in Inventory.`,
+    variant: "destructive",
+  };
+}
+
+/** Last 10 digits, so "+91 98765-43210" and "9876543210" match. */
+export function normalizePhone(value) {
+  return String(value ?? "")
+    .replace(/\D/g, "")
+    .slice(-10);
+}
+
+/** Credit needs someone to collect it from. Returns an error message or null. */
+export function creditCustomerError({ payments, customerName, customerNumber }) {
+  if (toNumber(payments.credit) <= 0) return null;
+  if (!String(customerName ?? "").trim()) return "Add the customer's name for a credit bill.";
+  if (normalizePhone(customerNumber).length !== 10) {
+    return "Add a 10-digit phone number for a credit bill.";
+  }
+  return null;
+}

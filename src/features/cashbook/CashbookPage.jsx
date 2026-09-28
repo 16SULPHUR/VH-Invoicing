@@ -1,4 +1,5 @@
-import { RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { Moon, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { TileSkeleton } from "@/components/common/Skeletons";
@@ -7,10 +8,15 @@ import { accountDisplayName } from "./balances";
 import { useCashbook, useCashbookImport } from "./hooks/useCashbook";
 import { QuickEntryForm } from "./components/QuickEntryForm";
 import { ChatImportPanel } from "./components/ChatImportPanel";
+import { CloseDayDialog } from "./components/CloseDayDialog";
 import { TransactionsTable } from "./components/TransactionsTable";
 import { ICON_STROKE } from "@/config/navigation";
 
-const ACCOUNT_TONES = ["bg-leaf text-white", "bg-rani text-white", "bg-marigold text-marigold-foreground"];
+const ACCOUNT_TONES = [
+  "bg-leaf text-white",
+  "bg-rani text-white",
+  "bg-marigold text-marigold-foreground",
+];
 
 function accountTone(name, index) {
   return /bank/i.test(name) ? "bg-indigo text-white" : ACCOUNT_TONES[index % ACCOUNT_TONES.length];
@@ -19,6 +25,7 @@ function accountTone(name, index) {
 export default function CashbookPage() {
   const cashbook = useCashbook();
   const chatImport = useCashbookImport(cashbook);
+  const [closingDay, setClosingDay] = useState(false);
 
   const isBusy =
     cashbook.addEntry.isPending ||
@@ -31,23 +38,31 @@ export default function CashbookPage() {
         title="Cashbook"
         subtitle="Daily balances, deposits and corrections"
         actions={
-          <Button
-            variant="outline"
-            size="icon"
-            className="press"
-            onClick={() => cashbook.refetch()}
-            disabled={cashbook.isLoading}
-            aria-label="Refresh cashbook"
-          >
-            <RefreshCw
-              size={16}
-              strokeWidth={ICON_STROKE}
-              className={cashbook.isLoading ? "animate-spin" : ""}
-              aria-hidden
-            />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setClosingDay(true)} className="block-shadow press">
+              <Moon size={16} strokeWidth={ICON_STROKE} className="mr-1.5" aria-hidden />
+              Close the day
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="press"
+              onClick={() => cashbook.refetch()}
+              disabled={cashbook.isLoading}
+              aria-label="Refresh cashbook"
+            >
+              <RefreshCw
+                size={16}
+                strokeWidth={ICON_STROKE}
+                className={cashbook.isLoading ? "animate-spin" : ""}
+                aria-hidden
+              />
+            </Button>
+          </div>
         }
       />
+
+      <CloseDayDialog open={closingDay} onOpenChange={setClosingDay} cashbook={cashbook} />
 
       {cashbook.isLoading ? (
         <TileSkeleton count={2} />

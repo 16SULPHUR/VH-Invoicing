@@ -13,7 +13,7 @@ export function MobileInvoicing({ workspace }) {
         draft={draft}
         catalog={catalog}
         customers={customers}
-        invoiceId={recentInvoices.nextInvoiceId}
+        invoiceId={workspace.displayedInvoiceId}
         isOnline={isOnline}
         actions={
           <div className="flex items-center gap-1.5">
@@ -28,7 +28,13 @@ export function MobileInvoicing({ workspace }) {
       />
 
       <div className="shrink-0 px-3 pb-2 pt-1">
-        <TotalBar draft={draft} onSubmit={workspace.submitInvoice} className="w-full" />
+        <TotalBar
+          draft={draft}
+          onSubmit={workspace.submitInvoice}
+          onCancelEdit={workspace.cancelEdit}
+          isSubmitting={workspace.isSubmitting}
+          className="w-full"
+        />
       </div>
     </div>
   );

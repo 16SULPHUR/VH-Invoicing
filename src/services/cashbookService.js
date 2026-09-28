@@ -82,6 +82,20 @@ export const cashbookService = {
     );
   },
 
+  /** Cash taken against old credit bills on a day, or null before credit_payments exists. */
+  async cashCollectedOn(isoDate) {
+    const { data, error } = await supabase
+      .from("credit_payments")
+      .select("amount")
+      .eq("method", "cash")
+      .eq("paid_on", isoDate);
+    if (error) {
+      if (["42P01", "PGRST205"].includes(error.code)) return null;
+      throw error;
+    }
+    return (data || []).reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  },
+
   async parseText(text) {
     const { data, error } = await supabase.functions.invoke("cashbook-parser", { body: { text } });
     if (error) throw error;

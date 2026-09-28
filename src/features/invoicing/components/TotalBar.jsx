@@ -4,7 +4,7 @@ import { formatRupees } from "@/utils/formatters";
 import { CheckoutPanel } from "./CheckoutPanel";
 
 /** Pink running total pinned above the tab bar; tapping it opens checkout. */
-export function TotalBar({ draft, onSubmit, className = "" }) {
+export function TotalBar({ draft, onSubmit, onCancelEdit, isSubmitting, className = "" }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -33,9 +33,14 @@ export function TotalBar({ draft, onSubmit, className = "" }) {
         </SheetHeader>
         <CheckoutPanel
           draft={draft}
+          isSubmitting={isSubmitting}
           onSubmit={() => {
             setOpen(false);
             onSubmit();
+          }}
+          onCancelEdit={() => {
+            setOpen(false);
+            onCancelEdit?.();
           }}
         />
       </SheetContent>

@@ -35,7 +35,10 @@ function CustomerCombobox({ customers, value, onSelect, id }) {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[18rem] overflow-hidden rounded-2xl p-0" align="start">
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] min-w-[18rem] overflow-hidden rounded-2xl p-0"
+        align="start"
+      >
         <Command>
           <CommandInput placeholder="Search customers…" value={search} onValueChange={setSearch} />
           <CommandEmpty>No customers found.</CommandEmpty>
@@ -46,7 +49,7 @@ function CustomerCombobox({ customers, value, onSelect, id }) {
                   key={customer.id}
                   value={customer.name}
                   onSelect={() => {
-                    onSelect(customer.name);
+                    onSelect(customer);
                     setOpen(false);
                   }}
                 >
@@ -69,7 +72,7 @@ function CustomerCombobox({ customers, value, onSelect, id }) {
                 <CommandItem
                   value={search}
                   onSelect={() => {
-                    onSelect(search);
+                    onSelect({ name: search });
                     setOpen(false);
                   }}
                 >
@@ -117,7 +120,10 @@ export function CustomerDetails({
                 id={id}
                 customers={customers}
                 value={customerName}
-                onSelect={setCustomerName}
+                onSelect={(customer) => {
+                  setCustomerName(customer.name);
+                  if (customer.phone) setCustomerNumber(customer.phone);
+                }}
               />
               <Button
                 type="button"

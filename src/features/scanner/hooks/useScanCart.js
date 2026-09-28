@@ -91,7 +91,7 @@ export function useScanCart() {
   });
 
   const sendToPrinter = useMutation({
-    mutationFn: (customerName) => printCommandService.requestPrint(customerName),
+    mutationFn: (customer) => printCommandService.requestPrint(customer),
     onSuccess: () => toast({ title: "Print sent", description: "The till is printing this bill." }),
     onError: notifyError("Error sending to print"),
   });

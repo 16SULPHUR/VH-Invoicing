@@ -87,3 +87,17 @@ export function salesPeriodRange(period, customRange = {}) {
   }
   return { startDate: startOfDay(today), endDate: endOfDay(today) };
 }
+
+/** YYYY-MM-DD in the device's own time zone, unlike toISODate which uses UTC. */
+export function localISODate(date = new Date()) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Exact UTC bounds of a local calendar day, for timestamptz filters. */
+export function localDayBounds(date = new Date()) {
+  const d = new Date(date);
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  return { start: start.toISOString(), end: new Date(end.getTime() - 1).toISOString() };
+}
