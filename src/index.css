@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  VH Invoicing design tokens.
+
+  This is a till application: staff use it for whole shifts, often on a low-end
+  screen in a bright shop. So the system is dark-locked, high contrast, dense,
+  and deliberately unanimated. One accent (rose) carries brand and primary
+  actions; payment methods get their own semantic hues because a cashier has to
+  tell cash from UPI from credit at a glance.
+
+  Radius rule (applied everywhere): controls and inputs use --radius-sm,
+  containers use --radius-lg, badges are pill.
+*/
+
+@layer base {
+  :root {
+    /* Neutral ramp: one cool-neutral family, never pure black or white. */
+    --background: 228 14% 8%;
+    --foreground: 220 16% 96%;
+
+    --surface: 228 13% 11%;
+    --surface-elevated: 228 12% 15%;
+
+    --card: 228 13% 11%;
+    --card-foreground: 220 16% 96%;
+
+    --popover: 228 12% 13%;
+    --popover-foreground: 220 16% 96%;
+
+    /* Brand rose. Desaturated from the old 81% so it sits on dark without buzzing. */
+    --primary: 336 72% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 228 12% 18%;
+    --secondary-foreground: 220 16% 96%;
+
+    --muted: 228 12% 16%;
+    --muted-foreground: 222 10% 66%;
+
+    --accent: 228 12% 18%;
+    --accent-foreground: 220 16% 96%;
+
+    --destructive: 358 68% 54%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 48% 44%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 84% 54%;
+    --warning-foreground: 228 14% 8%;
+
+    --border: 228 11% 20%;
+    --input: 228 11% 22%;
+    --ring: 336 72% 56%;
+
+    /* Payment methods. Semantic, not decorative: these map to money movement. */
+    --cash: 152 48% 46%;
+    --upi: 210 72% 60%;
+    --credit: 38 84% 56%;
+
+    /* Charts inherit the same hues so a sales chart reads like the rest of the app. */
+    --chart-1: 336 72% 60%;
+    --chart-2: 210 72% 60%;
+    --chart-3: 152 48% 50%;
+    --chart-4: 38 84% 58%;
+    --chart-5: 268 56% 64%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    /* Tells the UA to render scrollbars and native controls dark. */
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "tnum" 1;
+    /* Removes the 300ms double-tap delay on the touchscreen tills. */
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /* Windows dark mode ignores inherited colours on native selects. */
+  select {
+    background-color: hsl(var(--surface));
+    color: hsl(var(--foreground));
+  }
+
+  /* Scroll inside an overlay must not chain to the page behind it. */
+  [role="dialog"],
+  [data-radix-scroll-area-viewport] {
+    overscroll-behavior: contain;
+  }
+
+  /* Money and counts must align in columns, so digits are tabular everywhere. */
+  th,
+  td,
+  input[type="number"],
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A visible focus ring is non-negotiable on a keyboard-driven till. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* The printed invoice is paper: it stays light regardless of app theme. */
+  .paper {
+    @apply bg-white text-black;
+  }
+}
+
+@layer utilities {
+  /* Tactile press feedback, the only motion this app uses. */
+  .press {
+    @apply transition-transform active:translate-y-px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

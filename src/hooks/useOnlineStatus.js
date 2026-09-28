@@ -1,12 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
-import { db } from "../lib/offlineDb";
-import { syncManager } from "../lib/syncManager";
+import { useCallback, useEffect, useState } from "react";
+import { env } from "@/config/env";
+import { syncManager } from "@/lib/offline/syncManager";
 
-// Actual connectivity check — navigator.onLine is unreliable on some platforms
+const POLL_INTERVAL_MS = 5000;
+
+// navigator.onLine only reports whether a network interface exists, so confirm
+// that our backend is actually reachable before trusting it.
 async function checkRealConnectivity() {
   if (!navigator.onLine) return false;
   try {
-    const resp = await fetch("https://basihmnebvsflzkaivds.supabase.co/rest/v1/", {
+    await fetch(`${env.supabaseUrl}/rest/v1/`, {
       method: "HEAD",
       mode: "no-cors",
       cache: "no-store",
@@ -21,25 +24,31 @@ export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState(null);
-  const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | error | auth_required
+  const [syncStatus, setSyncStatus] = useState("idle");
 
   const recheckOnline = useCallback(async () => {
-    const real = await checkRealConnectivity();
-    setIsOnline(real);
+    setIsOnline(await checkRealConnectivity());
+  }, []);
+
+  const refreshPendingCount = useCallback(async () => {
+    try {
+      const state = await syncManager.getSyncState();
+      setPendingSyncCount(state.totalCount);
+      if (state.lastSyncTime) setLastSyncTime(state.lastSyncTime);
+    } catch {
+      // IndexedDB may not be open yet; the next poll will pick it up.
+    }
   }, []);
 
   useEffect(() => {
-    const handleOnline = () => {
-      // Don't trust the event blindly — verify
-      recheckOnline();
-    };
+    const handleOnline = () => recheckOnline();
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // Do an initial real check
     recheckOnline();
+    refreshPendingCount();
 
     const unsubscribe = syncManager.subscribe((event) => {
       switch (event.type) {
@@ -62,34 +71,15 @@ export function useOnlineStatus() {
         case "auth_required":
           setSyncStatus("auth_required");
           break;
-        case "queue_updated":
-        case "item_synced":
-        case "item_failed":
-          updatePendingCount();
-          break;
+        default:
+          refreshPendingCount();
       }
     });
 
-    // Initial count
-    updatePendingCount();
-
-    // Poll pending count and recheck connectivity periodically
     const interval = setInterval(() => {
-      updatePendingCount();
+      refreshPendingCount();
       recheckOnline();
-    }, 5000);
-
-    async function updatePendingCount() {
-      try {
-        const state = await syncManager.getSyncState();
-        setPendingSyncCount(state.totalCount);
-        if (state.lastSyncTime) {
-          setLastSyncTime(state.lastSyncTime);
-        }
-      } catch (err) {
-        // IndexedDB may not be ready yet
-      }
-    }
+    }, POLL_INTERVAL_MS);
 
     return () => {
       window.removeEventListener("online", handleOnline);
@@ -97,7 +87,7 @@ export function useOnlineStatus() {
       unsubscribe();
       clearInterval(interval);
     };
-  }, [recheckOnline]);
+  }, [recheckOnline, refreshPendingCount]);
 
   return { isOnline, pendingSyncCount, lastSyncTime, syncStatus };
 }
