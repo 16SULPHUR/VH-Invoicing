@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { usePrintStation } from "@/features/printing/usePrintStation";
 import { useInvoiceWorkspace } from "./hooks/useInvoiceWorkspace";
 import { DesktopInvoicing } from "./components/DesktopInvoicing";
 import { MobileInvoicing } from "./components/MobileInvoicing";
@@ -8,7 +9,10 @@ import { InvoiceModal } from "./components/InvoiceModal";
 
 export default function InvoicingPage() {
   const isMobile = useIsMobile();
-  const workspace = useInvoiceWorkspace();
+  const station = usePrintStation();
+  const workspace = useInvoiceWorkspace({
+    acceptRemotePrint: !isMobile && Boolean(station?.queueMissing),
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const { setCustomerName, setCustomerNumber, setNote } = workspace.draft;
 

@@ -157,8 +157,8 @@ export function PrintStationButton() {
 
               {station.queueMissing && (
                 <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                  The print queue isn&apos;t in the database yet. Run docs/schema/print_jobs.sql in
-                  Supabase.
+                  The print queue isn&apos;t in the database yet, so phone bills still print the old
+                  way. Run docs/schema/print_jobs.sql in Supabase to switch.
                 </p>
               )}
 

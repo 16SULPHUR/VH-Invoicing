@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { printJobService, PRINT_JOB_STATUS } from "@/services/printJobService";
+import { isPrintQueueMissing, printJobService, PRINT_JOB_STATUS } from "@/services/printJobService";
+import { printCommandService } from "@/services/scannedProductService";
+import { creditCustomerError } from "@/utils/invoice";
 import { useToast } from "@/hooks/use-toast";
 
 const JOB_KEY = "vh-phone-print-job";
@@ -22,6 +24,34 @@ function storeJobId(id) {
     else localStorage.removeItem(JOB_KEY);
   } catch {
     // Tracking just won't survive a reload.
+  }
+}
+
+// Until print_jobs.sql is run: the till prints its own screen and saves it on credit.
+async function sendTheOldWay(input, toast) {
+  const problem = creditCustomerError({
+    payments: { credit: 1 },
+    customerName: input.customer_name,
+    customerNumber: input.customer_phone,
+  });
+  if (problem) {
+    toast({ title: "Customer needed", description: problem, variant: "destructive" });
+    return null;
+  }
+  try {
+    await printCommandService.requestPrint({
+      customerName: input.customer_name,
+      customerPhone: input.customer_phone,
+    });
+    toast({ title: "Print sent", description: "Sent the old way. Check the till printed it." });
+    return true;
+  } catch (error) {
+    toast({
+      title: "Could not send to the till",
+      description: error.message,
+      variant: "destructive",
+    });
+    return null;
   }
 }
 
@@ -72,6 +102,7 @@ export function usePhonePrint() {
         setJob(created);
         return created;
       } catch (error) {
+        if (isPrintQueueMissing(error)) return sendTheOldWay(input, toast);
         toast({
           title: "Could not send to the till",
           description: error.message,
