@@ -6,14 +6,25 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(WhatsApp|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|Pinterest|Googlebot|GoogleOther|Google-PageRenderer|bingbot|Applebot|redditbot|Embedly|Iframely|Snapchat|Viber|Signal|Mastodon|Bluesky).*"
+          "value": ".*(WhatsApp|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|Pinterest|Googlebot|GoogleOther|Google-PageRenderer|bingbot|Applebot|redditbot|Embedly|Iframely|Snapchat|Viber|Signal|Mastodon|Bluesky|OpenGraph|opengraph|[Bb]ot\\b|[Cc]rawler|[Pp]review).*"
         }
       ],
       "destination": "/api/bill?code=:code"
     },
-    { "source": "/((?!assets/|api/|.*\\..*).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!assets/|api/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
-    { "source": "/b/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }] }
+    {
+      "source": "/b/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    }
   ]
 }

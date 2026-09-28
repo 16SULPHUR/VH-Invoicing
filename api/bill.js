@@ -1,6 +1,5 @@
 import { billLines, codeFrom, fetchBill, firstName, rupees, shopName } from "./_lib/bill.js";
 
-export const config = { runtime: "edge" };
 
 const escape = (text) =>
   String(text).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -37,7 +36,7 @@ function metaTags({ title, description, url, image }) {
 }
 
 /** Link-preview bots get the bill's title and image; people are served the app by vercel.json. */
-export default async function handler(request) {
+export async function GET(request) {
   const origin = new URL(request.url).origin;
   const code = codeFrom(request);
   const data = await fetchBill(code);

@@ -2,7 +2,6 @@ import { ImageResponse } from "@vercel/og";
 import { bricolage, bricolageExt, hanken400, hanken700 } from "./_lib/fonts.js";
 import { billDate, billLines, codeFrom, fetchBill, firstName, lineAmount, rupees, shopName } from "./_lib/bill.js";
 
-export const config = { runtime: "edge" };
 
 const INK = "#1e1a3a";
 const INDIGO = "#231a47";
@@ -141,7 +140,7 @@ function billCard(data) {
   );
 }
 
-export default async function handler(request) {
+export async function GET(request) {
   const code = codeFrom(request);
   const data = code ? await fetchBill(code) : null;
   const fonts = loadFonts();
