@@ -1,5 +1,6 @@
 import { CheckoutPanel } from "./CheckoutPanel";
 import { InvoiceWorkspace } from "./InvoiceWorkspace";
+import { NewBillButton } from "./NewBillButton";
 import { QuickActions } from "./QuickActions";
 import { RecentBillsButton, RecentBillsStrip } from "./RecentBills";
 import { TotalBar } from "./TotalBar";
@@ -18,6 +19,7 @@ export function DesktopInvoicing({ workspace }) {
           isOnline={isOnline}
           actions={
             <div className="flex items-center gap-2">
+              <NewBillButton draft={draft} onNewBill={workspace.cancelEdit} />
               <QuickActions dailySales={dailySales} sales={sales} />
               <div className="lg:hidden">
                 <RecentBillsButton
