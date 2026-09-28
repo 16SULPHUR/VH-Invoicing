@@ -58,7 +58,9 @@ export function ScannedItemsTable({ items, isLoading, isBusy, onRefresh, onClear
                   {item.barcode} · Qty {item.quantity}
                 </div>
               </div>
-              <span className="font-display font-bold tabular-nums">{formatRupees(item.price)}</span>
+              <span className="font-display font-bold tabular-nums">
+                {formatRupees(item.price)}
+              </span>
               <button
                 type="button"
                 aria-label={`Remove ${item.name}`}

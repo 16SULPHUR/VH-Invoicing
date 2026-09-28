@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoiceService } from "@/services/invoiceService";
-import { printCommandService } from "@/services/scannedProductService";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import {
@@ -47,7 +46,7 @@ function toPayload(draft, { id, date }) {
  * Single source of truth for the invoicing screen. Both the desktop and mobile
  * layouts render from this; they differ only in how they arrange the panels.
  */
-export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
+export function useInvoiceWorkspace() {
   const { toast } = useToast();
   const { isOnline } = useOnlineStatus();
   const printDocument = usePrintDocument();
@@ -327,31 +326,6 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
       runExclusive(() => (draft.isEditing ? updateInvoice() : printAndSaveInvoice(options))),
     [draft.isEditing, updateInvoice, printAndSaveInvoice, runExclusive]
   );
-
-  // The phone's Print button asks the till to print whatever has been scanned.
-  const submitRef = useRef(submitInvoice);
-  submitRef.current = submitInvoice;
-  const isEditingRef = useRef(draft.isEditing);
-  isEditingRef.current = draft.isEditing;
-  useEffect(() => {
-    if (!acceptRemotePrint) return undefined;
-    return printCommandService.subscribe((payload) => {
-      if (payload?.eventType !== "INSERT") return;
-      if (isEditingRef.current) {
-        toast({
-          title: "Print from phone ignored",
-          description: "Finish or cancel the bill you are editing, then print again.",
-          variant: "destructive",
-        });
-        return;
-      }
-      const { customer_name: customerName, customer_phone: customerNumber } = payload.new ?? {};
-      submitRef.current({
-        ...(customerName && { customerName }),
-        ...(customerNumber && { customerNumber }),
-      });
-    });
-  }, [acceptRemotePrint, toast]);
 
   // F1 is the till's "print bill" key.
   useEffect(() => {

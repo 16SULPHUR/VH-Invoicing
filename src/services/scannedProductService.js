@@ -37,25 +37,3 @@ export const scannedProductService = {
     return () => supabase.removeChannel(channel);
   },
 };
-
-export const printCommandService = {
-  async requestPrint({ customerName, customerPhone }) {
-    const result = await supabase
-      .from("print_command")
-      .insert([{ customer_name: customerName, customer_phone: customerPhone }]);
-    // Until print_command_phone.sql is run the column is missing; print without it.
-    if (result.error?.code === "PGRST204") {
-      return unwrap(await supabase.from("print_command").insert([{ customer_name: customerName }]));
-    }
-    return unwrap(result);
-  },
-
-  subscribe(onChange) {
-    const channel = supabase
-      .channel("print-command-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "print_command" }, onChange)
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  },
-};
