@@ -8,7 +8,8 @@ const EMPTY_PAYMENTS = { cash: "", upi: "", credit: "" };
 function readSaved(key) {
   if (!key) return null;
   try {
-    return JSON.parse(localStorage.getItem(key)) ?? null;
+    const saved = JSON.parse(localStorage.getItem(key)) ?? null;
+    return saved?.editingInvoice ? null : saved;
   } catch {
     return null;
   }
@@ -35,19 +36,18 @@ export function useInvoiceDraft({ persistKey } = {}) {
   const [lines, setLines] = useState(saved?.lines ?? []);
   const [note, setNote] = useState(saved?.note ?? "");
   const [payments, setPayments] = useState(saved?.payments ?? EMPTY_PAYMENTS);
-  const [currentDate, setCurrentDate] = useState(() =>
-    saved?.editingInvoice ? new Date(saved.editingInvoice.date) : new Date()
-  );
+  const [currentDate, setCurrentDate] = useState(() => new Date());
 
   const [lineForm, setLineForm] = useState(EMPTY_LINE_FORM);
   const [editingLineIndex, setEditingLineIndex] = useState(null);
 
-  const [editingInvoice, setEditingInvoice] = useState(saved?.editingInvoice ?? null);
+  const [editingInvoice, setEditingInvoice] = useState(null);
 
-  // Survives leaving the billing screen; cleared once the bill is printed or reset.
+  // A new bill survives leaving the billing screen; an edit never does, so the till
+  // does not reopen stuck on an old bill. Cleared once the bill is printed or reset.
   useEffect(() => {
     const isEmpty =
-      !editingInvoice &&
+      !!editingInvoice ||
       lines.length === 0 &&
       !customerName &&
       !customerNumber &&
@@ -57,7 +57,7 @@ export function useInvoiceDraft({ persistKey } = {}) {
       !payments.credit;
     writeSaved(
       persistKey,
-      isEmpty ? null : { customerName, customerNumber, lines, note, payments, editingInvoice }
+      isEmpty ? null : { customerName, customerNumber, lines, note, payments }
     );
   }, [persistKey, customerName, customerNumber, lines, note, payments, editingInvoice]);
 
