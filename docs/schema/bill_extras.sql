@@ -126,4 +126,10 @@ drop policy if exists push_subscriptions_rw on public.push_subscriptions;
 create policy push_subscriptions_rw on public.push_subscriptions
   for all to authenticated using (true) with check (true);
 
+-- Starting values; editable later in WhatsApp > Rules. Existing values are kept.
+insert into public.shop_settings (key, value, updated_at) values
+  ('exchange_days', '"4"'::jsonb, now()),
+  ('google_review_url', '"https://g.page/r/CYCkVDJf7iwfEBM/review"'::jsonb, now())
+on conflict (key) do nothing;
+
 notify pgrst, 'reload schema';
