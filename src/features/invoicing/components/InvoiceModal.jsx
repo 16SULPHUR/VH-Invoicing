@@ -26,7 +26,8 @@ import { formatInvoiceDate } from "@/utils/date";
 import { BillWhatsAppButton, OffersSwitch } from "@/features/whatsapp/components/BillWhatsApp";
 import { useWhatsAppSettings } from "@/features/whatsapp/hooks/useWhatsApp";
 import { appOrigin } from "@/features/whatsapp/lib/rules";
-import { useBillLink } from "../hooks/useBillLink";
+import { useBillLink, useBillSeen } from "../hooks/useBillLink";
+import { SeenTicks } from "./SeenTicks";
 import { billShareText } from "../billShareText";
 
 export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
@@ -38,6 +39,7 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const { toast } = useToast();
   const { rules } = useWhatsAppSettings();
   const link = useBillLink(invoice, appOrigin(rules));
+  const seen = useBillSeen(invoice, Boolean(link));
 
   if (!invoice) return null;
 
@@ -138,10 +140,13 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
                 <BillWhatsAppButton invoice={invoice} />
                 <OffersSwitch name={invoice.customerName} phone={invoice.customerNumber} />
                 {link && (
-                  <Button variant="outline" className="press" onClick={handleShareLink}>
-                    <Link2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
-                    {navigator.share ? "Share bill link" : "Copy bill link"}
-                  </Button>
+                  <>
+                    <Button variant="outline" className="press" onClick={handleShareLink}>
+                      <Link2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                      {navigator.share ? "Share bill link" : "Copy bill link"}
+                    </Button>
+                    <SeenTicks count={seen?.seen_count} lastSeen={seen?.last_seen_at} className="justify-center" />
+                  </>
                 )}
                 <Button variant="outline" className="press" onClick={() => setShowQR((v) => !v)}>
                   <QrCode size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />

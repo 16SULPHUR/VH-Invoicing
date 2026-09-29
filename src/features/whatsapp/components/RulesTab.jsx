@@ -5,12 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DEFAULT_RULES, RULE_FIELDS } from "../lib/rules";
 import { LANGUAGES } from "../lib/templates";
 import { useWhatsAppSetup } from "../hooks/useWhatsApp";
+import { PushReminder } from "@/features/push/PushReminder";
 
 const SHOP_VALUES = [
   { key: "shop_name", label: "Shop name", hint: "{shop_name} and the pay page title" },
   { key: "phone", label: "Shop phone", hint: "{shop_phone}", type: "tel" },
   { key: "upi_id", label: "UPI ID", hint: "Where pay-page payments go. Use the shop's merchant UPI ID." },
   { key: "wa_channel", label: "WhatsApp channel link", hint: "{channel_link}", placeholder: "https://whatsapp.com/channel/…" },
+];
+
+const BILL_PAGE_VALUES = [
+  { key: "exchange_days", label: "Exchange window (days)", hint: "Shown on the bill page as “Exchange till …”. Empty hides it.", type: "number", placeholder: "7" },
+  { key: "exchange_note", label: "Exchange note", hint: "e.g. With tags and bill, not for sale items", placeholder: "With tags and bill" },
+  { key: "google_review_url", label: "Google review link", hint: "A day after a paid bill, the bill page asks for a review.", placeholder: "https://g.page/r/…/review" },
 ];
 
 const OPENERS = [
@@ -52,6 +59,22 @@ function Status({ ready, children }) {
       <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${ready ? "text-success" : "text-warning"}`} aria-hidden />
       <span>{children}</span>
     </li>
+  );
+}
+
+function ValueFields({ fields, settings, save }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {fields.map(({ key, label, hint, placeholder, type }) => (
+        <div key={key} className="space-y-1.5">
+          <Label htmlFor={`shop-${key}`} className="text-xs font-semibold text-muted-foreground">
+            {label}
+          </Label>
+          <CommitInput id={`shop-${key}`} type={type} value={settings[key] ?? ""} placeholder={placeholder} onCommit={(value) => save({ [key]: value.trim() })} />
+          <p className="text-[11px] text-muted-foreground">{hint}</p>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -105,17 +128,12 @@ export function RulesTab({ wa }) {
       </Section>
 
       <Section title="Shop values">
-        <div className="grid gap-3 sm:grid-cols-2">
-          {SHOP_VALUES.map(({ key, label, hint, placeholder, type }) => (
-            <div key={key} className="space-y-1.5">
-              <Label htmlFor={`shop-${key}`} className="text-xs font-semibold text-muted-foreground">
-                {label}
-              </Label>
-              <CommitInput id={`shop-${key}`} type={type} value={settings[key] ?? ""} placeholder={placeholder} onCommit={(value) => wa.save({ [key]: value.trim() })} />
-              <p className="text-[11px] text-muted-foreground">{hint}</p>
-            </div>
-          ))}
-        </div>
+        <ValueFields fields={SHOP_VALUES} settings={settings} save={wa.save} />
+      </Section>
+
+      <Section title="Bill page and reminders">
+        <ValueFields fields={BILL_PAGE_VALUES} settings={settings} save={wa.save} />
+        <PushReminder />
       </Section>
 
       <Section title="Links and contacts">
