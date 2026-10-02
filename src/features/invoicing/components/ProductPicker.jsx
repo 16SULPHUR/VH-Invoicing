@@ -105,6 +105,7 @@ export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, o
       name: product.name,
       quantity: "1",
       price: String(product.sellingPrice ?? ""),
+      mrp: String(product.sellingPrice ?? ""),
     });
   }, [selectedId, catalog, setLineForm]);
 
@@ -147,7 +148,7 @@ export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, o
         )}
       </Field>
 
-      <Field label="Price" htmlFor="line-price">
+      <Field label="Agreed price" htmlFor="line-price">
         {(id) => (
           <Input
             id={id}

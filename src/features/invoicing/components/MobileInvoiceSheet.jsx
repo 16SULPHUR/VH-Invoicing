@@ -1,16 +1,13 @@
 import { useMemo, useState } from "react";
 import {
-  CheckCircle2,
   ChevronDown,
   Link2,
-  Loader2,
   MonitorSmartphone,
   Pencil,
   Printer,
   QrCode,
   Share2,
   Trash2,
-  XCircle,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -30,13 +27,15 @@ import { ICON_STROKE } from "@/config/navigation";
 import { formatRupees } from "@/utils/formatters";
 import { formatInvoiceDate } from "@/utils/date";
 import { parseInvoiceLines } from "@/utils/invoice";
-import { PRINT_JOB_STATUS } from "@/services/printJobService";
+import { RemotePrintStatus } from "@/features/printing/RemotePrintStatus";
 import { REPRINT_KEY, usePhonePrint } from "@/features/scanner/hooks/usePhonePrint";
 import { BillWhatsAppButton, OffersSwitch } from "@/features/whatsapp/components/BillWhatsApp";
 import { useWhatsAppSettings } from "@/features/whatsapp/hooks/useWhatsApp";
 import { appOrigin } from "@/features/whatsapp/lib/rules";
 import { usedPaymentMethods } from "../paymentMethods";
+import { BillSummary } from "./BillSummary";
 import { PrintableInvoice } from "./PrintableInvoice";
+import { ScaledBill } from "./ScaledBill";
 import { UpiPaymentCard } from "./UpiPaymentCard";
 import { usePrintDocument } from "../hooks/useInvoicePrinting";
 import { useShareInvoicePdf } from "../hooks/useInvoiceSharing";
@@ -56,75 +55,6 @@ function Tile({ icon: Icon, label, onClick, disabled, active }) {
       <Icon size={20} strokeWidth={ICON_STROKE} aria-hidden />
       {label}
     </button>
-  );
-}
-
-function RemotePrintStatus({ print, invoiceId }) {
-  const { job } = print;
-  if (!job) {
-    const online = print.stations.length > 0;
-    return (
-      <p className="flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground">
-        <span
-          className={`h-2 w-2 rounded-full ${online ? "bg-emerald-500" : "bg-destructive"}`}
-          aria-hidden
-        />
-        {online
-          ? `Till is open: ${[...new Set(print.stations.map((station) => station.name))].join(", ")}`
-          : "No till is open. Remote prints wait until one is."}
-      </p>
-    );
-  }
-
-  if (job.status === PRINT_JOB_STATUS.SAVED) {
-    return (
-      <div className="flex items-center gap-3 rounded-2xl bg-success/10 px-4 py-3">
-        <CheckCircle2 className="h-5 w-5 shrink-0 text-success" aria-hidden />
-        <span className="flex-1 text-sm font-semibold">Bill #{invoiceId} printed at the till</span>
-        <Button size="sm" variant="outline" onClick={print.dismiss}>
-          Done
-        </Button>
-      </div>
-    );
-  }
-
-  if (job.status === PRINT_JOB_STATUS.FAILED) {
-    return (
-      <div className="rounded-2xl bg-destructive/10 px-4 py-3">
-        <div className="flex items-center gap-2 font-semibold text-destructive">
-          <XCircle className="h-5 w-5 shrink-0" aria-hidden /> Not printed
-        </div>
-        <p className="mt-1 text-sm">{job.error}</p>
-        <div className="mt-2 flex gap-2">
-          <Button size="sm" onClick={print.retry}>
-            Try again
-          </Button>
-          <Button size="sm" variant="outline" onClick={print.cancel}>
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const claimed = job.status === PRINT_JOB_STATUS.CLAIMED;
-  return (
-    <div className="rounded-2xl bg-secondary px-4 py-3">
-      <div className="flex items-center gap-2 text-sm font-semibold">
-        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
-        {claimed ? "Printing at the till…" : "Sent, waiting for the till…"}
-      </div>
-      {print.unclaimedTooLong && (
-        <p className="mt-2 text-sm">
-          No till has picked this up. Check the till computer is on with the app open.
-        </p>
-      )}
-      {!claimed && (
-        <Button size="sm" variant="outline" className="mt-2" onClick={print.cancel}>
-          Cancel
-        </Button>
-      )}
-    </div>
   );
 }
 
@@ -307,6 +237,8 @@ export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete }) {
 
           <OffersSwitch name={invoice.customerName} phone={invoice.customerNumber} />
 
+          <BillSummary lines={lines} invoice={invoice} />
+
           <div>
             <button
               type="button"
@@ -314,7 +246,7 @@ export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete }) {
               className="press flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm font-bold"
               aria-expanded={showBill}
             >
-              View printed bill
+              Paper copy
               <ChevronDown
                 size={18}
                 strokeWidth={ICON_STROKE}
@@ -323,8 +255,8 @@ export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete }) {
               />
             </button>
             {showBill && (
-              <div className="mt-2 max-h-[60dvh] overflow-auto rounded-2xl bg-secondary p-3">
-                {printable}
+              <div className="mt-2">
+                <ScaledBill>{printable}</ScaledBill>
               </div>
             )}
           </div>
