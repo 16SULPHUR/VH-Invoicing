@@ -40,18 +40,6 @@ export async function getTrialBalance(range) {
   }));
 }
 
-export async function getGSTOutput(range) {
-  const { data, error } = await applyRange(
-    supabase.from("ledger_view").select("*").eq("account_name", "GST Output"),
-    range
-  );
-  if (error) throw error;
-
-  const rows = data || [];
-  const totalGST = rows.reduce((sum, row) => sum + (Number(row.credit) || 0), 0);
-  return { transactions: rows, totalGST };
-}
-
 export async function getCollectionsByDateRange(startISO, endISO) {
   const { data, error } = await supabase
     .from("ledger_view")
