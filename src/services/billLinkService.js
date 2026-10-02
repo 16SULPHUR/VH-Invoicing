@@ -24,6 +24,27 @@ export const billLinkService = {
     return data?.share_code ? billUrl(data.share_code, origin) : null;
   },
 
+  /** Tells the shop the customer opened the link. Staff opening it do not count. */
+  async markSeen(code) {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) return;
+    await supabase.rpc("mark_bill_seen", { p_code: code });
+  },
+
+  /** When and how often the customer opened the bill; null before bill_extras.sql is run. */
+  async seenFor(date) {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("first_seen_at, last_seen_at, seen_count")
+      .eq("date", date)
+      .maybeSingle();
+    if (error) {
+      if (isMissingColumn(error)) return null;
+      throw error;
+    }
+    return data;
+  },
+
   async getPublicBill(code) {
     return unwrap(await supabase.rpc("get_public_bill", { p_code: code }));
   },

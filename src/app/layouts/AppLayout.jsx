@@ -4,8 +4,11 @@ import { AppRail, AppTabBar } from "./AppNav";
 import { PageLoader } from "@/components/common/PageLoader";
 import { PrintStationProvider } from "@/features/printing/PrintStationProvider";
 import { InstallButton } from "@/features/install/InstallButton";
+import { useDuesBadge } from "@/features/push/useDuesBadge";
 
 export function AppLayout({ onSignOut }) {
+  useDuesBadge();
+
   return (
     <PrintStationProvider>
       <div className="flex h-[100dvh] w-full overflow-hidden bg-background">

@@ -19,5 +19,11 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/push-send",
+      "schedule": "30 15 * * *"
+    }
   ]
 }
