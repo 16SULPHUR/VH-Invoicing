@@ -1,4 +1,5 @@
 import { InvoiceWorkspace } from "./InvoiceWorkspace";
+import { NewBillButton } from "./NewBillButton";
 import { QuickActions } from "./QuickActions";
 import { RecentBillsButton } from "./RecentBills";
 import { TotalBar } from "./TotalBar";
@@ -17,7 +18,8 @@ export function MobileInvoicing({ workspace }) {
         isOnline={isOnline}
         actions={
           <div className="flex items-center gap-1.5">
-            <QuickActions dailySales={dailySales} sales={sales} onDark />
+            <NewBillButton draft={draft} onNewBill={workspace.cancelEdit} onDark />
+              <QuickActions dailySales={dailySales} sales={sales} onDark />
             <RecentBillsButton
               recentInvoices={recentInvoices}
               onInvoiceClick={workspace.openInvoice}
