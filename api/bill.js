@@ -35,11 +35,17 @@ function metaTags({ title, description, url, image }) {
   ].join("\n    ");
 }
 
-/** Link-preview bots get the bill's title and image; people are served the app by vercel.json. */
+/** Serves the app with this bill's title and preview image, so any link scanner or bot sees the bill. */
 export async function GET(request) {
   const origin = new URL(request.url).origin;
   const code = codeFrom(request);
-  const data = await fetchBill(code);
+  const [data, shell] = await Promise.all([
+    fetchBill(code),
+    fetch(`${origin}/index.html`).then(
+      (response) => (response.ok ? response.text() : null),
+      () => null
+    ),
+  ]);
   const meta = data?.bill
     ? describe(data)
     : { title: shopName(data), description: "This bill link is not valid.", version: "0" };
@@ -49,7 +55,11 @@ export async function GET(request) {
     url,
     image: `${origin}/api/og?code=${code ?? ""}&v=${encodeURIComponent(meta.version)}`,
   });
-  const html = `<!DOCTYPE html>
+  const head = `<!-- meta -->\n    ${tags}\n    <!-- /meta -->`;
+
+  const html = shell?.includes("<!-- meta -->")
+    ? shell.replace(/<!-- meta -->[\s\S]*?<!-- \/meta -->/, () => head)
+    : `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />

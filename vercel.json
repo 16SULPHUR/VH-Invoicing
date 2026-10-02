@@ -2,13 +2,6 @@
   "rewrites": [
     {
       "source": "/b/:code",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(WhatsApp|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|Pinterest|Googlebot|GoogleOther|Google-PageRenderer|bingbot|Applebot|redditbot|Embedly|Iframely|Snapchat|Viber|Signal|Mastodon|Bluesky|OpenGraph|opengraph|[Bb]ot\\b|[Cc]rawler|[Pp]review).*"
-        }
-      ],
       "destination": "/api/bill?code=:code"
     },
     {
