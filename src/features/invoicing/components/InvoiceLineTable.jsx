@@ -33,7 +33,17 @@ export function InvoiceLineTable({ lines, onEdit, onDelete, onChangeQuantity }) 
           <div className="min-w-0">
             <p className="truncate text-[15px] font-bold">{line.name}</p>
             <p className="text-xs text-muted-foreground tabular-nums">
+              {line.mrp > line.price && (
+                <>
+                  <s>{formatRupees(line.mrp)}</s>{" "}
+                </>
+              )}
               {formatRupees(line.price)} each
+              {line.mrp > line.price && (
+                <span className="ml-1 font-bold text-success">
+                  −{Math.round(((line.mrp - line.price) / line.mrp) * 100)}%
+                </span>
+              )}
             </p>
           </div>
 

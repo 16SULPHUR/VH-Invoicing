@@ -1,5 +1,6 @@
 import { Check, FilePen, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AgreedPrice } from "./AgreedPrice";
 import { NoteField } from "./NoteField";
 import { PaymentDetails } from "./PaymentDetails";
 import { formatRupees, toNumber } from "@/utils/formatters";
@@ -10,7 +11,7 @@ import { ICON_STROKE } from "@/config/navigation";
  * The checkout column stays in view while the operator works the left side, so
  * the total, the split and the action are never more than a glance away.
  */
-export function CheckoutPanel({ draft, onSubmit, onCancelEdit, isSubmitting, children }) {
+export function CheckoutPanel({ draft, onSubmit, onCancelEdit, isSubmitting, submitLabel = "Print bill", children }) {
   const total = toNumber(draft.total);
   const paid = paymentsTotal(draft.payments);
   const balance = total - paid;
@@ -30,6 +31,8 @@ export function CheckoutPanel({ draft, onSubmit, onCancelEdit, isSubmitting, chi
           {draft.customerName || "Walk-in customer"}
         </p>
       </div>
+
+      <AgreedPrice draft={draft} />
 
       <PaymentDetails
         payments={draft.payments}
@@ -69,7 +72,7 @@ export function CheckoutPanel({ draft, onSubmit, onCancelEdit, isSubmitting, chi
           ) : (
             <Printer size={19} strokeWidth={ICON_STROKE} aria-hidden />
           )}
-          {draft.isEditing ? "Update bill" : "Print bill"}
+          {draft.isEditing ? "Update bill" : submitLabel}
           <kbd className="ml-1 rounded-md border border-white/30 px-1.5 font-sans text-[11px] font-semibold opacity-80">
             F1
           </kbd>
