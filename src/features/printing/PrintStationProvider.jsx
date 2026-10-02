@@ -76,12 +76,40 @@ export function PrintStationProvider({ children }) {
     [printDocument]
   );
 
+  const printSaved = useCallback(
+    async (date) => {
+      const invoice = await invoiceService.getInvoiceByDate(date);
+      printBill({
+        invoiceId: invoice.id,
+        date: invoice.date,
+        customerName: invoice.customerName,
+        customerNumber: invoice.customerNumber,
+        lines: parseInvoiceLines(invoice.products),
+        total: invoice.total,
+        payments: { cash: invoice.cash, upi: invoice.upi, credit: invoice.credit },
+        note: invoice.note,
+      });
+      return invoice;
+    },
+    [printBill]
+  );
+
   const runJob = useCallback(
     async (job) => {
       const claimed = await printJobService.claim(job.id, settings.id).catch(() => null);
       if (!claimed) return;
       setBusyId(job.id);
       try {
+        if (claimed.invoice_id) {
+          const invoice = await printSaved(claimed.invoice_date);
+          await printJobService.markPrinted(claimed.id);
+          toast({
+            title: `Printing bill #${invoice.id}`,
+            description: `Sent from ${claimed.requested_by || "a phone"}.`,
+          });
+          return;
+        }
+
         const problem = printJobError(claimed);
         if (problem) throw new Error(problem);
 
@@ -126,7 +154,7 @@ export function PrintStationProvider({ children }) {
         refreshRecent();
       }
     },
-    [settings.id, printBill, toast, queryClient, refreshRecent]
+    [settings.id, printBill, printSaved, toast, queryClient, refreshRecent]
   );
 
   // One job at a time, each at most once per tab.
@@ -207,22 +235,12 @@ export function PrintStationProvider({ children }) {
   const reprint = useCallback(
     async (job) => {
       try {
-        const invoice = await invoiceService.getInvoiceByDate(job.invoice_date);
-        printBill({
-          invoiceId: invoice.id,
-          date: invoice.date,
-          customerName: invoice.customerName,
-          customerNumber: invoice.customerNumber,
-          lines: parseInvoiceLines(invoice.products),
-          total: invoice.total,
-          payments: { cash: invoice.cash, upi: invoice.upi, credit: invoice.credit },
-          note: invoice.note,
-        });
+        await printSaved(job.invoice_date);
       } catch (error) {
         toast({ title: "Could not reprint", description: error.message, variant: "destructive" });
       }
     },
-    [printBill, toast]
+    [printSaved, toast]
   );
 
   const testPrint = useCallback(

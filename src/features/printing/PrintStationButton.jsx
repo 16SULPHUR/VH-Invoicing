@@ -41,18 +41,22 @@ function JobRow({ job, station }) {
   const { text, tone } = jobLabel(job, station.busyId);
   const waiting = job.status === PRINT_JOB_STATUS.PENDING || job.status === PRINT_JOB_STATUS.FAILED;
   const lines = jobLines(job);
+  const isReprint = job.invoice_id && lines.length === 0;
 
   return (
     <li className="rounded-2xl border-[1.5px] border-border bg-surface p-3">
       <div className="flex items-baseline justify-between gap-2">
         <span className="truncate font-semibold">{job.customer_name || "Walk-in"}</span>
         <span className="shrink-0 font-display font-extrabold">
-          {formatRupees(invoiceTotal(lines))}
+          {isReprint ? `Bill #${job.invoice_id}` : formatRupees(invoiceTotal(lines))}
         </span>
       </div>
       <div className="mt-0.5 text-xs text-muted-foreground">
-        {timeFormatter.format(new Date(job.created_at))} · {lines.length} item
-        {lines.length === 1 ? "" : "s"} · {job.payment_mode.toUpperCase()} ·{" "}
+        {timeFormatter.format(new Date(job.created_at))} ·{" "}
+        {isReprint
+          ? "Reprint"
+          : `${lines.length} item${lines.length === 1 ? "" : "s"} · ${job.payment_mode.toUpperCase()}`}{" "}
+        ·{" "}
         {job.requested_by || "Phone"}
       </div>
       <div className={`mt-1 text-sm font-semibold ${tone}`}>{text}</div>

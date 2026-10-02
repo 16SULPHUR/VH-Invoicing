@@ -47,14 +47,18 @@ function toPayload(draft, { id, date }) {
  * Single source of truth for the invoicing screen. Both the desktop and mobile
  * layouts render from this; they differ only in how they arrange the panels.
  */
-export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
+export function useInvoiceWorkspace({
+  acceptRemotePrint = false,
+  persistKey = "vh-till-draft",
+  remote = null,
+} = {}) {
   const { toast } = useToast();
   const { isOnline } = useOnlineStatus();
   const printDocument = usePrintDocument();
   const invalidateInvoices = useInvalidateInvoiceData();
   const queryClient = useQueryClient();
 
-  const draft = useInvoiceDraft({ persistKey: "vh-till-draft" });
+  const draft = useInvoiceDraft({ persistKey });
   const { data: catalog } = useProductCatalog();
   const { data: customers } = useCustomerDirectory();
   const { data: dailySales } = useDailySales();
@@ -69,7 +73,7 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
   const { loadScannedProducts, clearScannedProducts } = useScannedProducts({
     catalog,
     setLines: draft.setLines,
-    enabled: catalog.length > 0,
+    enabled: catalog.length > 0 && !remote,
     paused: draft.isEditing,
   });
 
@@ -256,25 +260,27 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
       if (blockedByCredit(bill)) return;
 
       const invoiceId = nextInvoiceId;
-      const printed = printDocument(
-        <PrintableInvoice
-          invoiceId={invoiceId}
-          invoiceDate={formatInvoiceDate(new Date())}
-          customerName={customerName}
-          customerContact={customerNumber}
-          products={draft.lines}
-          total={draft.total}
-          payments={bill.payments}
-          note={draft.note}
-        />
-      );
+      if (!remote) {
+        const printed = printDocument(
+          <PrintableInvoice
+            invoiceId={invoiceId}
+            invoiceDate={formatInvoiceDate(new Date())}
+            customerName={customerName}
+            customerContact={customerNumber}
+            products={draft.lines}
+            total={draft.total}
+            payments={bill.payments}
+            note={draft.note}
+          />
+        );
 
-      if (!printed) {
-        toast({
-          title: "Print blocked",
-          description: "Allow pop-ups for this site to print invoices.",
-          variant: "destructive",
-        });
+        if (!printed) {
+          toast({
+            title: "Print blocked",
+            description: "Allow pop-ups for this site to print invoices.",
+            variant: "destructive",
+          });
+        }
       }
 
       const date = new Date().toISOString();
@@ -293,12 +299,16 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
         if (saved._syncStatus === "pending") {
           toast({
             title: "Saved offline",
-            description: "Invoice saved offline. It will sync when you are back online.",
+            description: remote
+              ? "Saved on this phone. Open the bill and use Remote print once you are online."
+              : "Invoice saved offline. It will sync when you are back online.",
           });
+        } else if (remote) {
+          await remote.send(null, { reprint: { ...toPayload(bill, { id: invoiceId, date }), ...saved } });
         }
 
         draft.reset();
-        await clearScannedProducts();
+        if (!remote) await clearScannedProducts();
         refreshAll();
         notifyStock(saved.stockFailures);
       } catch (error) {
@@ -314,6 +324,7 @@ export function useInvoiceWorkspace({ acceptRemotePrint = false } = {}) {
       nextInvoiceId,
       blockedByCredit,
       printDocument,
+      remote,
       rememberCreditCustomer,
       refreshAll,
       clearScannedProducts,

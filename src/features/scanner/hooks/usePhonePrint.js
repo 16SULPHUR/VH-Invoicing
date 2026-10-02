@@ -5,23 +5,24 @@ import { creditCustomerError } from "@/utils/invoice";
 import { useToast } from "@/hooks/use-toast";
 
 const JOB_KEY = "vh-phone-print-job";
+export const REPRINT_KEY = "vh-phone-reprint-job";
 const POLL_MS = 3000;
 export const NO_TILL_AFTER_MS = 15 * 1000;
 
 const OPEN = new Set([PRINT_JOB_STATUS.PENDING, PRINT_JOB_STATUS.CLAIMED]);
 
-function storedJobId() {
+function storedJobId(key) {
   try {
-    return localStorage.getItem(JOB_KEY);
+    return localStorage.getItem(key);
   } catch {
     return null;
   }
 }
 
-function storeJobId(id) {
+function storeJobId(key, id) {
   try {
-    if (id) localStorage.setItem(JOB_KEY, id);
-    else localStorage.removeItem(JOB_KEY);
+    if (id) localStorage.setItem(key, id);
+    else localStorage.removeItem(key);
   } catch {
     // Tracking just won't survive a reload.
   }
@@ -56,7 +57,7 @@ async function sendTheOldWay(input, toast) {
 }
 
 /** Sends the scan list to a till as a print job and follows it until it is printed. */
-export function usePhonePrint() {
+export function usePhonePrint({ storageKey = JOB_KEY, legacy = true } = {}) {
   const { toast } = useToast();
   const [stations, setStations] = useState([]);
   const [job, setJob] = useState(null);
@@ -67,9 +68,9 @@ export function usePhonePrint() {
   useEffect(() => printJobService.watchStations(setStations), []);
 
   useEffect(() => {
-    const id = storedJobId();
-    if (id) printJobService.get(id).then(setJob, () => storeJobId(null));
-  }, []);
+    const id = storedJobId(storageKey);
+    if (id) printJobService.get(id).then(setJob, () => storeJobId(storageKey, null));
+  }, [storageKey]);
 
   const jobId = job?.id;
   const isOpen = job ? OPEN.has(job.status) : false;
@@ -93,16 +94,18 @@ export function usePhonePrint() {
   }, [jobId, isOpen]);
 
   const send = useCallback(
-    async (input) => {
+    async (input, { reprint } = {}) => {
       setIsSending(true);
       try {
-        const created = await printJobService.create({ ...input, requested_by: "Phone" });
-        storeJobId(created.id);
+        const created = reprint
+          ? await printJobService.createReprint({ invoice: reprint })
+          : await printJobService.create({ ...input, requested_by: "Phone" });
+        storeJobId(storageKey, created.id);
         setSentAt(Date.now());
         setJob(created);
         return created;
       } catch (error) {
-        if (isPrintQueueMissing(error)) return sendTheOldWay(input, toast);
+        if (legacy && !reprint && isPrintQueueMissing(error)) return sendTheOldWay(input, toast);
         toast({
           title: "Could not send to the till",
           description: error.message,
@@ -113,7 +116,7 @@ export function usePhonePrint() {
         setIsSending(false);
       }
     },
-    [toast]
+    [toast, storageKey, legacy]
   );
 
   const cancel = useCallback(async () => {
@@ -126,9 +129,9 @@ export function usePhonePrint() {
       });
       return;
     }
-    storeJobId(null);
+    storeJobId(storageKey, null);
     setJob(null);
-  }, [jobId, toast]);
+  }, [jobId, toast, storageKey]);
 
   const retry = useCallback(async () => {
     if (!jobId) return;
@@ -138,9 +141,9 @@ export function usePhonePrint() {
   }, [jobId]);
 
   const dismiss = useCallback(() => {
-    storeJobId(null);
+    storeJobId(storageKey, null);
     setJob(null);
-  }, []);
+  }, [storageKey]);
 
   const unclaimedTooLong =
     job?.status === PRINT_JOB_STATUS.PENDING && now - sentAt > NO_TILL_AFTER_MS;

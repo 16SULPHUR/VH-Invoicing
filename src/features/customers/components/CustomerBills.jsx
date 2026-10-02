@@ -5,6 +5,7 @@ import { PAYMENT_METHODS } from "@/features/invoicing/paymentMethods";
 import { formatDateDDMMMYYYY } from "@/utils/date";
 import { formatRupees } from "@/utils/formatters";
 import { invoiceItemCount, parseInvoiceLines } from "@/utils/invoice";
+import { SeenTicks } from "@/features/invoicing/components/SeenTicks";
 import { BillWhatsAppButton } from "@/features/whatsapp/components/BillWhatsApp";
 
 export function CustomerBills({ invoices, onEdit }) {
@@ -26,6 +27,7 @@ export function CustomerBills({ invoices, onEdit }) {
                   {formatDateDDMMMYYYY(invoice.date)} · {items} item{items === 1 ? "" : "s"}
                 </span>
               </div>
+              <SeenTicks count={invoice.seen_count} lastSeen={invoice.last_seen_at} onlySeen className="mt-0.5" />
               <div className="mt-1 flex flex-wrap gap-1">
                 {PAYMENT_METHODS.filter(({ key }) => Number(invoice[key]) > 0).map(({ key, label, text, tint }) => (
                   <span key={key} className={`rounded-full border px-2 py-px text-[11px] font-bold tabular-nums ${tint} ${text}`}>

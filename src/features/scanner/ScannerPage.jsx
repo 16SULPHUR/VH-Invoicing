@@ -1,44 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PageHeader } from "@/components/common/PageHeader";
+import { ScanLine } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { printJobError } from "@/features/printing/printJobBill";
-import { PRINT_JOB_STATUS } from "@/services/printJobService";
+import { ICON_STROKE } from "@/config/navigation";
+import { InvoiceWorkspace } from "@/features/invoicing/components/InvoiceWorkspace";
+import { TotalBar } from "@/features/invoicing/components/TotalBar";
+import { useInvoiceWorkspace } from "@/features/invoicing/hooks/useInvoiceWorkspace";
+import { RemotePrintStatus } from "@/features/printing/RemotePrintStatus";
 import { CameraPanel } from "./components/CameraPanel";
-import { PhonePrintPanel } from "./components/PhonePrintPanel";
-import { ScanDetailsDialog } from "./components/ScanDetailsDialog";
-import { ScannedItemsTable } from "./components/ScannedItemsTable";
 import { useBarcodeCamera } from "./hooks/useBarcodeCamera";
-import { useScanCart } from "./hooks/useScanCart";
-import { usePhonePrint } from "./hooks/usePhonePrint";
+import { REPRINT_KEY, usePhonePrint } from "./hooks/usePhonePrint";
 
+const findByBarcode = (catalog, barcode) =>
+  catalog?.find((product) => String(product?.barcode ?? "") === String(barcode));
+
+/** The till on a phone: scan or search, agree the price, save the bill, print it at the till. */
 export default function ScannerPage() {
   const { toast } = useToast();
-  const cart = useScanCart();
   const beepRef = useRef(null);
-
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [paymentMode, setPaymentMode] = useState("");
-  const print = usePhonePrint();
-  const { refetch: refetchScans } = cart;
-  const printedJob = print.job?.status === PRINT_JOB_STATUS.SAVED ? print.job.id : null;
-  // The till clears the printed scans; show that even if the live update was missed.
-  useEffect(() => {
-    if (printedJob) refetchScans();
-  }, [printedJob, refetchScans]);
-  const [pendingScan, setPendingScan] = useState(null);
-
-  const playBeep = useCallback(() => {
-    if (!beepRef.current) beepRef.current = new Audio("/beep.wav");
-    // Autoplay policies can block this; a silent scan is still a valid scan.
-    beepRef.current.play().catch(() => {});
-  }, []);
-
-  const { findInCatalog } = cart;
+  const [showCamera, setShowCamera] = useState(false);
+  const remote = usePhonePrint({ storageKey: REPRINT_KEY, legacy: false });
+  const workspace = useInvoiceWorkspace({ persistKey: "vh-phone-draft", remote });
+  const { draft, catalog } = workspace;
+  const { addProduct } = draft;
 
   const handleDetected = useCallback(
     ({ barcode }) => {
-      const product = findInCatalog(barcode);
+      const product = findByBarcode(catalog, barcode);
       if (!product) {
         toast({
           title: "Unknown barcode",
@@ -47,98 +35,61 @@ export default function ScannerPage() {
         });
         return;
       }
-
-      playBeep();
-      setPendingScan({
-        barcode,
-        productName: product.name,
-        quantity: 1,
-        price: product.sellingPrice ?? 0,
-      });
+      if (!beepRef.current) beepRef.current = new Audio("/beep.wav");
+      beepRef.current.play().catch(() => {});
+      addProduct(product, barcode);
+      toast({ title: product.name, description: "Added to the bill." });
     },
-    [findInCatalog, playBeep, toast]
+    [catalog, addProduct, toast]
   );
 
   const camera = useBarcodeCamera({ onDetected: handleDetected });
-  const { stop: stopCamera, start: startCamera } = camera;
+  const { start: startCamera, stop: stopCamera } = camera;
 
-  // Pause the camera while the operator is confirming quantity and price.
   useEffect(() => {
-    if (pendingScan) stopCamera();
-  }, [pendingScan, stopCamera]);
+    if (showCamera) startCamera();
+    else stopCamera();
+  }, [showCamera, startCamera, stopCamera]);
+  useEffect(() => stopCamera, [stopCamera]);
 
-  const confirmScan = () => {
-    cart.addScan.mutate(
-      { barcode: pendingScan.barcode, quantity: pendingScan.quantity, price: pendingScan.price },
-      {
-        onSuccess: () => {
-          setPendingScan(null);
-          startCamera();
-        },
-      }
-    );
-  };
-
-  const handlePrint = async () => {
-    const job = {
-      items: cart.items.map(({ name, barcode, quantity, price, amount }) => ({
-        name,
-        barcode,
-        quantity,
-        price,
-        amount,
-      })),
-      scan_ids: cart.items.flatMap((item) => item.scanIds),
-      customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim(),
-      payment_mode: paymentMode,
-    };
-    const problem = printJobError(job);
-    if (problem) {
-      toast({ title: "Can't print yet", description: problem, variant: "destructive" });
-      return;
-    }
-    if (await print.send(job)) {
-      setCustomerName("");
-      setCustomerPhone("");
-      setPaymentMode("");
-    }
-  };
-
-  const isBusy = cart.isLoading || cart.removeItem.isPending || cart.clearAll.isPending;
+  const scanner = (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        variant={showCamera ? "outline" : "rani"}
+        className="press h-12 w-full text-base font-bold"
+        onClick={() => setShowCamera((open) => !open)}
+      >
+        <ScanLine size={18} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+        {showCamera ? "Close scanner" : "Scan a barcode"}
+      </Button>
+      {showCamera && <CameraPanel camera={camera} />}
+    </div>
+  );
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 p-4">
-      <PageHeader title="Scan" subtitle="Scans sync to the till in real time" />
-
-      <CameraPanel camera={camera} />
-
-      <ScannedItemsTable
-        items={cart.items}
-        isLoading={cart.isLoading}
-        isBusy={isBusy}
-        onRefresh={cart.refetch}
-        onClear={() => cart.clearAll.mutate()}
-        onDelete={(barcode) => cart.removeItem.mutate(barcode)}
+    <div className="flex h-full min-h-0 flex-col">
+      <InvoiceWorkspace
+        compact
+        scanner={scanner}
+        draft={draft}
+        catalog={catalog}
+        customers={workspace.customers}
+        invoiceId={workspace.displayedInvoiceId}
+        isOnline={workspace.isOnline}
       />
 
-      <PhonePrintPanel
-        print={print}
-        customerName={customerName}
-        customerPhone={customerPhone}
-        paymentMode={paymentMode}
-        onCustomerName={setCustomerName}
-        onCustomerPhone={setCustomerPhone}
-        onPaymentMode={setPaymentMode}
-        onPrint={handlePrint}
-      />
-
-      <ScanDetailsDialog
-        scan={pendingScan}
-        onChange={(field, value) => setPendingScan((previous) => ({ ...previous, [field]: value }))}
-        onConfirm={confirmScan}
-        onOpenChange={(open) => !open && setPendingScan(null)}
-      />
+      <div className="shrink-0 space-y-2 px-3 pb-2 pt-1">
+        <RemotePrintStatus print={remote} invoiceId={remote.job?.invoice_id} />
+        <TotalBar
+          draft={draft}
+          onSubmit={workspace.submitInvoice}
+          onCancelEdit={workspace.cancelEdit}
+          isSubmitting={workspace.isSubmitting}
+          submitLabel="Save & print at till"
+          className="w-full"
+        />
+      </div>
     </div>
   );
 }

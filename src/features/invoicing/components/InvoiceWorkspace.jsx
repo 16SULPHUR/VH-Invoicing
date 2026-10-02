@@ -1,6 +1,7 @@
 import { OfflineInvoiceBanner } from "@/components/common/OfflineInvoiceBanner";
 import { CustomerDetails } from "./CustomerDetails";
 import { InvoiceLineTable } from "./InvoiceLineTable";
+import { ParkedBills } from "./ParkedBills";
 import { ProductPicker } from "./ProductPicker";
 
 function headerDate(date) {
@@ -12,7 +13,7 @@ function headerDate(date) {
 }
 
 /** The working half of the till: who is buying, and what. */
-export function InvoiceWorkspace({ draft, catalog, customers, invoiceId, isOnline, actions, compact }) {
+export function InvoiceWorkspace({ draft, catalog, customers, invoiceId, isOnline, actions, compact, scanner }) {
   const title = draft.isEditing ? "Edit bill" : "New bill";
   const subtitle = `#${invoiceId ?? "…"} · ${headerDate(draft.currentDate)}`;
 
@@ -43,6 +44,10 @@ export function InvoiceWorkspace({ draft, catalog, customers, invoiceId, isOnlin
 
       <div className={`flex flex-col gap-4 ${compact ? "px-4 pb-4 pt-6" : "px-7 pb-7 pt-5"}`}>
         {!isOnline && <OfflineInvoiceBanner />}
+
+        {scanner}
+
+        <ParkedBills draft={draft} />
 
         <div className="rounded-2xl bg-surface p-4 shadow-[0_1px_0_hsl(var(--border))]">
           <CustomerDetails

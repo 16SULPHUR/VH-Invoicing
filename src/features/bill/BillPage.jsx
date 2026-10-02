@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Download, Loader2, Megaphone, MessageCircle, Share2, Smartphone } from "lucide-react";
+import { Download, Loader2, Megaphone, MessageCircle, RefreshCw, Share2, Smartphone, Star } from "lucide-react";
 import { BUSINESS } from "@/config/business";
 import { billLinkService } from "@/services/billLinkService";
 import { formatDateDDMMMYYYY } from "@/utils/date";
@@ -13,6 +13,51 @@ import { CopyUpiId, Notice, Shell } from "@/features/whatsapp/pay/PublicShell";
 const CODE = /^[A-Za-z0-9]{8,32}$/;
 const METHOD = { cash: "Cash", upi: "UPI" };
 const isHttps = (link) => /^https:\/\//.test(link ?? "");
+const DAY = 86_400_000;
+
+function ExchangeWindow({ bill, shop }) {
+  const days = Math.floor(toNumber(shop.exchange_days));
+  if (days <= 0) return null;
+  const until = new Date(new Date(bill.date).getTime() + days * DAY);
+  const open = until.getTime() >= Date.now();
+
+  return (
+    <section
+      className={`flex items-start gap-3 rounded-2xl px-4 py-3 text-sm ${
+        open ? "bg-marigold/15" : "bg-secondary text-muted-foreground"
+      }`}
+    >
+      <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+      <div>
+        <p className="font-bold">
+          {open ? `Exchange till ${formatDateDDMMMYYYY(until)}` : `Exchange window ended ${formatDateDDMMMYYYY(until)}`}
+        </p>
+        {shop.exchange_note && <p className="text-xs opacity-80">{shop.exchange_note}</p>}
+      </div>
+    </section>
+  );
+}
+
+function ReviewAsk({ bill, shop, shopName }) {
+  const paidDayAgo = toNumber(bill.credit) === 0 && Date.now() - new Date(bill.date).getTime() >= DAY;
+  if (!paidDayAgo || !isHttps(shop.google_review_url)) return null;
+
+  return (
+    <a
+      href={shop.google_review_url}
+      className="press flex items-center gap-3 rounded-2xl bg-indigo px-4 py-3.5 text-white"
+    >
+      <Star className="h-6 w-6 shrink-0 fill-marigold text-marigold" aria-hidden />
+      <span className="min-w-0 flex-1 text-sm">
+        <b className="block font-display text-base">Happy with your purchase?</b>
+        A quick Google review helps {shopName} a lot.
+      </span>
+      <span className="rounded-full bg-marigold px-3.5 py-1.5 text-sm font-extrabold text-marigold-foreground">
+        Rate us
+      </span>
+    </a>
+  );
+}
 
 function PayCard({ shopName, upiId, bill, customerDue, dueBills }) {
   const due = toNumber(bill.credit);
@@ -200,7 +245,10 @@ export default function BillPage() {
   useEffect(() => {
     if (!CODE.test(code)) return;
     billLinkService.getPublicBill(code).then(
-      (page) => setState(page?.bill ? { status: "ready", page } : { status: "missing" }),
+      (page) => {
+        setState(page?.bill ? { status: "ready", page } : { status: "missing" });
+        if (page?.bill) billLinkService.markSeen(code).catch(() => {});
+      },
       () => setState({ status: "error" })
     );
   }, [code]);
@@ -278,7 +326,9 @@ export default function BillPage() {
       )}
 
       <Receipt bill={bill} payments={page.payments ?? []} />
+      <ExchangeWindow bill={bill} shop={shop} />
       <Actions bill={bill} shop={shop} shopName={shopName} />
+      <ReviewAsk bill={bill} shop={shop} shopName={shopName} />
 
       <p className="pt-2 text-center text-sm font-semibold text-muted-foreground">
         Thank you for shopping with {shopName}!

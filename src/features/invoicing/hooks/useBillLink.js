@@ -11,3 +11,14 @@ export function useBillLink(invoice, origin) {
   });
   return data ?? null;
 }
+
+export function useBillSeen(invoice, enabled) {
+  const { data } = useQuery({
+    queryKey: ["bill-seen", invoice?.date],
+    queryFn: () => billLinkService.seenFor(invoice.date),
+    enabled: Boolean(invoice?.date && enabled),
+    staleTime: 30_000,
+    retry: false,
+  });
+  return data ?? null;
+}

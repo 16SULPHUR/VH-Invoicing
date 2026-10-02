@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoiceItemCount, invoiceTotal, lineAmount, parseInvoiceLines } from "@/utils/invoice";
 import { formatAmount } from "@/utils/formatters";
 
-const EMPTY_LINE_FORM = { name: "", price: "", quantity: "" };
+const EMPTY_LINE_FORM = { name: "", price: "", quantity: "", mrp: "" };
 const EMPTY_PAYMENTS = { cash: "", upi: "", credit: "" };
 
 function readSaved(key) {
@@ -77,7 +77,7 @@ export function useInvoiceDraft({ persistKey } = {}) {
   const submitLineForm = useCallback(
     (event) => {
       event?.preventDefault();
-      const { name, price, quantity } = lineForm;
+      const { name, price, quantity, mrp } = lineForm;
       if (!name || !price || !quantity) return;
 
       const line = {
@@ -85,6 +85,7 @@ export function useInvoiceDraft({ persistKey } = {}) {
         price: parseFloat(price),
         quantity: parseInt(quantity, 10),
         amount: lineAmount({ price, quantity }),
+        ...(parseFloat(mrp) > parseFloat(price) && { mrp: parseFloat(mrp) }),
       };
 
       setLines((prev) => {
@@ -106,6 +107,7 @@ export function useInvoiceDraft({ persistKey } = {}) {
         name: line.name,
         price: String(line.price),
         quantity: String(line.quantity),
+        mrp: line.mrp ? String(line.mrp) : "",
       });
       setEditingLineIndex(index);
     },
@@ -120,6 +122,64 @@ export function useInvoiceDraft({ persistKey } = {}) {
         return { ...line, quantity, amount: lineAmount({ price: line.price, quantity }) };
       })
     );
+  }, []);
+
+  /** Adds a product, or one more of it when its barcode (or name) is already on the bill. */
+  const addProduct = useCallback((product, barcode) => {
+    const price = Number(product.sellingPrice) || 0;
+    setLines((prev) => {
+      const index = prev.findIndex((line) =>
+        barcode ? String(line.barcode) === String(barcode) : line.name === product.name
+      );
+      if (index === -1) {
+        const line = { name: product.name, quantity: 1, price, amount: price };
+        return [{ ...line, ...(barcode && { barcode: String(barcode) }) }, ...prev];
+      }
+      return prev.map((line, i) => {
+        if (i !== index) return line;
+        const quantity = line.quantity + 1;
+        return { ...line, quantity, amount: lineAmount({ price: line.price, quantity }) };
+      });
+    });
+  }, []);
+
+  /** Spreads an agreed bill total across the lines in proportion, the last line taking the rounding. */
+  const settleTotal = useCallback((target) => {
+    setLines((prev) => {
+      const goal = Number(target);
+      const current = invoiceTotal(prev);
+      if (!prev.length || !(goal > 0) || !current) return prev;
+      const ratio = goal / current;
+      const lastIndex = prev.length - 1;
+      let allocated = 0;
+      return prev.map((line, index) => {
+        const mrp = line.mrp ?? line.price;
+        const price =
+          index === lastIndex
+            ? Math.max(0, Math.round(((goal - allocated) / line.quantity) * 100) / 100)
+            : Math.round(line.price * ratio * 100) / 100;
+        allocated += price * line.quantity;
+        const { mrp: _old, ...rest } = line;
+        return { ...rest, price, amount: lineAmount({ price, quantity: line.quantity }), ...(mrp > price && { mrp }) };
+      });
+    });
+  }, []);
+
+  const snapshot = useCallback(
+    () => ({ customerName, customerNumber, lines, note, payments }),
+    [customerName, customerNumber, lines, note, payments]
+  );
+
+  const restore = useCallback((bill) => {
+    setCustomerName(bill.customerName ?? "");
+    setCustomerNumber(bill.customerNumber ?? "");
+    setLines(bill.lines ?? []);
+    setNote(bill.note ?? "");
+    setPayments(bill.payments ?? EMPTY_PAYMENTS);
+    setCurrentDate(new Date());
+    setLineForm(EMPTY_LINE_FORM);
+    setEditingLineIndex(null);
+    setEditingInvoice(null);
   }, []);
 
   const deleteLine = useCallback((index) => {
@@ -173,6 +233,10 @@ export function useInvoiceDraft({ persistKey } = {}) {
     submitLineForm,
     startEditingLine,
     changeLineQuantity,
+    addProduct,
+    settleTotal,
+    snapshot,
+    restore,
     deleteLine,
     total,
     itemCount,

@@ -6,6 +6,7 @@ import { useInvoiceWorkspace } from "./hooks/useInvoiceWorkspace";
 import { DesktopInvoicing } from "./components/DesktopInvoicing";
 import { MobileInvoicing } from "./components/MobileInvoicing";
 import { InvoiceModal } from "./components/InvoiceModal";
+import { MobileInvoiceSheet } from "./components/MobileInvoiceSheet";
 
 export default function InvoicingPage() {
   const isMobile = useIsMobile();
@@ -28,13 +29,14 @@ export default function InvoicingPage() {
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams, setCustomerName, setCustomerNumber, setNote]);
   const Layout = isMobile ? MobileInvoicing : DesktopInvoicing;
+  const InvoiceView = isMobile ? MobileInvoiceSheet : InvoiceModal;
 
   return (
     <div className="h-full min-h-0">
       <Layout workspace={workspace} />
 
       {workspace.selectedInvoice && (
-        <InvoiceModal
+        <InvoiceView
           invoice={workspace.selectedInvoice}
           onClose={workspace.closeInvoice}
           onEdit={workspace.editInvoice}
