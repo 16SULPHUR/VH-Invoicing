@@ -18,6 +18,7 @@ export default function ScannerPage() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [note, setNote] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
   const print = usePhonePrint();
   const { refetch: refetchScans } = cart;
@@ -92,6 +93,7 @@ export default function ScannerPage() {
       customer_name: customerName.trim(),
       customer_phone: customerPhone.trim(),
       payment_mode: paymentMode,
+      note: note.trim(),
     };
     const problem = printJobError(job);
     if (problem) {
@@ -101,6 +103,7 @@ export default function ScannerPage() {
     if (await print.send(job)) {
       setCustomerName("");
       setCustomerPhone("");
+      setNote("");
       setPaymentMode("");
     }
   };
@@ -124,11 +127,14 @@ export default function ScannerPage() {
 
       <PhonePrintPanel
         print={print}
+        items={cart.items}
         customerName={customerName}
         customerPhone={customerPhone}
+        note={note}
         paymentMode={paymentMode}
         onCustomerName={setCustomerName}
         onCustomerPhone={setCustomerPhone}
+        onNote={setNote}
         onPaymentMode={setPaymentMode}
         onPrint={handlePrint}
       />

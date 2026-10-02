@@ -60,8 +60,31 @@ export const printJobService = {
         .from(TABLE)
         .update({ status: PRINT_JOB_STATUS.FAILED, error, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .is("invoice_id", null)
+        .eq("status", PRINT_JOB_STATUS.CLAIMED)
     );
+  },
+
+  async markPrinted(id) {
+    return unwrap(
+      await supabase
+        .from(TABLE)
+        .update({ status: PRINT_JOB_STATUS.SAVED, error: null, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("status", PRINT_JOB_STATUS.CLAIMED)
+    );
+  },
+
+  /** Asks a till to print a bill that is already saved. The job carries the invoice, not items. */
+  async createReprint({ invoice, requestedBy = "Phone" }) {
+    const paidWith = ["cash", "upi", "credit"].find((mode) => Number(invoice[mode]) > 0) || "cash";
+    return this.create({
+      invoice_id: invoice.id,
+      invoice_date: invoice.date,
+      customer_name: invoice.customerName || "",
+      customer_phone: String(invoice.customerNumber || ""),
+      payment_mode: paidWith,
+      requested_by: requestedBy,
+    });
   },
 
   async retry(id) {

@@ -1,6 +1,10 @@
+import { useMemo } from "react";
 import { CheckCircle2, Loader2, Printer, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useCustomers } from "@/features/customers/hooks/useCustomers";
+import { phoneDigits } from "@/features/customers/lib/customerKey";
+import { formatRupees } from "@/utils/formatters";
 import { PRINT_JOB_STATUS } from "@/services/printJobService";
 import { PAYMENT_MODES } from "@/features/printing/printJobBill";
 
@@ -83,17 +87,42 @@ function JobStatus({ print }) {
   );
 }
 
+function useCustomerSuggestions(name, phone) {
+  const { data: customers = [] } = useCustomers();
+  return useMemo(() => {
+    const byName = name.trim().toLowerCase();
+    const byPhone = phoneDigits(phone);
+    if (byName.length < 2 && byPhone.length < 3) return [];
+    return customers
+      .filter((customer) => {
+        const digits = phoneDigits(customer.phone);
+        const matchesName = byName.length >= 2 && customer.name?.toLowerCase().includes(byName);
+        const matchesPhone = byPhone.length >= 3 && digits.includes(byPhone);
+        const alreadyChosen = digits === byPhone && customer.name?.trim() === name.trim();
+        return (matchesName || matchesPhone) && !alreadyChosen;
+      })
+      .slice(0, 4);
+  }, [customers, name, phone]);
+}
+
 export function PhonePrintPanel({
   print,
+  items,
   customerName,
   customerPhone,
+  note,
   paymentMode,
   onCustomerName,
   onCustomerPhone,
+  onNote,
   onPaymentMode,
   onPrint,
 }) {
+  const suggestions = useCustomerSuggestions(customerName, customerPhone);
   if (print.job && print.isOpen) return <JobStatus print={print} />;
+
+  const total = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const pieces = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
   return (
     <div className="space-y-2">
@@ -105,7 +134,7 @@ export function PhonePrintPanel({
           value={customerName}
           onChange={(event) => onCustomerName(event.target.value)}
           placeholder={paymentMode === "credit" ? "Customer name (needed)" : "Customer name"}
-          autoComplete="name"
+          autoComplete="off"
           className="min-w-[9rem] flex-1 bg-surface"
         />
         <Input
@@ -114,10 +143,45 @@ export function PhonePrintPanel({
           value={customerPhone}
           onChange={(event) => onCustomerPhone(event.target.value)}
           placeholder={paymentMode === "credit" ? "Phone (needed)" : "Phone"}
-          autoComplete="tel"
+          autoComplete="off"
           className="w-36 bg-surface"
         />
       </div>
+      {suggestions.length > 0 && (
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+          {suggestions.map((customer) => (
+            <li key={`${customer.name}-${customer.phone}`}>
+              <button
+                type="button"
+                onClick={() => {
+                  onCustomerName(customer.name || "");
+                  onCustomerPhone(phoneDigits(customer.phone));
+                }}
+                className="press flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm"
+              >
+                <span className="truncate font-semibold">{customer.name}</span>
+                <span className="tabular-nums text-muted-foreground">{phoneDigits(customer.phone)}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Input
+        type="text"
+        value={note}
+        onChange={(event) => onNote(event.target.value)}
+        placeholder="Note on the bill (optional)"
+        maxLength={200}
+        className="bg-surface"
+      />
+      {items.length > 0 && (
+        <div className="flex items-baseline justify-between rounded-xl bg-secondary px-3 py-2">
+          <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            {items.length} {items.length === 1 ? "item" : "items"} · {pieces} pcs
+          </span>
+          <span className="font-display text-xl font-extrabold tabular-nums">{formatRupees(total)}</span>
+        </div>
+      )}
       <div className="flex gap-2">
         <div
           role="radiogroup"
