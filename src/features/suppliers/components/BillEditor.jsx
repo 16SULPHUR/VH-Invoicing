@@ -38,14 +38,13 @@ function blank(today) {
 function ReadPreview({ read, supplier, suppliers, onUse, onDismiss }) {
   const itemsTotal = round2((read.items ?? []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0));
   const rows = [
-    ["Supplier", read.supplier_name ?? "—", supplier ? `Matches ${supplier.name}` : suppliers.length ? "Not in your supplier list" : null],
-    ["GSTIN", read.gstin ?? "—"],
-    ["Bill no.", read.bill_no ?? "—"],
-    ["Bill date", read.bill_date ?? "—"],
-    ["Taxable value", read.taxable_amount != null ? formatRupees(read.taxable_amount) : "—"],
-    ["GST", read.gst_rate != null ? `${read.gst_rate}%` : "—"],
-    ["HSN", read.hsn ?? "—"],
-    ["Total", read.total != null ? formatRupees(read.total) : "—"],
+    ["Supplier", read.supplier_name ?? "—", supplier ? `Matches ${supplier.name}` : suppliers.length ? "Not in your supplier list" : null, true],
+    ["GSTIN", read.gstin ?? "—", null, true],
+    ["Bill no.", read.bill_no ?? "—", null, true],
+    ["Bill date", read.bill_date ?? "—", null, true],
+    ["GST", read.gst_rate != null ? `${read.gst_rate}%` : "—", null, false],
+    ["HSN", read.hsn ?? "—", null, false],
+    ["Total", read.total != null ? formatRupees(read.total) : "—", null, true],
   ];
   const mismatch = itemsTotal > 0 && read.total != null && Math.abs(itemsTotal - Number(read.total)) > 1;
   return (
@@ -53,18 +52,19 @@ function ReadPreview({ read, supplier, suppliers, onUse, onDismiss }) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-display text-base font-bold">What was read from the photo</p>
-          <p className="text-xs text-muted-foreground">Check it against the paper bill. Nothing is saved yet.</p>
+          <p className="text-xs text-muted-foreground">Read on this phone, so mistakes happen, especially with handwriting. Check every field marked Check. Nothing is saved yet.</p>
         </div>
         <button type="button" onClick={onDismiss} className="press rounded-full p-1 hover:bg-black/5" aria-label="Dismiss">
           <X className="h-4 w-4" aria-hidden />
         </button>
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-        {rows.map(([label, value, note]) => (
+        {rows.map(([label, value, note, important]) => (
           <div key={label} className="contents">
             <dt className="text-muted-foreground">{label}</dt>
             <dd className="min-w-0 font-semibold tabular-nums">
-              {value}
+              {value === "—" ? <span className="text-destructive">Not found, type it in</span> : value}
+              {value !== "—" && important && <span className="ml-2 rounded-full bg-marigold/30 px-1.5 py-0.5 text-[10px] font-bold uppercase text-warning">Check</span>}
               {note && <span className="ml-2 text-xs font-normal text-muted-foreground">{note}</span>}
             </dd>
           </div>
@@ -107,6 +107,7 @@ export function BillEditor({ bill, bills, suppliers, supplierById, open, onClose
   const [dueTouched, setDueTouched] = useState(false);
   const [photo, setPhoto] = useState({ file: null, url: null, existing: null });
   const [reading, setReading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [read, setRead] = useState(null);
   const [addingSupplier, setAddingSupplier] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -172,8 +173,9 @@ export function BillEditor({ bill, bills, suppliers, supplierById, open, onClose
 
   const readPhoto = async () => {
     setReading(true);
+    setProgress(0);
     try {
-      setRead(await readSupplierBill(photo.file));
+      setRead(await readSupplierBill(photo.file, setProgress));
     } catch (error) {
       toast({ title: "Couldn't read the bill", description: error.message, variant: "destructive" });
     } finally {
@@ -265,7 +267,7 @@ export function BillEditor({ bill, bills, suppliers, supplierById, open, onClose
             </Button>
             {photo.file && (
               <Button type="button" variant="marigold" className="press" disabled={reading} onClick={readPhoto}>
-                <ScanText className="h-4 w-4" aria-hidden /> {reading ? "Reading…" : "Read bill"}
+                <ScanText className="h-4 w-4" aria-hidden /> {reading ? `Reading… ${Math.round(progress * 100)}%` : "Read bill"}
               </Button>
             )}
             <input ref={fileInput} type="file" accept="image/*" capture="environment" hidden onChange={(event) => { chooseFile(event.target.files?.[0]); event.target.value = ""; }} />
