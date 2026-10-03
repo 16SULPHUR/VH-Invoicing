@@ -1,0 +1,60 @@
+import { supabase } from "@/lib/supabase";
+import { applyRange } from "@/features/reports/range/reportRange";
+
+export async function getTransactions(range) {
+  const { data, error } = await applyRange(supabase.from("transactions").select("*"), range).order("date", {
+    ascending: false,
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getLedger(range) {
+  const { data, error } = await applyRange(supabase.from("ledger_view").select("*"), range).order("date", {
+    ascending: true,
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+/** Balances as of the range's end date. */
+export async function getTrialBalance(range) {
+  const { data, error } = await applyRange(supabase.from("ledger_view").select("account_name, debit, credit"), {
+    to: range?.to,
+  });
+  if (error) throw error;
+
+  const balance = {};
+  (data || []).forEach(({ account_name, debit, credit }) => {
+    const numericDebit = Number(debit) || 0;
+    const numericCredit = Number(credit) || 0;
+    if (!balance[account_name]) balance[account_name] = { debit: 0, credit: 0 };
+    balance[account_name].debit += numericDebit;
+    balance[account_name].credit += numericCredit;
+  });
+
+  return Object.entries(balance).map(([account, { debit, credit }]) => ({
+    account,
+    debit,
+    credit,
+  }));
+}
+
+export async function getCollectionsByDateRange(startISO, endISO) {
+  const { data, error } = await supabase
+    .from("ledger_view")
+    .select("account_name, debit, date")
+    .gte("date", startISO)
+    .lte("date", endISO)
+    .in("account_name", ["Cash", "UPI", "Accounts Receivable"]);
+  if (error) throw error;
+
+  const sums = { cash: 0, upi: 0, credit: 0 };
+  (data || []).forEach((row) => {
+    const amount = Number(row.debit) || 0;
+    if (row.account_name === "Cash") sums.cash += amount;
+    else if (row.account_name === "UPI") sums.upi += amount;
+    else if (row.account_name === "Accounts Receivable") sums.credit += amount;
+  });
+  return sums;
+}

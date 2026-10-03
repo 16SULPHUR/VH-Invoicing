@@ -1,0 +1,174 @@
+import { useEffect, useState } from "react";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Field } from "@/components/common/Field";
+import { cn } from "@/lib/utils";
+import { formatRupees } from "@/utils/formatters";
+import { ICON_STROKE } from "@/config/navigation";
+
+function CatalogCombobox({ catalog, selectedId, onSelect, onTypeName, typedName, id }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const selected = catalog.find((product) => product.id === selectedId);
+  const shown = selected?.name || typedName;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          id={id}
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="h-10 w-full justify-between rounded-xl bg-surface-elevated font-medium hover:bg-surface"
+        >
+          <span className={cn("truncate", !shown && "text-muted-foreground")}>
+            {shown || "Search a product or scan its barcode…"}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[18rem] overflow-hidden rounded-2xl p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search products…" value={search} onValueChange={setSearch} />
+          <CommandEmpty>No products found.</CommandEmpty>
+          <CommandList>
+            <CommandGroup>
+              {catalog.map((product) => (
+                <CommandItem
+                  key={product.id}
+                  value={product.name}
+                  onSelect={() => {
+                    onSelect(product.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedId === product.id ? "opacity-100" : "opacity-0"
+                    )}
+                    aria-hidden
+                  />
+                  <span className="flex w-full justify-between gap-2">
+                    <span className="truncate">{product.name}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {formatRupees(product.sellingPrice)}
+                    </span>
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            {search && (
+              <CommandGroup heading="Not in catalog">
+                <CommandItem
+                  value={search}
+                  onSelect={() => {
+                    onTypeName(search);
+                    onSelect("");
+                    setOpen(false);
+                  }}
+                >
+                  Add &quot;{search}&quot; as a one-off
+                </CommandItem>
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export function ProductPicker({ catalog, lineForm, setLineForm, isEditingLine, onSubmit }) {
+  const [selectedId, setSelectedId] = useState("");
+
+  const setField = (field) => (event) =>
+    setLineForm((previous) => ({ ...previous, [field]: event.target.value }));
+
+  // Picking a catalog product prefills name, price and a quantity of one.
+  useEffect(() => {
+    if (!selectedId) return;
+    const product = catalog.find((item) => item.id === selectedId);
+    if (!product) return;
+    setLineForm({
+      name: product.name,
+      quantity: "1",
+      price: String(product.sellingPrice ?? ""),
+      mrp: String(product.sellingPrice ?? ""),
+    });
+  }, [selectedId, catalog, setLineForm]);
+
+  const handleSubmit = (event) => {
+    onSubmit(event);
+    setSelectedId("");
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-[1fr_1fr_auto] items-end gap-3 sm:grid-cols-[minmax(0,1fr)_5rem_7rem_auto]"
+    >
+      <Field label="Product" htmlFor="line-product" className="col-span-3 sm:col-span-1">
+        {(id) => (
+          <CatalogCombobox
+            id={id}
+            catalog={catalog}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            typedName={lineForm.name}
+            onTypeName={(name) => setLineForm((previous) => ({ ...previous, name }))}
+          />
+        )}
+      </Field>
+
+      <Field label="Qty" htmlFor="line-qty">
+        {(id) => (
+          <Input
+            id={id}
+            type="number"
+            autoComplete="off"
+            inputMode="numeric"
+            min="1"
+            value={lineForm.quantity}
+            onChange={setField("quantity")}
+            className="h-10 text-right font-semibold tabular-nums"
+            required
+          />
+        )}
+      </Field>
+
+      <Field label="Agreed price" htmlFor="line-price">
+        {(id) => (
+          <Input
+            id={id}
+            type="number"
+            autoComplete="off"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={lineForm.price}
+            onChange={setField("price")}
+            className="h-10 text-right font-semibold tabular-nums"
+            required
+          />
+        )}
+      </Field>
+
+      <Button type="submit" className="block-shadow mb-1 h-10">
+        <Plus size={16} strokeWidth={ICON_STROKE} className="mr-1.5" aria-hidden />
+        {isEditingLine ? "Update" : "Add"}
+      </Button>
+    </form>
+  );
+}
