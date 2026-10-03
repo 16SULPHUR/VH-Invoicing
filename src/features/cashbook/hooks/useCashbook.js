@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { computeBalances, normalizeAmount } from "../balances";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
+import { useEnteredBy } from "./useEnteredBy";
 
 const EMPTY_CASHBOOK = { accounts: [], reconciliations: [], transactions: [] };
 
@@ -22,6 +23,8 @@ export function useCashbook() {
     EMPTY_CASHBOOK
   );
   useQueryErrorToast(error, "Failed to load cashbook data");
+
+  const [enteredBy] = useEnteredBy();
 
   const balances = useMemo(() => computeBalances(data), [data]);
 
@@ -50,6 +53,7 @@ export function useCashbook() {
         amount: normalizeAmount(numericAmount, type),
         type,
         description: note || null,
+        author: enteredBy.trim() || null,
       });
     },
     onSuccess: () => {
@@ -60,7 +64,29 @@ export function useCashbook() {
       toast({ title: "Failed to save entry", description: error.message, variant: "destructive" }),
   });
 
-  return { ...data, balances, isLoading, refetch, addEntry, accountIdByName, invalidate };
+  const deleteEntries = useMutation({
+    mutationFn: async ({ transactionIds = [], reconciliationId = null }) => {
+      await cashbookService.deleteTransactions(transactionIds);
+      if (reconciliationId) await cashbookService.deleteReconciliation(reconciliationId);
+    },
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Removed" });
+    },
+    onError: (error) =>
+      toast({ title: "Could not remove", description: error.message, variant: "destructive" }),
+  });
+
+  return {
+    ...data,
+    balances,
+    isLoading,
+    refetch,
+    addEntry,
+    deleteEntries,
+    accountIdByName,
+    invalidate,
+  };
 }
 
 /** Preview-then-import flow for pasted chat logs. */

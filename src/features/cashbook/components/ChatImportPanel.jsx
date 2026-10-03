@@ -26,10 +26,7 @@ export function ChatImportPanel({ preview, onPreview, onImport, isBusy }) {
         <Button variant="outline" onClick={() => onPreview(text)} disabled={!text || isBusy}>
           Preview
         </Button>
-        <Button
-          onClick={() => onImport(() => setText(""))}
-          disabled={!preview || isBusy}
-        >
+        <Button onClick={() => onImport(() => setText(""))} disabled={!preview || isBusy}>
           Import
         </Button>
       </div>
