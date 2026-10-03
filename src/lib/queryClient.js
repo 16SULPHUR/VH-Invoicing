@@ -35,7 +35,7 @@ export const queryKeys = {
     catalog: ["products", "catalog"],
     detail: (id) => ["products", id],
   },
-  suppliers: { all: ["suppliers"] },
+  suppliers: { all: ["suppliers"], books: ["suppliers", "books"] },
   customers: {
     all: ["customers"],
     credit: ["customers", "credit"],

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -32,10 +33,12 @@ export default function AddProductForm() {
   const attributesAvailable = hasAttributesColumn(products);
   const form = useAddProduct({ attributesAvailable });
   const firstFieldRef = useRef(null);
+  const prefilledSupplier = useLocation().state?.supplier;
 
   useEffect(() => {
     firstFieldRef.current?.focus();
-  }, []);
+    if (prefilledSupplier != null) form.setField("supplier", prefilledSupplier);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <form
