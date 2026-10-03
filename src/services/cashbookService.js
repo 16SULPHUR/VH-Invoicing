@@ -3,7 +3,6 @@ import { supabase, unwrap } from "@/lib/supabase";
 export const DEFAULT_CASH_ACCOUNTS = ["HOME", "SHOP"];
 
 const RECONCILIATION_LOOKBACK_DAYS = 365;
-const TRANSACTION_FALLBACK_LOOKBACK_DAYS = 180;
 
 function daysAgoISODate(days) {
   const date = new Date();
@@ -73,6 +72,33 @@ export const cashbookService = {
     return unwrap(await supabase.from("cash_transactions").insert(transactions));
   },
 
+  async deleteTransactions(ids) {
+    if (ids.length === 0) return null;
+    return unwrap(await supabase.from("cash_transactions").delete().in("id", ids));
+  },
+
+  async deleteReconciliation(id) {
+    return unwrap(await supabase.from("cash_reconciliations").delete().eq("id", id));
+  },
+
+  /** Replaces any earlier handover for the same day, then writes the new one. */
+  async saveHandover({ homeId, shopId, date, brought, left, note, author, replaceIds, nextDate }) {
+    await this.deleteTransactions(replaceIds);
+    if (brought > 0) {
+      await this.addTransaction({
+        account_id: homeId,
+        txn_date: date,
+        amount: brought,
+        type: "inflow",
+        description: `Handover ${date}`,
+        author,
+      });
+    }
+    return this.upsertReconciliations([
+      { account_id: shopId, as_of_date: nextDate, balance: left, note, author },
+    ]);
+  },
+
   async upsertReconciliations(snapshots) {
     if (snapshots.length === 0) return null;
     return unwrap(
@@ -102,29 +128,10 @@ export const cashbookService = {
     return data;
   },
 
-  /**
-   * Transactions are only needed from the oldest "latest snapshot" onwards, since
-   * anything before that is already folded into a reconciliation balance.
-   */
-  transactionsSinceFor(reconciliations) {
-    if (!reconciliations?.length) return daysAgoISODate(TRANSACTION_FALLBACK_LOOKBACK_DAYS);
-
-    const latestByAccount = new Map();
-    for (const row of reconciliations) {
-      const previous = latestByAccount.get(row.account_id);
-      if (!previous || row.as_of_date > previous.as_of_date) {
-        latestByAccount.set(row.account_id, row);
-      }
-    }
-
-    const latestDates = Array.from(latestByAccount.values(), (row) => row.as_of_date).sort();
-    return latestDates[0] ?? daysAgoISODate(TRANSACTION_FALLBACK_LOOKBACK_DAYS);
-  },
-
   async loadAll() {
     const accounts = await this.ensureDefaultAccounts();
     const reconciliations = await this.listReconciliations();
-    const transactions = await this.listTransactions(this.transactionsSinceFor(reconciliations));
+    const transactions = await this.listTransactions(daysAgoISODate(RECONCILIATION_LOOKBACK_DAYS));
     return { accounts, reconciliations, transactions };
   },
 };
