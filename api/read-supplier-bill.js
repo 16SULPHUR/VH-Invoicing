@@ -1,6 +1,6 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./_lib/publicEnv.js";
 
-const MODEL = "claude-sonnet-5-5";
+const MODEL = "gemini-2.5-flash";
 
 const PROMPT = `This is a photo of a supplier's invoice to a saree shop in India. Read it and reply with JSON only, no other text:
 {
@@ -15,7 +15,7 @@ const PROMPT = `This is a photo of a supplier's invoice to a saree shop in India
   "items": [{"description": string, "quantity": number|null, "rate": number|null, "amount": number|null}],
   "notes": string|null
 }
-"total" is the final payable amount. "gst_rate" is the combined GST percentage (for example 5, not 2.5). Use null for anything you cannot read; never guess digits. Indian dates are day first.`;
+"total" is the final payable amount. "gst_rate" is the combined GST percentage (for example 5, not 2.5). Use null for anything you cannot read; never guess digits. Indian dates are day first. The bill may be handwritten and may mix Gujarati, Hindi and English; transcribe names in English letters.`;
 
 async function signedIn(request) {
   const token = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
@@ -27,8 +27,8 @@ async function signedIn(request) {
 }
 
 export async function POST(request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return Response.json({ error: "Bill reading is not set up (ANTHROPIC_API_KEY is missing)." }, { status: 503 });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return Response.json({ error: "Bill reading is not set up (GEMINI_API_KEY is missing)." }, { status: 503 });
   if (!(await signedIn(request))) return Response.json({ error: "Please sign in again." }, { status: 401 });
 
   let body;
@@ -42,27 +42,21 @@ export async function POST(request) {
     return Response.json({ error: "Send the bill as a JPEG, PNG or WebP image." }, { status: 400 });
   }
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
     method: "POST",
-    headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
     body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 2000,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: mediaType, data: image } },
-            { type: "text", text: PROMPT },
-          ],
-        },
-      ],
+      contents: [{ parts: [{ inline_data: { mime_type: mediaType, data: image } }, { text: PROMPT }] }],
+      generationConfig: { responseMimeType: "application/json", temperature: 0 },
     }),
   });
+  if (response.status === 429) {
+    return Response.json({ error: "The free reading limit was reached. Try again in a minute, or type the bill in." }, { status: 429 });
+  }
   if (!response.ok) return Response.json({ error: "The bill could not be read right now." }, { status: 502 });
 
   const result = await response.json();
-  const text = (result.content || []).filter((part) => part.type === "text").map((part) => part.text).join("");
+  const text = (result.candidates?.[0]?.content?.parts ?? []).map((part) => part.text ?? "").join("");
   const match = text.match(/\{[\s\S]*\}/);
   try {
     return Response.json({ bill: JSON.parse(match?.[0] ?? "") });
