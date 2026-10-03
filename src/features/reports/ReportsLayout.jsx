@@ -10,6 +10,7 @@ const REPORT_TABS = [
   { to: "customers", label: "Customers" },
   { to: "stock", label: "Stock", noRange: true },
   { to: "gst", label: "GST", noRange: true },
+  { to: "purchases", label: "Purchases", noRange: true },
   { to: "books", label: "Books" },
 ];
 

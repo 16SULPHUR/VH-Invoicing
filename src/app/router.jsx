@@ -11,11 +11,13 @@ const InventoryPage = lazy(() => import("@/features/inventory/InventoryPage"));
 const CounterPage = lazy(() => import("@/features/counter/CounterPage"));
 const CustomersPage = lazy(() => import("@/features/customers/CustomersPage"));
 const WhatsAppPage = lazy(() => import("@/features/whatsapp/WhatsAppPage"));
+const SuppliersPage = lazy(() => import("@/features/suppliers/SuppliersPage"));
 const CashbookPage = lazy(() => import("@/features/cashbook/CashbookPage"));
 const ReportsLayout = lazy(() => import("@/features/reports/ReportsLayout"));
 const TransactionsPage = lazy(() => import("@/features/reports/pages/TransactionsPage"));
 const LedgerPage = lazy(() => import("@/features/reports/pages/LedgerPage"));
 const TrialBalancePage = lazy(() => import("@/features/reports/pages/TrialBalancePage"));
+const PurchasesPage = lazy(() => import("@/features/reports/pages/PurchasesPage"));
 const GstReportPage = lazy(() => import("@/features/reports/pages/GstReportPage"));
 const OverviewPage = lazy(() => import("@/features/reports/pages/OverviewPage"));
 const SalesPage = lazy(() => import("@/features/reports/pages/SalesPage"));
@@ -53,6 +55,7 @@ export function createRouter({ onSignOut }) {
         { path: "inventory", element: <InventoryPage /> },
         { path: "customers", element: <CustomersPage /> },
         { path: "whatsapp", element: <WhatsAppPage /> },
+        { path: "suppliers", element: <SuppliersPage /> },
         { path: "cashbook", element: <CashbookPage /> },
         {
           path: "reports",
@@ -65,6 +68,7 @@ export function createRouter({ onSignOut }) {
             { path: "customers", element: <CustomersReportPage /> },
             { path: "stock", element: <StockPage /> },
             { path: "gst", element: <GstReportPage /> },
+            { path: "purchases", element: <PurchasesPage /> },
             {
               path: "books",
               element: <BooksLayout />,
