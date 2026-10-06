@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Field } from "@/components/common/Field";
 import { cn } from "@/lib/utils";
 import { ICON_STROKE } from "@/config/navigation";
+import { findKnownCustomer } from "@/utils/invoice";
 
 function CustomerCombobox({ customers, value, onSelect, id }) {
   const [open, setOpen] = useState(false);
@@ -95,6 +96,7 @@ export function CustomerDetails({
   setCustomerNumber,
 }) {
   const [isTyping, setIsTyping] = useState(false);
+  const known = findKnownCustomer(customers, customerName);
 
   return (
     <div className="grid grid-cols-[1.3fr_1fr] gap-3">
@@ -122,7 +124,7 @@ export function CustomerDetails({
                 value={customerName}
                 onSelect={(customer) => {
                   setCustomerName(customer.name);
-                  if (customer.phone) setCustomerNumber(customer.phone);
+                  if (customer.id) setCustomerNumber(customer.phone ? String(customer.phone) : "");
                 }}
               />
               <Button
@@ -148,6 +150,7 @@ export function CustomerDetails({
             inputMode="tel"
             value={customerNumber}
             onChange={(event) => setCustomerNumber(event.target.value)}
+            placeholder={known ? "Not needed" : ""}
             className="h-10"
             autoComplete="tel"
           />

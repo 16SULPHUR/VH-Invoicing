@@ -20,6 +20,7 @@ const RECENT_KEY = ["print-jobs", "recent"];
 async function rememberCreditCustomer({ credit, customerName, customerNumber }) {
   if (credit <= 0) return;
   const phone = normalizePhone(customerNumber);
+  if (phone.length !== 10) return;
   const customers = await customerService.list();
   if (customers.some((customer) => normalizePhone(customer.phone) === phone)) return;
   await customerService.create({ name: customerName, phone: Number(phone) });
@@ -110,10 +111,11 @@ export function PrintStationProvider({ children }) {
           return;
         }
 
-        const problem = printJobError(claimed);
+        const customers = await customerService.list().catch(() => []);
+        const problem = printJobError(claimed, customers);
         if (problem) throw new Error(problem);
 
-        const { lines, total, payments, payload } = billFromJob(claimed);
+        const { lines, total, payments, payload } = billFromJob(claimed, customers);
         const result = await printJobService.finish(claimed.id, payload);
         const invoice = result.invoice;
 
