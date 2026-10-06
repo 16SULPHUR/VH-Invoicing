@@ -9,6 +9,7 @@ import {
   paymentsBalance,
   paymentsTotal,
   stockWarningToast,
+  withKnownPhone,
 } from "@/utils/invoice";
 import { customerService } from "@/services/customerService";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,12 +87,12 @@ export function useInvoiceWorkspace({
 
   const blockedByCredit = useCallback(
     (bill) => {
-      const message = creditCustomerError(bill);
+      const message = creditCustomerError({ ...bill, customers });
       if (!message) return false;
       toast({ title: "Customer needed", description: message, variant: "destructive" });
       return true;
     },
-    [toast]
+    [toast, customers]
   );
 
   // Credit customers become saved customers so their phone is there next time.
@@ -99,6 +100,7 @@ export function useInvoiceWorkspace({
     async ({ payments, customerName, customerNumber }) => {
       if (toNumber(payments.credit) <= 0 || !isOnline) return;
       const phone = normalizePhone(customerNumber);
+      if (phone.length !== 10) return;
       if (customers.some((customer) => normalizePhone(customer.phone) === phone)) return;
       try {
         await customerService.create({ name: customerName.trim(), phone: Number(phone) });
@@ -192,13 +194,14 @@ export function useInvoiceWorkspace({
       });
       return;
     }
-    if (blockedByCredit(draft)) return;
+    const bill = withKnownPhone(draft, customers);
+    if (blockedByCredit(bill)) return;
 
     // The stored date string is the bill's key; re-formatting it can miss the row.
     const date = draft.editingInvoice.date;
     try {
-      const saved = await invoiceService.updateInvoice(date, toPayload(draft, { date }));
-      rememberCreditCustomer(draft);
+      const saved = await invoiceService.updateInvoice(date, toPayload(bill, { date }));
+      rememberCreditCustomer(bill);
       refreshAll();
       draft.reset();
       loadScannedProducts();
@@ -220,6 +223,7 @@ export function useInvoiceWorkspace({
     }
   }, [
     draft,
+    customers,
     blockedByCredit,
     rememberCreditCustomer,
     refreshAll,
@@ -251,12 +255,15 @@ export function useInvoiceWorkspace({
         return;
       }
       const unpaid = paymentsTotal(draft.payments) === 0;
-      const bill = {
-        ...draft,
-        customerName,
-        customerNumber,
-        payments: unpaid ? { cash: "", upi: "", credit: draft.total } : draft.payments,
-      };
+      const bill = withKnownPhone(
+        {
+          ...draft,
+          customerName,
+          customerNumber,
+          payments: unpaid ? { cash: "", upi: "", credit: draft.total } : draft.payments,
+        },
+        customers
+      );
       if (blockedByCredit(bill)) return;
 
       const invoiceId = nextInvoiceId;
@@ -265,8 +272,8 @@ export function useInvoiceWorkspace({
           <PrintableInvoice
             invoiceId={invoiceId}
             invoiceDate={formatInvoiceDate(new Date())}
-            customerName={customerName}
-            customerContact={customerNumber}
+            customerName={bill.customerName}
+            customerContact={bill.customerNumber}
             products={draft.lines}
             total={draft.total}
             payments={bill.payments}
@@ -321,6 +328,7 @@ export function useInvoiceWorkspace({
     },
     [
       draft,
+      customers,
       nextInvoiceId,
       blockedByCredit,
       printDocument,

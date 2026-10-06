@@ -63,12 +63,30 @@ export function normalizePhone(value) {
     .slice(-10);
 }
 
+const nameKey = (name) => String(name ?? "").trim().toLowerCase();
+
+/** The one saved customer with this name, or null when there is none or several. */
+export function findKnownCustomer(customers, name) {
+  const key = nameKey(name);
+  if (!key) return null;
+  const matches = (customers || []).filter((customer) => nameKey(customer.name) === key);
+  return matches.length === 1 ? matches[0] : null;
+}
+
+/** Fills a blank phone from the saved customer, so their bills group together. */
+export function withKnownPhone(bill, customers) {
+  if (normalizePhone(bill.customerNumber)) return bill;
+  const phone = normalizePhone(findKnownCustomer(customers, bill.customerName)?.phone);
+  return phone.length === 10 ? { ...bill, customerNumber: phone } : bill;
+}
+
 /** Credit needs someone to collect it from. Returns an error message or null. */
-export function creditCustomerError({ payments, customerName, customerNumber }) {
+export function creditCustomerError({ payments, customerName, customerNumber, customers }) {
   if (toNumber(payments.credit) <= 0) return null;
   if (!String(customerName ?? "").trim()) return "Add the customer's name for a credit bill.";
-  if (normalizePhone(customerNumber).length !== 10) {
-    return "Add a 10-digit phone number for a credit bill.";
-  }
-  return null;
+  const digits = normalizePhone(customerNumber);
+  if (digits.length === 10) return null;
+  if (digits) return "The phone number needs 10 digits.";
+  if (findKnownCustomer(customers, customerName)) return null;
+  return "New credit customer: add a 10-digit phone, or pick a saved customer.";
 }
