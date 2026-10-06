@@ -1,0 +1,33 @@
+{
+  "rewrites": [
+    {
+      "source": "/b/:code",
+      "destination": "/api/bill?code=:code"
+    },
+    {
+      "source": "/((?!assets/|api/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/b/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/push-send",
+      "schedule": "30 15 * * *"
+    },
+    {
+      "path": "/api/supplier-due-send",
+      "schedule": "30 3 * * *"
+    }
+  ]
+}
