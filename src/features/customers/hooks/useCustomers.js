@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
-import { WA_FIELDS, customerService } from "@/services/customerService";
+import { BOOK_FIELDS, WA_FIELDS, customerService } from "@/services/customerService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useQueryWithDefault } from "@/hooks/useQueryWithDefault";
@@ -50,7 +50,7 @@ export const useUpdateCustomer = () =>
         name,
         address,
         phone,
-        ...Object.fromEntries(WA_FIELDS.filter((key) => key in rest).map((key) => [key, rest[key]])),
+        ...Object.fromEntries([...WA_FIELDS, ...BOOK_FIELDS].filter((key) => key in rest).map((key) => [key, rest[key]])),
       }),
     successMessage: "Customer updated successfully.",
     errorMessage: "Failed to update customer",

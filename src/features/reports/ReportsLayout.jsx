@@ -11,7 +11,6 @@ const REPORT_TABS = [
   { to: "stock", label: "Stock", noRange: true },
   { to: "gst", label: "GST", noRange: true },
   { to: "purchases", label: "Purchases", noRange: true },
-  { to: "books", label: "Books" },
 ];
 
 const tabClass = ({ isActive }) =>

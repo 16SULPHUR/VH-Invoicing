@@ -22,10 +22,6 @@
   ],
   "crons": [
     {
-      "path": "/api/push-send",
-      "schedule": "30 15 * * *"
-    },
-    {
       "path": "/api/supplier-due-send",
       "schedule": "30 3 * * *"
     }

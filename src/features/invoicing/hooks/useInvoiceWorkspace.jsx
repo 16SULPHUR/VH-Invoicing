@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import {
   creditCustomerError,
+  customerRequiredError,
   normalizePhone,
   paymentsBalance,
   paymentsTotal,
@@ -86,8 +87,9 @@ export function useInvoiceWorkspace({
       : recentInvoices.nextInvoiceId;
 
   const blockedByCredit = useCallback(
-    (bill) => {
-      const message = creditCustomerError({ ...bill, customers });
+    (bill, { requireSaved = true } = {}) => {
+      const message =
+        (requireSaved && customerRequiredError({ ...bill, customers })) || creditCustomerError({ ...bill, customers });
       if (!message) return false;
       toast({ title: "Customer needed", description: message, variant: "destructive" });
       return true;
@@ -195,7 +197,8 @@ export function useInvoiceWorkspace({
       return;
     }
     const bill = withKnownPhone(draft, customers);
-    if (blockedByCredit(bill)) return;
+    const renamed = draft.customerName.trim() !== String(draft.editingInvoice.customerName ?? "").trim();
+    if (blockedByCredit(bill, { requireSaved: renamed })) return;
 
     // The stored date string is the bill's key; re-formatting it can miss the row.
     const date = draft.editingInvoice.date;

@@ -7,7 +7,7 @@ import { localISODate } from "@/utils/date";
 import { formatRupees, toNumber } from "@/utils/formatters";
 import { ToolSheet } from "@/features/counter/components/ToolSheet";
 import { TextArea } from "@/features/counter/components/Bits";
-import { useEnteredBy } from "@/features/cashbook/hooks/useEnteredBy";
+import { useEnteredBy } from "@/features/books/useEnteredBy";
 import { KIND_LABEL, MODES, allocateOldestFirst, dueText, round2, shortDate } from "../lib/billMath";
 import { useSupplierBookMutations } from "../hooks/useSupplierBooks";
 

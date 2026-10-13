@@ -4,6 +4,8 @@ import { customerKey, phoneDigits } from "@/features/customers/lib/customerKey";
 
 // WhatsApp consent and greeting dates, added by docs/schema/whatsapp_outbox.sql.
 export const WA_FIELDS = ["wa_optin", "wa_optin_at", "wa_optout_at", "birthday", "anniversary"];
+// Added by docs/schema/books.sql.
+export const BOOK_FIELDS = ["remarks", "gstin"];
 const LOCAL_CONSENT = "vh.waConsent";
 
 const pick = (object, keys) => Object.fromEntries(keys.filter((key) => key in object).map((key) => [key, object[key]]));
@@ -73,9 +75,9 @@ export const customerService = {
     try {
       return unwrap(await supabase.from("customers").insert([customer]).select());
     } catch (error) {
-      if (!isMissingColumn(error) || !hasWaFields(customer)) throw error;
-      keepLocally(customer, customer);
-      return unwrap(await supabase.from("customers").insert([omit(customer, WA_FIELDS)]).select());
+      if (!isMissingColumn(error)) throw error;
+      if (hasWaFields(customer)) keepLocally(customer, customer);
+      return unwrap(await supabase.from("customers").insert([omit(customer, [...WA_FIELDS, ...BOOK_FIELDS])]).select());
     }
   },
 
@@ -83,9 +85,9 @@ export const customerService = {
     try {
       return unwrap(await supabase.from("customers").update(changes).eq("id", id).select());
     } catch (error) {
-      if (!isMissingColumn(error) || !hasWaFields(changes)) throw error;
-      keepLocally(changes, changes);
-      const rest = omit(changes, WA_FIELDS);
+      if (!isMissingColumn(error)) throw error;
+      if (hasWaFields(changes)) keepLocally(changes, changes);
+      const rest = omit(changes, [...WA_FIELDS, ...BOOK_FIELDS]);
       if (Object.keys(rest).length === 0) return [];
       return unwrap(await supabase.from("customers").update(rest).eq("id", id).select());
     }

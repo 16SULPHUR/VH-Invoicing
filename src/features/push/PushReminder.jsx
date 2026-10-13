@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ICON_STROKE } from "@/config/navigation";
 import { pushService } from "./pushService";
 
-/** Turns the evening "Close the day" reminder on or off for this phone. */
+/** Turns shop reminders on or off for this phone. */
 export function PushReminder() {
   const { toast } = useToast();
   const [on, setOn] = useState(null);
@@ -40,9 +40,9 @@ export function PushReminder() {
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-3.5 py-3">
       <p className="min-w-0 text-sm">
-        <b className="block">Close the day reminder</b>
+        <b className="block">Reminders</b>
         <span className="text-xs text-muted-foreground">
-          An evening notification on this phone with the drawer and dues to check.
+          Notifications on this phone, like supplier bills falling due.
         </span>
       </p>
       <Button type="button" variant={on ? "outline" : "rani"} size="sm" onClick={toggle} disabled={busy || on === null} className="shrink-0">

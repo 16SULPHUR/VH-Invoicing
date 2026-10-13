@@ -12,9 +12,17 @@ const CounterPage = lazy(() => import("@/features/counter/CounterPage"));
 const CustomersPage = lazy(() => import("@/features/customers/CustomersPage"));
 const WhatsAppPage = lazy(() => import("@/features/whatsapp/WhatsAppPage"));
 const SuppliersPage = lazy(() => import("@/features/suppliers/SuppliersPage"));
-const CashbookPage = lazy(() => import("@/features/cashbook/CashbookPage"));
+const HoldingsPage = lazy(() => import("@/features/holdings/HoldingsPage"));
+const BooksLayout = lazy(() => import("@/features/books/BooksLayout"));
+const DayBookPage = lazy(() => import("@/features/books/pages/DayBookPage"));
+const CustomerAccountsPage = lazy(() => import("@/features/books/pages/CustomerAccountsPage"));
+const ProfitLossPage = lazy(() => import("@/features/books/pages/ProfitLossPage"));
+const BalanceSheetPage = lazy(() => import("@/features/books/pages/BalanceSheetPage"));
+const OpeningBalancePage = lazy(() => import("@/features/books/pages/OpeningBalancePage"));
+const CashBookPage = lazy(() => import("@/features/books/pages/AccountBookPage").then((m) => ({ default: m.CashBookPage })));
+const BankBookPage = lazy(() => import("@/features/books/pages/AccountBookPage").then((m) => ({ default: m.BankBookPage })));
+const ExpensesPage = lazy(() => import("@/features/books/pages/AccountBookPage").then((m) => ({ default: m.ExpensesPage })));
 const ReportsLayout = lazy(() => import("@/features/reports/ReportsLayout"));
-const TransactionsPage = lazy(() => import("@/features/reports/pages/TransactionsPage"));
 const LedgerPage = lazy(() => import("@/features/reports/pages/LedgerPage"));
 const TrialBalancePage = lazy(() => import("@/features/reports/pages/TrialBalancePage"));
 const PurchasesPage = lazy(() => import("@/features/reports/pages/PurchasesPage"));
@@ -24,7 +32,6 @@ const SalesPage = lazy(() => import("@/features/reports/pages/SalesPage"));
 const ProductsPage = lazy(() => import("@/features/reports/pages/ProductsPage"));
 const CustomersReportPage = lazy(() => import("@/features/reports/pages/CustomersReportPage"));
 const StockPage = lazy(() => import("@/features/reports/pages/StockPage"));
-const BooksLayout = lazy(() => import("@/features/reports/pages/BooksLayout"));
 const StickerDesignerPage = lazy(() => import("@/features/inventory/stickers/designer/DesignerPage"));
 
 export function createRouter({ onSignOut }) {
@@ -56,7 +63,25 @@ export function createRouter({ onSignOut }) {
         { path: "customers", element: <CustomersPage /> },
         { path: "whatsapp", element: <WhatsAppPage /> },
         { path: "suppliers", element: <SuppliersPage /> },
-        { path: "cashbook", element: <CashbookPage /> },
+        { path: "holdings", element: <HoldingsPage /> },
+        { path: "cashbook", element: <Navigate to="/holdings" replace /> },
+        {
+          path: "books",
+          element: <BooksLayout />,
+          children: [
+            { index: true, element: <Navigate to="daybook" replace /> },
+            { path: "daybook", element: <DayBookPage /> },
+            { path: "cash", element: <CashBookPage /> },
+            { path: "bank", element: <BankBookPage /> },
+            { path: "customers", element: <CustomerAccountsPage /> },
+            { path: "expenses", element: <ExpensesPage /> },
+            { path: "ledger", element: <LedgerPage /> },
+            { path: "trial-balance", element: <TrialBalancePage /> },
+            { path: "profit-loss", element: <ProfitLossPage /> },
+            { path: "balance-sheet", element: <BalanceSheetPage /> },
+            { path: "opening", element: <OpeningBalancePage /> },
+          ],
+        },
         {
           path: "reports",
           element: <ReportsLayout />,
@@ -69,19 +94,10 @@ export function createRouter({ onSignOut }) {
             { path: "stock", element: <StockPage /> },
             { path: "gst", element: <GstReportPage /> },
             { path: "purchases", element: <PurchasesPage /> },
-            {
-              path: "books",
-              element: <BooksLayout />,
-              children: [
-                { index: true, element: <Navigate to="transactions" replace /> },
-                { path: "transactions", element: <TransactionsPage /> },
-                { path: "ledger", element: <LedgerPage /> },
-                { path: "trial-balance", element: <TrialBalancePage /> },
-              ],
-            },
-            { path: "transactions", element: <Navigate to="../books/transactions" replace /> },
-            { path: "ledger", element: <Navigate to="../books/ledger" replace /> },
-            { path: "trial-balance", element: <Navigate to="../books/trial-balance" replace /> },
+            { path: "books/*", element: <Navigate to="/books" replace /> },
+            { path: "transactions", element: <Navigate to="/books/daybook" replace /> },
+            { path: "ledger", element: <Navigate to="/books/ledger" replace /> },
+            { path: "trial-balance", element: <Navigate to="/books/trial-balance" replace /> },
           ],
         },
         { path: "*", element: <Navigate to="/" replace /> },

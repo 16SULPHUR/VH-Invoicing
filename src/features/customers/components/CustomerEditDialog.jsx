@@ -14,6 +14,8 @@ const FIELDS = [
   { key: "name", label: "Name" },
   { key: "address", label: "Address" },
   { key: "phone", label: "Phone" },
+  { key: "remarks", label: "Remarks" },
+  { key: "gstin", label: "GSTIN" },
 ];
 
 export function CustomerEditDialog({ customer, onChange, onSubmit, open, onOpenChange, isSaving }) {
