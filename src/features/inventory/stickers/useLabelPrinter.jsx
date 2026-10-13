@@ -1,3 +1,4 @@
+import { BUSINESS } from "@/config/business";
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { usePrintDocument } from "@/features/invoicing/hooks/useInvoicePrinting";
@@ -16,7 +17,7 @@ export function useLabelPrinter() {
 
   const open = useCallback(
     (element, size, fonts = []) => {
-      const opened = printDocument(element, { title: "Variety Heaven stickers", pageSize: pageSizeOf(size), fonts });
+      const opened = printDocument(element, { title: `${BUSINESS.displayName} stickers`, pageSize: pageSizeOf(size), fonts });
       if (!opened) {
         toast({ title: "Print blocked", description: "Allow pop-ups for this site to print stickers.", variant: "destructive" });
       }

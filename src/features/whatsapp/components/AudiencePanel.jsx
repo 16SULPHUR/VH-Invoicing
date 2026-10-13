@@ -93,7 +93,7 @@ export function AudiencePanel({ form, setForm, templates, kind, contactCount, on
             <Label htmlFor="wa-keyword" className="text-xs font-semibold text-muted-foreground">
               Word in the item name
             </Label>
-            <Input id="wa-keyword" value={form.keyword} onChange={(event) => setForm({ keyword: event.target.value })} placeholder="saree" />
+            <Input id="wa-keyword" value={form.keyword} onChange={(event) => setForm({ keyword: event.target.value })} placeholder="e.g. a product word" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="wa-keyword-days" className="text-xs font-semibold text-muted-foreground">

@@ -286,7 +286,7 @@ export function BookingSheet({ open, booking, onClose, onSaved }) {
                   </div>
                 </div>
                 <Field label="Note" htmlFor="booking-note">
-                  <TextArea id="booking-note" value={draft.note} onChange={(event) => set({ note: event.target.value })} placeholder="Wedding on 12 Dec, blouse measurements with Salma…" />
+                  <TextArea id="booking-note" value={draft.note} onChange={(event) => set({ note: event.target.value })} placeholder="Needed by 12 Dec, details to remember…" />
                 </Field>
                 {!isNew && (
                   <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setCancelling({ creditNote: false, reason: "" })}>

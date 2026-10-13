@@ -1,6 +1,7 @@
 import { customerKey, phoneDigits } from "@/features/customers/lib/customerKey";
 import { greetingName, renderTemplate } from "@/features/whatsapp/lib/templates";
 import { formatRupees } from "@/utils/formatters";
+import { getJobKinds } from "./jobs";
 import { shortDate } from "./shopTools";
 
 // Service messages for the counter. Blank values drop their line, as in the outbox.
@@ -46,6 +47,12 @@ export const WORK_NAMES = {
   alteration: { hi: "alteration", en: "alteration" },
   other: { hi: "kaam", en: "order" },
 };
+
+export function workName(kind) {
+  if (WORK_NAMES[kind]) return WORK_NAMES[kind];
+  const label = (getJobKinds().find(({ value }) => value === kind)?.label ?? "").toLowerCase();
+  return label ? { hi: label, en: label } : WORK_NAMES.other;
+}
 
 /** Text and log entry for one service message. */
 export function serviceMessage(templateId, record, { settings, language = "hi", vars = {} }) {

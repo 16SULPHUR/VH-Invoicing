@@ -78,7 +78,7 @@ export default function AlterationsTab() {
         <EmptyState
           icon={Scissors}
           title={search.trim() ? "No job matches" : filter === "open" ? "No open jobs" : "Nothing here"}
-          description="Take in a saree for fall-pico, a blouse to stitch or an alteration with New job."
+          description="Take in work to be done, like stitching or an alteration, with New job."
         />
       ) : (
         <ul className="space-y-2">

@@ -1,11 +1,15 @@
+const titleCase = (text) => text.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+export const displayName = titleCase(process.env.VITE_BUSINESS_NAME || "VARIETY HEAVEN");
+
 export const manifestForPlugIn = {
   registerType: "prompt",
   includeAssets: ["favicon.ico", "apple-touch-icon.png"],
   manifest: {
     id: "/",
-    name: "Variety Heaven",
-    short_name: "Variety Heaven",
-    description: "Billing, stock, customers and accounts for Variety Heaven",
+    name: displayName,
+    short_name: displayName,
+    description: `Billing, stock, customers and accounts for ${displayName}`,
     lang: "en-IN",
     categories: ["business", "finance", "shopping"],
     icons: [
