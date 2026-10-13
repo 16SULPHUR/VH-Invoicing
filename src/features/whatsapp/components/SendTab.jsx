@@ -36,7 +36,7 @@ export function SendTab({ wa }) {
     language: wa.rules.language,
     optedInOnly: false,
     campaign: "",
-    keyword: "saree",
+    keyword: "",
     keywordDays: 180,
   }));
 

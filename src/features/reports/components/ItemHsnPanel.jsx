@@ -56,7 +56,7 @@ export function ItemHsnPanel({ bills, settings, save }) {
         <>
           <div className="relative w-48">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find item, e.g. BLOUSE" aria-label="Find item" className="h-8 pl-9 text-sm" />
+            <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find an item" aria-label="Find item" className="h-8 pl-9 text-sm" />
           </div>
           <Pills options={SHOW} value={show} onChange={setShow} label="Show items" />
         </>

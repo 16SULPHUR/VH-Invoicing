@@ -12,6 +12,7 @@ export const env = {
   supabaseUrl: required("VITE_SUPABASE_URL"),
   supabaseAnonKey: required("VITE_SUPABASE_ANON_KEY"),
   businessName: import.meta.env.VITE_BUSINESS_NAME || "VARIETY HEAVEN",
+  productSiteUrl: import.meta.env.VITE_PRODUCT_SITE_URL ?? "https://suit.varietyheaven.in/",
   upiId: import.meta.env.VITE_UPI_ID || "",
   mediaUploadUrl: import.meta.env.VITE_MEDIA_UPLOAD_URL || "",
   upiMerchantCode: import.meta.env.VITE_UPI_MERCHANT_CODE || "",

@@ -2,18 +2,8 @@ import { QRCodeSVG } from "qrcode.react";
 import { toNumber } from "@/utils/formatters";
 import { upiLinkFor } from "../upi";
 import { paginateBill, TALL_NAME_CHARS } from "../printLayout";
+import { readBillShop } from "@/features/settings/billShop";
 
-const SHOP = {
-  address: "Shop no. 09, Sentosa Enclave, Near Ramipark Soc., Dindoli, Surat, Gujarat 394210",
-  contacts: ["81601 85875", "79900 57097", "@varietyheaven.in", "GSTIN 24GGEPP0013E1ZZ"],
-  terms: [
-    "Goods once sold will not be taken back.",
-    "Exchange timing is 4:00 PM to 6:00 PM.",
-    "No guarantee for colour and zari quality.",
-    "Goods should be returned within 4 days.",
-    "Subject to Surat jurisdiction only.",
-  ],
-};
 
 // Inlined because the bill is also rendered to a static string for the print window and PDF.
 const STYLES = `
@@ -102,15 +92,19 @@ function Border({ bottom }) {
   return <div className={`vhb-border${bottom ? " bot" : ""}`} />;
 }
 
-function FirstHeader({ customerName, customerContact, invoiceId, invoiceDate }) {
+function Logo({ shop }) {
+  return shop.logoUrl ? <img src={shop.logoUrl} alt={shop.name} /> : <b className="vhb-d">{shop.name}</b>;
+}
+
+function FirstHeader({ shop, customerName, customerContact, invoiceId, invoiceDate }) {
   return (
     <>
       <div className="vhb-brand">
-        <img src="new-logo.png" alt="Variety Heaven" />
+        <Logo shop={shop} />
         <p>
-          {SHOP.address}
+          {shop.address}
           <br />
-          {SHOP.contacts.map((item, index) => (
+          {shop.contacts.map((item, index) => (
             <span key={item}>
               {index > 0 && <span className="vhb-sep">◆</span>}
               {item}
@@ -239,20 +233,20 @@ function QrCodes({ dueAmount }) {
   );
 }
 
-function Fine() {
+function Fine({ shop }) {
   return (
     <div className="vhb-fine">
       <div>
         <span className="vhb-cap">Terms</span>
         <ol>
-          {SHOP.terms.map((term) => (
+          {shop.terms.map((term) => (
             <li key={term}>{term}</li>
           ))}
         </ol>
       </div>
       <div className="vhb-sig">
-        <img src="sign.svg" alt="" />
-        <i>For Variety Heaven</i>
+        {shop.signatureUrl && <img src={shop.signatureUrl} alt="" />}
+        <i>For {shop.name}</i>
       </div>
     </div>
   );
@@ -269,6 +263,7 @@ export const PrintableInvoice = ({
   payments,
   note,
 }) => {
+  const shop = readBillShop();
   const lines = products || [];
   const pages = paginateBill(lines);
   const itemCount = lines.reduce((sum, line) => sum + toNumber(line.quantity), 0);
@@ -285,6 +280,7 @@ export const PrintableInvoice = ({
           <div className="vhb-body">
             {page.isFirst ? (
               <FirstHeader
+                shop={shop}
                 customerName={customerName}
                 customerContact={customerContact}
                 invoiceId={invoiceId}
@@ -292,7 +288,7 @@ export const PrintableInvoice = ({
               />
             ) : (
               <div className="vhb-slim">
-                <img src="new-logo.png" alt="Variety Heaven" />
+                <Logo shop={shop} />
                 <div>
                   <b>Bill #{invoiceId}</b> · {customerName || "Walk-in customer"} · {invoiceDate}
                   <br />
@@ -357,7 +353,7 @@ export const PrintableInvoice = ({
               <>
                 <Settle total={total} payments={payments} note={note} />
                 <QrCodes dueAmount={dueAmount} />
-                <Fine />
+                <Fine shop={shop} />
               </>
             )}
           </div>

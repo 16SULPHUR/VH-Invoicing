@@ -13,6 +13,7 @@ const CustomersPage = lazy(() => import("@/features/customers/CustomersPage"));
 const WhatsAppPage = lazy(() => import("@/features/whatsapp/WhatsAppPage"));
 const SuppliersPage = lazy(() => import("@/features/suppliers/SuppliersPage"));
 const CashbookPage = lazy(() => import("@/features/cashbook/CashbookPage"));
+const ShopPage = lazy(() => import("@/features/shop/ShopPage"));
 const ReportsLayout = lazy(() => import("@/features/reports/ReportsLayout"));
 const TransactionsPage = lazy(() => import("@/features/reports/pages/TransactionsPage"));
 const LedgerPage = lazy(() => import("@/features/reports/pages/LedgerPage"));
@@ -57,6 +58,7 @@ export function createRouter({ onSignOut }) {
         { path: "whatsapp", element: <WhatsAppPage /> },
         { path: "suppliers", element: <SuppliersPage /> },
         { path: "cashbook", element: <CashbookPage /> },
+        { path: "shop", element: <ShopPage /> },
         {
           path: "reports",
           element: <ReportsLayout />,

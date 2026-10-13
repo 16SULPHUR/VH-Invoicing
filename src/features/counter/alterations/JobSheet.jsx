@@ -13,15 +13,15 @@ import { WhatsAppAction } from "../components/WhatsAppAction";
 import { useSaveTool } from "../hooks/useShopTools";
 import { usePrintSlip } from "../hooks/usePrintSlip";
 import { useServiceMessage } from "../hooks/useServiceMessage";
-import { JOB_KINDS, JOB_STATUSES, jobBalance, kindLabel, statusOf } from "../lib/jobs";
-import { WORK_NAMES } from "../lib/messages";
+import { JOB_STATUSES, getJobKinds, jobBalance, kindLabel, statusOf } from "../lib/jobs";
+import { workName } from "../lib/messages";
 import { jobSlip } from "../lib/slips";
 import { addDays, rupees, todayLocal } from "../lib/shopTools";
 
 const FIELDS = ["kind", "customer_name", "customer_phone", "items", "measurements", "charge", "advance", "ready_on", "status", "tailor"];
 
 const blank = () => ({
-  kind: "blouse",
+  kind: getJobKinds().find(({ value }) => value === "blouse")?.value ?? getJobKinds()[0].value,
   customer_name: "",
   customer_phone: "",
   items: "",
@@ -82,7 +82,7 @@ export function JobSheet({ open, job, tailors, onClose, onSaved }) {
     save.mutate({ record: job, row: { ...row(), ...changes } }, { onSuccess: (saved) => done?.(saved) });
 
   const readyMessage = job
-    ? messages.build("job_ready", job, { work: WORK_NAMES[job.kind] ?? WORK_NAMES.other, balance: jobBalance(job) })
+    ? messages.build("job_ready", job, { work: workName(job.kind), balance: jobBalance(job) })
     : null;
 
   const sendReady = (opened) => {
@@ -168,7 +168,7 @@ export function JobSheet({ open, job, tailors, onClose, onSaved }) {
       open={open}
       onClose={onClose}
       title={isNew ? "New job" : `Token ${job.token}`}
-      description={isNew ? "Fall-pico, blouse stitching or an alteration" : `${kindLabel(job.kind)} for ${job.customer_name || "a customer"}`}
+      description={isNew ? "Pick the kind of work, then the customer and items" : `${kindLabel(job.kind)} for ${job.customer_name || "a customer"}`}
       badge={status && <StatusPill solid tone={status.tone}>{status.label}</StatusPill>}
       footer={footer}
     >
@@ -188,9 +188,9 @@ export function JobSheet({ open, job, tailors, onClose, onSaved }) {
         </div>
       ) : (
         <>
-          <Chips label="Kind of work" value={draft.kind} onChange={(kind) => set({ kind, ...(isNew ? { ready_on: addDays(todayLocal(), JOB_KINDS.find((item) => item.value === kind).days) } : {}) })} options={JOB_KINDS} />
+          <Chips label="Kind of work" value={draft.kind} onChange={(kind) => set({ kind, ...(isNew ? { ready_on: addDays(todayLocal(), getJobKinds().find((item) => item.value === kind)?.days ?? 3) } : {}) })} options={getJobKinds()} />
           <CustomerFields idPrefix="job" name={draft.customer_name} phone={draft.customer_phone} onChange={set} />
-          <Field label="Items" htmlFor="job-items" hint="What was handed over, e.g. 2 sarees (red, green), 1 blouse piece">
+          <Field label="Items" htmlFor="job-items" hint="What was handed over, e.g. 2 pieces (red, green)">
             <TextArea id="job-items" value={draft.items} onChange={(event) => set({ items: event.target.value })} />
           </Field>
           <Field label="Measurements and notes" htmlFor="job-notes">

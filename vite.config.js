@@ -3,14 +3,14 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
-import { manifestForPlugIn } from "./manifest";
+import { manifestForPlugIn, displayName } from "./manifest";
 
 const siteUrl = () => (process.env.VITE_SITE_URL || "https://pos.varietyheaven.in").replace(/\/$/, "");
 
 // Link previews need absolute URLs in index.html.
 const siteUrlInHtml = () => ({
   name: "site-url-in-html",
-  transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", siteUrl()),
+  transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", siteUrl()).replaceAll("%BUSINESS_NAME%", displayName),
 });
 
 export default defineConfig({

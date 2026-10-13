@@ -12,6 +12,21 @@ export const DEFAULT_PRODUCT_FIELDS = [
   { key: "work", label: "Work type" },
 ];
 
+export const DEFAULT_BILL_TERMS = [
+  "Goods once sold will not be taken back.",
+  "Exchange timing is 4:00 PM to 6:00 PM.",
+  "No guarantee for colour and zari quality.",
+  "Goods should be returned within 4 days.",
+  "Subject to Surat jurisdiction only.",
+];
+
+export const DEFAULT_JOB_KINDS = [
+  { value: "fall_pico", label: "Fall-pico", days: 2 },
+  { value: "blouse", label: "Blouse stitching", days: 7 },
+  { value: "alteration", label: "Alteration", days: 3 },
+  { value: "other", label: "Other", days: 3 },
+];
+
 export const SHOP_DEFAULTS = {
   shop_name: BUSINESS.displayName,
   tagline: "Drape Yourself in Luxury",
@@ -21,6 +36,13 @@ export const SHOP_DEFAULTS = {
   cost_code_word: "",
   product_fields: DEFAULT_PRODUCT_FIELDS,
   wa_channel: "",
+  address: "Shop no. 09, Sentosa Enclave, Near Ramipark Soc., Dindoli, Surat, Gujarat 394210",
+  bill_contacts: ["81601 85875", "79900 57097", "@varietyheaven.in"],
+  bill_terms: DEFAULT_BILL_TERMS,
+  logo_url: "new-logo.png",
+  signature_url: "sign.svg",
+  product_types: "suits, sarees, kurtis and dupattas",
+  job_kinds: DEFAULT_JOB_KINDS,
 };
 
 export const SHOP_FIELDS = [
@@ -61,6 +83,9 @@ export function useShopSettings() {
   const settings = useMemo(() => {
     const merged = { ...SHOP_DEFAULTS, ...values };
     if (!Array.isArray(merged.product_fields)) merged.product_fields = DEFAULT_PRODUCT_FIELDS;
+    if (!Array.isArray(merged.bill_contacts)) merged.bill_contacts = SHOP_DEFAULTS.bill_contacts;
+    if (!Array.isArray(merged.bill_terms)) merged.bill_terms = DEFAULT_BILL_TERMS;
+    if (!Array.isArray(merged.job_kinds) || merged.job_kinds.length === 0) merged.job_kinds = DEFAULT_JOB_KINDS;
     return merged;
   }, [values]);
 

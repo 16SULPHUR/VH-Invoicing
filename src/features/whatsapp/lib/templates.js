@@ -27,6 +27,7 @@ export const BLANKS = [
   { key: "shop_name", label: "Shop name" },
   { key: "shop_phone", label: "Shop phone" },
   { key: "channel_link", label: "WhatsApp channel link" },
+  { key: "products", label: "What the shop sells" },
 ];
 
 // Names read fine when left out ("Namaste ji"); any other empty blank drops its line.
@@ -123,12 +124,12 @@ ${STOP.en}`,
     name: "We miss you",
     kind: "marketing",
     hi: `Namaste {first_name} ji 🙏
-Kaafi din ho gaye aapko {shop_name} mein dekhe! Naye suits, sarees aur kurtis aa gaye hain ✨
+Kaafi din ho gaye aapko {shop_name} mein dekhe! Naye {products} aa gaye hain ✨
 Is hafte aaiye, aapke liye kuch special rakha hai.
 Naye designs yahan dekhein: {channel_link}
 ${STOP.hi}`,
     en: `Hello {first_name} 🙏
-It's been a while since we saw you at {shop_name}! New suits, sarees and kurtis are in ✨
+It's been a while since we saw you at {shop_name}! New {products} are in ✨
 Visit us this week, we have kept something special for you.
 See the new designs: {channel_link}
 ${STOP.en}`,
@@ -138,12 +139,12 @@ ${STOP.en}`,
     name: "New arrivals",
     kind: "marketing",
     hi: `Namaste {first_name} ji ✨
-{shop_name} mein *naya stock* aa gaya hai: suits, sarees, kurtis aur dupattas.
+{shop_name} mein *naya stock* aa gaya hai: {products}.
 Photos dekhne ke liye channel follow karein: {channel_link}
 Koi design pasand aaye toh isi number par reply karein, hum aapke liye rakh denge 😊
 ${STOP.hi}`,
     en: `Hello {first_name} ✨
-*New stock* is in at {shop_name}: suits, sarees, kurtis and dupattas.
+*New stock* is in at {shop_name}: {products}.
 Follow our channel for photos: {channel_link}
 Like a design? Reply here and we'll keep it aside for you 😊
 ${STOP.en}`,
@@ -231,6 +232,7 @@ export function messageVars(customer, { settings, payLink = "", bill = customer?
     shop_name: settings?.shop_name ?? "",
     shop_phone: settings?.phone ?? "",
     channel_link: settings?.wa_channel ?? "",
+    products: settings?.product_types ?? "",
   };
 }
 

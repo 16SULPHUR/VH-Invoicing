@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BUSINESS } from "@/config/business";
+import { env } from "@/config/env";
 import { authService } from "@/services/authService";
 import { InstallButton } from "@/features/install/InstallButton";
 
@@ -41,14 +42,16 @@ export default function LoginPage({ onAuthenticated }) {
         <p className="relative mt-3 text-[15px] text-indigo-foreground">
           Billing, stock and accounts for the shop.
         </p>
-        <a
-          href="https://suit.varietyheaven.in/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="relative mt-5 inline-flex w-fit items-center gap-1 text-sm font-semibold text-marigold hover:underline"
-        >
-          suit.varietyheaven.in <ArrowUpRight className="h-4 w-4" aria-hidden />
-        </a>
+        {env.productSiteUrl && (
+          <a
+            href={env.productSiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative mt-5 inline-flex w-fit items-center gap-1 text-sm font-semibold text-marigold hover:underline"
+          >
+            {env.productSiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")} <ArrowUpRight className="h-4 w-4" aria-hidden />
+          </a>
+        )}
       </section>
 
       <section className="grid place-items-center px-6 py-10">
