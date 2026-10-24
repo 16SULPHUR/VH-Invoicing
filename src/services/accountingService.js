@@ -20,14 +20,14 @@ export function getTransactions(range) {
 
 export function getLedger(range) {
   return readAll(() =>
-    applyRange(supabase.from("ledger_view").select("*"), range).order("date").order("transaction_id")
+    applyRange(supabase.from("ledger_view").select("*"), range).order("date").order("transaction_id").order("account_name").order("debit")
   );
 }
 
 /** Balances as of the range's end date. */
 export async function getTrialBalance(range) {
   const data = await readAll(() =>
-    applyRange(supabase.from("ledger_view").select("account_name, debit, credit"), { to: range?.to }).order("transaction_id")
+    applyRange(supabase.from("ledger_view").select("account_name, debit, credit"), { to: range?.to }).order("transaction_id").order("account_name").order("debit")
   );
 
   const balance = {};

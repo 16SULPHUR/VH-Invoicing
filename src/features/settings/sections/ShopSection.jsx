@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { validCodeWord } from "@/features/inventory/stickers/expr";
 import { isBuiltInName, toVariableName } from "@/features/inventory/stickers/variables";
+import { useGstSettings } from "@/features/reports/hooks/useGstSettings";
 import { CommitInput, Section, StoredBadge, ValueFields } from "../components/fields";
 
 const SHOP_VALUES = [
   { key: "shop_name", label: "Shop name", hint: "On stickers, slips, messages and the pay page." },
   { key: "tagline", label: "Tagline" },
+  { key: "address", label: "Address", hint: "Printed at the top of reports.", className: "sm:col-span-2" },
   { key: "phone", label: "Shop phone", type: "tel", hint: "{shop_phone} in messages." },
   { key: "whatsapp", label: "WhatsApp link", placeholder: "https://wa.me/91…" },
   { key: "upi_id", label: "UPI ID", hint: "Where pay-page payments go. Use the shop's merchant UPI ID." },
@@ -82,10 +84,16 @@ function ProductFields({ fields, save }) {
 
 export function ShopSection({ shop }) {
   const { settings, save, stored } = shop;
+  const { gst, save: saveGst } = useGstSettings();
   return (
     <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
       <Section title="Shop details" aside={<StoredBadge stored={stored} />}>
         <ValueFields fields={SHOP_VALUES} settings={settings} save={save} />
+        <ValueFields
+          fields={[{ key: "gstin", label: "GSTIN", hint: "Printed at the top of reports. Same as Settings › GST.", normalize: (value) => value.trim().toUpperCase() }]}
+          settings={gst}
+          save={saveGst}
+        />
       </Section>
       <div className="space-y-4">
         <Section title="Cost code" description="Lets staff read the cost on a sticker without customers knowing.">

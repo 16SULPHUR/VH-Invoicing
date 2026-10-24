@@ -1,8 +1,8 @@
 // Built-in PDF fonts have no ₹ or Unicode minus.
 const clean = (value) => String(value ?? "").replace(/₹\s?/g, "").replace(/−/g, "-");
 
-/** A4 landscape table PDF with repeated header and an optional bold totals row. */
-export async function downloadPdfTable({ filename, title, subtitle, headers, rows, aligns = [], footer }) {
+/** A4 landscape table PDF with repeated header and an optional bold totals row. `company` lines head every page. */
+export async function downloadPdfTable({ filename, title, subtitle, headers, rows, aligns = [], footer, company = [] }) {
   const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -50,14 +50,25 @@ export async function downloadPdfTable({ filename, title, subtitle, headers, row
   let page = 1;
   const startPage = () => {
     const size = doc.getFontSize();
+    let top = margin;
+    company.forEach((text, i) => {
+      doc.setFont("helvetica", i === 0 ? "bold" : "normal");
+      doc.setFontSize(i === 0 ? 14 : 8);
+      doc.text(clean(text), pageWidth / 2, top + 6, { align: "center" });
+      top += i === 0 ? 16 : 11;
+    });
+    if (company.length) {
+      line(top, 0.5);
+      top += 10;
+    }
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
-    doc.text(clean(title), margin, margin + 6);
+    doc.text(clean(title), margin, top + 6);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text(clean(`${subtitle ?? ""}${subtitle ? "  ·  " : ""}Amounts in Rs  ·  Page ${page}`), margin, margin + 20);
+    doc.text(clean(`${subtitle ?? ""}${subtitle ? "  ·  " : ""}Amounts in Rs  ·  Page ${page}`), margin, top + 20);
     doc.setFontSize(size);
-    const y = margin + 30;
+    const y = top + 30;
     doc.setFillColor(240, 240, 240);
     doc.rect(margin, y, pageWidth - margin * 2, rowHeight, "F");
     drawRow(head, y, true);

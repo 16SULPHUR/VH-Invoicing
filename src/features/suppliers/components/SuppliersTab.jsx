@@ -5,11 +5,13 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { formatRupees } from "@/utils/formatters";
 import { ToolSheet } from "@/features/counter/components/ToolSheet";
 import { KIND_LABEL, modeLabel, round2, supplierTotals, shortDate } from "../lib/billMath";
+import { useCompanyInfo } from "@/features/settings/useCompanyInfo";
 import { printStatement } from "../lib/statement";
 import { StatusChip, } from "./Chip";
 import { SupplierEditor } from "./SupplierEditor";
 
 function Ledger({ supplier, bills, onClose, onEdit, onOpenBill, onPay, onAddBill }) {
+  const company = useCompanyInfo();
   const entries = useMemo(() => {
     const list = [];
     for (const bill of bills) {
@@ -40,7 +42,7 @@ function Ledger({ supplier, bills, onClose, onEdit, onOpenBill, onPay, onAddBill
         <>
           <Button variant="rani" className="press" onClick={onAddBill}><Plus className="h-4 w-4" aria-hidden /> Add bill</Button>
           {totals.outstanding > 0 && <Button variant="outline" onClick={onPay}>Pay</Button>}
-          <Button variant="outline" onClick={() => printStatement({ supplier, entries, totals })}><Printer className="h-4 w-4" aria-hidden /> Statement</Button>
+          <Button variant="outline" onClick={() => printStatement({ supplier, entries, totals, company })}><Printer className="h-4 w-4" aria-hidden /> Statement</Button>
         </>
       }
     >

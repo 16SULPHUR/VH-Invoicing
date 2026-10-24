@@ -171,7 +171,7 @@ export default function GstReportPage() {
           )}
           <button
             type="button"
-            onClick={() => printGstSummary({ gst, settings, period, shopName: shop.shop_name, payable, itc })}
+            onClick={() => printGstSummary({ gst, settings, period, shopName: shop.shop_name, address: shop.address, payable, itc })}
             className="press inline-flex h-10 items-center gap-2 rounded-full bg-indigo px-4 text-sm font-bold text-white"
           >
             <Printer className="h-4 w-4" aria-hidden /> Print summary

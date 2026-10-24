@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { CompanyHeader } from "@/components/common/CompanyHeader";
 import { PageLoader } from "@/components/common/PageLoader";
 import { ReportRangePicker } from "./range/ReportRangePicker";
 
@@ -24,6 +25,7 @@ export default function ReportsLayout() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <nav aria-label="Reports" className="shrink-0 px-4 pt-4 md:px-6">
+        <CompanyHeader className="mx-auto mb-3 max-w-[1400px]" />
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3">
           <div className="inline-flex h-11 max-w-full gap-1 overflow-x-auto rounded-full border border-border bg-surface p-1">
             {REPORT_TABS.map((tab) => (

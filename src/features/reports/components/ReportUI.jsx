@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { downloadCsv, toCsv } from "@/utils/csv";
 import { downloadPdfTable } from "@/utils/pdfTable";
+import { companyLines, useCompanyInfo } from "@/features/settings/useCompanyInfo";
 import { percent } from "../lib/format";
 
 export function Panel({ title, eyebrow, actions, children, className = "", bodyClassName = "" }) {
@@ -185,6 +186,7 @@ export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (ro
   const [sort, setSort] = useState(initialSort ?? { key: null, asc: false });
   const [showAll, setShowAll] = useState(false);
   const exportCols = useExportColumns(columns, csvName);
+  const company = useCompanyInfo();
   const picked = exportCols.picked;
 
   const sorted = useMemo(() => {
@@ -221,6 +223,7 @@ export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (ro
       aligns: picked.map((c) => c.align),
       rows: sorted.map((row) => picked.map((c) => textCell(c, row))),
       footer: footer && picked.map((c, i) => footerCell(c, i, textCell)),
+      company: companyLines(company),
     });
 
   if (rows.length === 0) return <p className="rounded-xl bg-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">{empty}</p>;
