@@ -33,6 +33,7 @@ const SalesPage = lazy(() => import("@/features/reports/pages/SalesPage"));
 const ProductsPage = lazy(() => import("@/features/reports/pages/ProductsPage"));
 const CustomersReportPage = lazy(() => import("@/features/reports/pages/CustomersReportPage"));
 const StockPage = lazy(() => import("@/features/reports/pages/StockPage"));
+const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
 const StickerDesignerPage = lazy(() => import("@/features/inventory/stickers/designer/DesignerPage"));
 
 export function createRouter({ onSignOut }) {
@@ -65,6 +66,7 @@ export function createRouter({ onSignOut }) {
         { path: "whatsapp", element: <WhatsAppPage /> },
         { path: "suppliers", element: <SuppliersPage /> },
         { path: "holdings", element: <HoldingsPage /> },
+        { path: "settings", element: <SettingsPage /> },
         { path: "cashbook", element: <Navigate to="/holdings" replace /> },
         {
           path: "books",

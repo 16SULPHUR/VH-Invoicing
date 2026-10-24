@@ -66,6 +66,7 @@ export const queryKeys = {
     customers: ["books", "customers"],
     holdings: ["books", "holdings"],
     opening: ["books", "opening"],
+    accounts: ["books", "accounts"],
   },
   accounting: {
     transactions: ["accounting", "transactions"],

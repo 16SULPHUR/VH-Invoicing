@@ -9,6 +9,7 @@ import {
   House,
   FileChartColumn,
   Truck,
+  Settings,
 } from "lucide-react";
 
 // Single source of truth for navigation. Adding a screen means adding a route in
@@ -24,6 +25,7 @@ export const NAV_ITEMS = [
   { label: "Books", short: "Books", to: "/books", icon: BookOpen, primary: false },
   { label: "Home & Shop", short: "Home/Shop", to: "/holdings", icon: House, primary: false },
   { label: "Reports", short: "Reports", to: "/reports", icon: FileChartColumn, primary: false },
+  { label: "Settings", short: "Settings", to: "/settings", icon: Settings, primary: false },
 ];
 
 export const PRIMARY_NAV_ITEMS = NAV_ITEMS.filter((item) => item.primary);
