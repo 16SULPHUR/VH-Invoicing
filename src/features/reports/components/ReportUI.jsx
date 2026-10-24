@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, Download } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Download, FileText } from "lucide-react";
 import { downloadCsv, toCsv } from "@/utils/csv";
+import { downloadPdfTable } from "@/utils/pdfTable";
 import { percent } from "../lib/format";
 
 export function Panel({ title, eyebrow, actions, children, className = "", bodyClassName = "" }) {
@@ -75,6 +76,28 @@ export function CsvButton({ filename, headers, rows, label = "CSV" }) {
   );
 }
 
+export function PdfButton({ onClick, label = "PDF" }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          await onClick();
+        } finally {
+          setBusy(false);
+        }
+      }}
+      className="press inline-flex h-8 items-center gap-1.5 rounded-full border-[1.5px] border-border bg-surface px-3 text-xs font-bold hover:border-indigo/40 disabled:opacity-60"
+    >
+      <FileText className="h-3.5 w-3.5" aria-hidden />
+      {busy ? "Making…" : label}
+    </button>
+  );
+}
+
 export function Pills({ options, value, onChange, label }) {
   return (
     <div role="group" aria-label={label} className="inline-flex h-8 gap-0.5 rounded-full border border-border bg-surface p-0.5">
@@ -96,10 +119,11 @@ export function Pills({ options, value, onChange, label }) {
 }
 
 /**
- * Sortable table for already-computed rows. Columns: { key, header, render?, value?, align?, csv? }.
- * `value` gives the sort and CSV value when `render` formats it.
+ * Sortable table for already-computed rows. Columns: { key, header, render?, value?, align?, csv?, text? }.
+ * `value` gives the sort and CSV value when `render` formats it; `text` gives the PDF cell when `render` returns markup.
+ * `footer` is a totals row: only its own keys are shown, under the same columns.
  */
-export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (row, i) => row.id ?? i, csvName, onRowClick, empty = "Nothing in this period." }) {
+export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (row, i) => row.id ?? i, csvName, title, subtitle, footer, onRowClick, empty = "Nothing in this period." }) {
   const [sort, setSort] = useState(initialSort ?? { key: null, asc: false });
   const [showAll, setShowAll] = useState(false);
 
@@ -117,21 +141,43 @@ export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (ro
 
   const visible = showAll ? sorted : sorted.slice(0, limit);
   const csvValue = (column, row) => (column.csv ? column.csv(row) : column.value ? column.value(row) : row[column.key]);
+  const csvCell = (column, row) => {
+    const v = csvValue(column, row);
+    return v instanceof Date ? v.toISOString().slice(0, 10) : v;
+  };
+  const textCell = (column, row) => {
+    if (column.text) return column.text(row);
+    const shown = column.render ? column.render(row) : row[column.key];
+    return typeof shown === "string" || typeof shown === "number" ? shown : csvCell(column, row);
+  };
+  const footerCell = (column, i, cell) => (i === 0 ? "Total" : column.key in footer ? cell(column, footer) : "");
+
+  const exportPdf = () =>
+    downloadPdfTable({
+      filename: csvName.replace(/\.csv$/, "") + ".pdf",
+      title: title ?? csvName.replace(/\.csv$/, "").replace(/_/g, " "),
+      subtitle,
+      headers: columns.map((c) => c.header),
+      aligns: columns.map((c) => c.align),
+      rows: sorted.map((row) => columns.map((c) => textCell(c, row))),
+      footer: footer && columns.map((c, i) => footerCell(c, i, textCell)),
+    });
 
   if (rows.length === 0) return <p className="rounded-xl bg-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">{empty}</p>;
 
   return (
     <div>
       {csvName && (
-        <div className="-mt-1 mb-2 flex justify-end">
+        <div className="-mt-1 mb-2 flex justify-end gap-2">
           <CsvButton
             filename={csvName}
             headers={columns.map((c) => c.header)}
-            rows={sorted.map((row) => columns.map((c) => {
-              const v = csvValue(c, row);
-              return v instanceof Date ? v.toISOString().slice(0, 10) : v;
-            }))}
+            rows={[
+              ...sorted.map((row) => columns.map((c) => csvCell(c, row))),
+              ...(footer ? [columns.map((c, i) => footerCell(c, i, csvCell))] : []),
+            ]}
           />
+          <PdfButton onClick={exportPdf} />
         </div>
       )}
       <div className="-mx-4 overflow-x-auto">
@@ -167,6 +213,17 @@ export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (ro
               </tr>
             ))}
           </tbody>
+          {footer && (
+            <tfoot>
+              <tr className="border-t-2 border-foreground/70 bg-surface-elevated font-bold">
+                {columns.map((column, i) => (
+                  <td key={column.key} className={`px-4 py-2 tabular-nums ${column.align === "right" ? "text-right" : ""}`}>
+                    {footerCell(column, i, (c, row) => (c.render ? c.render(row) : row[c.key]))}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       {sorted.length > limit && (

@@ -19,7 +19,12 @@ const money = (key, header) => ({ key, header, align: "right", render: (r) => ru
 const periodColumns = (unit) => [
   unit === "month"
     ? { key: "period", header: "Month", render: (r) => monthLabel(r.period) }
-    : { key: "period", header: "Day", render: (r) => <span>{dayLabel(r.period)} <span className="text-muted-foreground">{weekdayLabel(r.period).slice(0, 3)}</span></span> },
+    : {
+        key: "period",
+        header: "Day",
+        render: (r) => <span>{dayLabel(r.period)} <span className="text-muted-foreground">{weekdayLabel(r.period).slice(0, 3)}</span></span>,
+        text: (r) => `${dayLabel(r.period)} ${weekdayLabel(r.period).slice(0, 3)}`,
+      },
   { key: "bills", header: "Bills", align: "right" },
   { key: "items", header: "Pieces", align: "right" },
   money("sales", "Net sales"),
@@ -32,10 +37,12 @@ const periodColumns = (unit) => [
   { key: "margin", header: "Margin", align: "right", render: (r) => percent(r.margin) },
 ];
 
+const BILL_SUMS = ["items", "sales", "adjustments", "total", "cash", "upi", "credit"];
+
 const BILL_COLUMNS = [
   { key: "id", header: "Bill", render: (r) => <span className="font-bold">{r.id}</span> },
   { key: "date", header: "Date", value: (r) => r.date, render: (r) => dayYearLabel(r.date), csv: (r) => r.day },
-  { key: "customerName", header: "Customer", render: (r) => r.customerName || <span className="text-muted-foreground">Walk-in</span> },
+  { key: "customerName", header: "Customer", render: (r) => r.customerName || <span className="text-muted-foreground">Walk-in</span>, text: (r) => r.customerName || "Walk-in" },
   { key: "customerPhone", header: "Phone" },
   { key: "items", header: "Pieces", align: "right" },
   money("sales", "Net sales"),
@@ -56,9 +63,8 @@ export default function SalesPage() {
   const periods = useMemo(() => (view === "bill" ? [] : byPeriod(bills, view)), [bills, view]);
   const billRows = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const rows = [...bills].reverse();
-    if (!needle) return rows;
-    return rows.filter((b) => String(b.id) === needle || b.customerName.toLowerCase().includes(needle) || String(b.customerPhone).includes(needle) || b.lines.some((l) => l.name.toLowerCase().includes(needle)));
+    if (!needle) return bills;
+    return bills.filter((b) => String(b.id) === needle || b.customerName.toLowerCase().includes(needle) || String(b.customerPhone).includes(needle) || b.lines.some((l) => l.name.toLowerCase().includes(needle)));
   }, [bills, query]);
 
   const oddLines = useMemo(
@@ -69,7 +75,14 @@ export default function SalesPage() {
     [bills]
   );
 
+  const billTotals = useMemo(
+    () => Object.fromEntries(BILL_SUMS.map((key) => [key, billRows.reduce((sum, b) => sum + (Number(b[key]) || 0), 0)])),
+    [billRows]
+  );
+
   const file = `${effective.from}_${effective.to}`;
+  const range = effective.from === effective.to ? dayYearLabel(effective.from) : `${dayYearLabel(effective.from)} to ${dayYearLabel(effective.to)}`;
+  const pdfTitle = { day: "Sales by day", month: "Sales by month", bill: "Bills" }[view];
 
   return (
     <ReportShell report={report}>
@@ -95,9 +108,9 @@ export default function SalesPage() {
         }
       >
         {view === "bill" ? (
-          <DataTable key="bills" columns={BILL_COLUMNS} rows={billRows} limit={25} rowKey={(r) => r.key} csvName={`bills_${file}.csv`} onRowClick={setBill} />
+          <DataTable key="bills" columns={BILL_COLUMNS} rows={billRows} footer={billTotals} limit={25} rowKey={(r) => r.key} csvName={`bills_${file}.csv`} title={pdfTitle} subtitle={range} onRowClick={setBill} />
         ) : (
-          <DataTable key={view} columns={periodColumns(view)} rows={[...periods].reverse()} limit={31} rowKey={(r) => r.period} csvName={`sales_by_${view}_${file}.csv`} />
+          <DataTable key={view} columns={periodColumns(view)} rows={periods} footer={now} limit={31} rowKey={(r) => r.period} csvName={`sales_by_${view}_${file}.csv`} title={pdfTitle} subtitle={range} />
         )}
       </Panel>
 
@@ -115,6 +128,8 @@ export default function SalesPage() {
           rowKey={(r) => r.id}
           onRowClick={(r) => setBill(r.bill)}
           csvName={`returns_and_adjustments_${file}.csv`}
+          title="Returns and non-sale lines"
+          subtitle={range}
           empty="No returns or non-sale lines in this period."
         />
       </Panel>
