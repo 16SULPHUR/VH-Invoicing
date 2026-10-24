@@ -28,3 +28,13 @@ export const REFERENCE_LABELS = {
 };
 
 export const referenceLabel = (table) => REFERENCE_LABELS[table] ?? "Entry";
+
+export function entryDescription(kind, category, note) {
+  const head = kind.value === "expense" && category ? `${kind.label} · ${category}` : kind.label;
+  return note.trim() ? `${head}: ${note.trim()}` : head;
+}
+
+export function expenseCategory(description) {
+  const match = /^Expense paid · ([^:]+)/.exec(description ?? "");
+  return match ? match[1].trim() : "Uncategorised";
+}

@@ -12,6 +12,7 @@ import {
   stockWarningToast,
   withKnownPhone,
 } from "@/utils/invoice";
+import { useBooksSettings } from "@/features/books/booksSettings";
 import { customerService } from "@/services/customerService";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
@@ -63,6 +64,7 @@ export function useInvoiceWorkspace({
   const draft = useInvoiceDraft({ persistKey });
   const { data: catalog } = useProductCatalog();
   const { data: customers } = useCustomerDirectory();
+  const { books } = useBooksSettings();
   const { data: dailySales } = useDailySales();
   const recentInvoices = useRecentInvoices();
   const sales = useSalesSummary();
@@ -89,12 +91,13 @@ export function useInvoiceWorkspace({
   const blockedByCredit = useCallback(
     (bill, { requireSaved = true } = {}) => {
       const message =
-        (requireSaved && customerRequiredError({ ...bill, customers })) || creditCustomerError({ ...bill, customers });
+        (requireSaved && books.require_customer && customerRequiredError({ ...bill, customers, walkIn: books.walk_in_name })) ||
+        creditCustomerError({ ...bill, customers });
       if (!message) return false;
       toast({ title: "Customer needed", description: message, variant: "destructive" });
       return true;
     },
-    [toast, customers]
+    [toast, customers, books]
   );
 
   // Credit customers become saved customers so their phone is there next time.

@@ -16,12 +16,12 @@ import { formatDateDDMMMYYYY, localISODate } from "@/utils/date";
 import { formatRupees, toNumber } from "@/utils/formatters";
 import { SelectField } from "@/features/books/components/SelectField";
 import { useEnteredBy } from "@/features/books/useEnteredBy";
+import { placeLabels, useBooksSettings } from "@/features/books/booksSettings";
 
-const PLACES = [
-  { value: "home", label: "Home" },
-  { value: "shop", label: "Shop" },
+const placesFor = (books) => [
+  { value: "home", label: books.home_label },
+  { value: "shop", label: books.shop_label },
 ];
-const placeName = (value) => PLACES.find((place) => place.value === value)?.label ?? value;
 const MODES = [
   { value: "in", label: "Money in" },
   { value: "out", label: "Money out" },
@@ -30,7 +30,9 @@ const MODES = [
 ];
 const KIND_LABEL = { opening: "Opening", in: "In", out: "Out", transfer: "Moved", correction: "Counted" };
 
-function EntryDialog({ open, onOpenChange, balances, initialMode }) {
+function EntryDialog({ open, onOpenChange, balances, initialMode, books }) {
+  const PLACES = placesFor(books);
+  const placeName = (value) => placeLabels(books)[value] ?? value;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [mode, setMode] = useState(initialMode);
@@ -70,9 +72,11 @@ function EntryDialog({ open, onOpenChange, balances, initialMode }) {
   });
 
   const problem =
-    (mode === "out" || mode === "transfer") && value > (balances[place] ?? 0)
+    !books.holdings_allow_negative && (mode === "out" || mode === "transfer") && value > (balances[place] ?? 0)
       ? `${placeName(place)} only has ${formatRupees(balances[place] ?? 0)}.`
-      : null;
+      : books.holdings_require_author && !author.trim()
+        ? "Enter who is making this entry."
+        : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,7 +111,7 @@ function EntryDialog({ open, onOpenChange, balances, initialMode }) {
             <Field label="Date" htmlFor="holding-date">
               {(id) => <Input id={id} type="date" value={date} onChange={(event) => setDate(event.target.value)} />}
             </Field>
-            <Field label="By (optional)" htmlFor="holding-by">
+            <Field label={books.holdings_require_author ? "By" : "By (optional)"} htmlFor="holding-by">
               {(id) => <Input id={id} value={author} onChange={(event) => setAuthor(event.target.value)} autoComplete="off" />}
             </Field>
           </div>
@@ -129,6 +133,9 @@ function EntryDialog({ open, onOpenChange, balances, initialMode }) {
 }
 
 export default function HoldingsPage() {
+  const { books } = useBooksSettings();
+  const PLACES = placesFor(books);
+  const placeName = (value) => placeLabels(books)[value] ?? value;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState(null);
@@ -189,11 +196,16 @@ export default function HoldingsPage() {
 
       {data && (
         <>
-          {dialog && <EntryDialog key={dialog} open onOpenChange={(open) => !open && setDialog(null)} balances={balances} initialMode={dialog} />}
+          {dialog && <EntryDialog key={dialog} open onOpenChange={(open) => !open && setDialog(null)} balances={balances} initialMode={dialog} books={books} />}
+          {books.shop_cash_limit > 0 && balances.shop > books.shop_cash_limit && (
+            <p role="status" className="rounded-2xl bg-marigold/15 px-3.5 py-2.5 text-sm font-semibold text-warning">
+              {books.shop_label} holds {formatRupees(balances.shop)}, over your {formatRupees(books.shop_cash_limit)} limit. Time to move some.
+            </p>
+          )}
           <div className="grid grid-cols-3 gap-3">
             {[
-              ["Home", balances.home, "bg-rani text-white"],
-              ["Shop", balances.shop, "bg-leaf text-white"],
+              [books.home_label, balances.home, "bg-rani text-white"],
+              [books.shop_label, balances.shop, "bg-leaf text-white"],
               ["Total", balances.home + balances.shop, "bg-indigo text-white"],
             ].map(([label, value, tone]) => (
               <div key={label} className={`motif-overlay rounded-[1.25rem] px-4 py-3.5 sm:px-5 sm:py-4 ${tone}`}>

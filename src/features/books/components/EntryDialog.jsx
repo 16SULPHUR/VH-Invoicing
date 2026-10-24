@@ -9,18 +9,21 @@ import { queryKeys } from "@/lib/queryClient";
 import { booksService } from "@/services/booksService";
 import { localISODate } from "@/utils/date";
 import { toNumber } from "@/utils/formatters";
-import { ENTRY_KINDS, SOURCE_OPTIONS, entryLines } from "../lib/entryKinds";
+import { useBooksSettings } from "../booksSettings";
+import { ENTRY_KINDS, SOURCE_OPTIONS, entryDescription, entryLines } from "../lib/entryKinds";
 import { SelectField } from "./SelectField";
 
-export function EntryDialog({ open, onOpenChange, defaultKind = "expense", defaultSource = "Cash", kinds }) {
+export function EntryDialog({ open, onOpenChange, defaultKind = "expense", defaultSource, kinds }) {
+  const { books } = useBooksSettings();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const options = ENTRY_KINDS.filter((item) => !kinds || kinds.includes(item.value));
   const [kind, setKind] = useState(defaultKind);
-  const [source, setSource] = useState(defaultSource);
+  const [source, setSource] = useState(defaultSource ?? books.default_source);
   const [date, setDate] = useState(localISODate());
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [category, setCategory] = useState("");
 
   const selected = options.find((item) => item.value === kind) ?? options[0];
   const value = toNumber(amount);
@@ -29,7 +32,7 @@ export function EntryDialog({ open, onOpenChange, defaultKind = "expense", defau
     mutationFn: () =>
       booksService.postJournal({
         date,
-        description: note.trim() ? `${selected.label}: ${note.trim()}` : selected.label,
+        description: entryDescription(selected, category, note),
         lines: entryLines(selected.value, source, value),
       }),
     onSuccess: () => {
@@ -54,6 +57,15 @@ export function EntryDialog({ open, onOpenChange, defaultKind = "expense", defau
         </DialogHeader>
         <div className="space-y-4">
           <SelectField label="What happened" value={selected.value} onChange={setKind} options={options} htmlFor="entry-kind" />
+          {selected.value === "expense" && (
+            <SelectField
+              label="Category"
+              value={category}
+              onChange={setCategory}
+              htmlFor="entry-category"
+              options={[{ value: "", label: "No category" }, ...books.expense_categories.map((name) => ({ value: name, label: name }))]}
+            />
+          )}
           {selected.needsSource && (
             <SelectField label="Through" value={source} onChange={setSource} options={SOURCE_OPTIONS} htmlFor="entry-source" />
           )}

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -14,13 +15,16 @@ import { useReportRange } from "@/features/reports/range/useReportRange";
 import { formatDateDDMMMYYYY } from "@/utils/date";
 import { formatINR } from "@/utils/formatters";
 import { EntryDialog } from "../components/EntryDialog";
-import { referenceLabel } from "../lib/entryKinds";
+import { CsvButton } from "@/features/reports/components/ReportUI";
+import { useBooksSettings } from "../booksSettings";
+import { expenseCategory, referenceLabel } from "../lib/entryKinds";
 
-export default function AccountBookPage({ title, subtitle, accounts, inLabel, outLabel, kinds, defaultKind, defaultSource }) {
+export default function AccountBookPage({ title, subtitle, accounts, inLabel, outLabel, kinds, defaultKind, defaultSource, byCategory = false }) {
   const { range } = useReportRange();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
+  const [search, setSearch] = useState("");
 
   const book = useQuery({
     queryKey: queryKeys.books.account(accounts, range.from, range.to),
@@ -36,7 +40,21 @@ export default function AccountBookPage({ title, subtitle, accounts, inLabel, ou
     onError: (error) => toast({ title: "Could not delete", description: error.message, variant: "destructive" }),
   });
 
-  const lines = book.data?.lines ?? [];
+  const allLines = book.data?.lines;
+  const lines = useMemo(() => {
+    const rows = allLines ?? [];
+    const needle = search.trim().toLowerCase();
+    return needle ? rows.filter((row) => `${row.description} ${referenceLabel(row.reference_table)}`.toLowerCase().includes(needle)) : rows;
+  }, [allLines, search]);
+  const categories = useMemo(() => {
+    if (!byCategory) return [];
+    const totals = new Map();
+    lines.forEach((row) => {
+      const key = expenseCategory(row.description);
+      totals.set(key, (totals.get(key) ?? 0) + (Number(row.debit) || 0) - (Number(row.credit) || 0));
+    });
+    return [...totals.entries()].sort((a, b) => b[1] - a[1]);
+  }, [lines, byCategory]);
   const totalIn = lines.reduce((sum, row) => sum + (Number(row.debit) || 0), 0);
   const totalOut = lines.reduce((sum, row) => sum + (Number(row.credit) || 0), 0);
 
@@ -46,10 +64,25 @@ export default function AccountBookPage({ title, subtitle, accounts, inLabel, ou
         title={title}
         subtitle={subtitle}
         actions={
-          <Button onClick={() => setAdding(true)} className="block-shadow press">
-            <Plus size={16} className="mr-1.5" aria-hidden />
-            New entry
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search entries…"
+              aria-label="Search entries"
+              className="h-9 w-44"
+            />
+            <CsvButton
+              filename={`${title.toLowerCase().replace(/\W+/g, "_")}_${range.from || "all"}_${range.to || "all"}.csv`}
+              headers={["Date", "Particulars", "Type", inLabel, outLabel, "Balance"]}
+              rows={lines.map((row) => [row.date?.slice(0, 10), row.description, referenceLabel(row.reference_table), row.debit || "", row.credit || "", row.balance])}
+            />
+            <Button onClick={() => setAdding(true)} className="block-shadow press">
+              <Plus size={16} className="mr-1.5" aria-hidden />
+              New entry
+            </Button>
+          </div>
         }
       />
       <EntryDialog open={adding} onOpenChange={setAdding} kinds={kinds} defaultKind={defaultKind} defaultSource={defaultSource} />
@@ -66,6 +99,20 @@ export default function AccountBookPage({ title, subtitle, accounts, inLabel, ou
         <StatTile label={outLabel} value={formatINR(totalOut)} accent="text-rani" />
         <StatTile label="Closing" value={formatINR(book.data?.closing)} />
       </div>
+
+      {categories.length > 0 && (
+        <div className="rounded-2xl border border-border/70 bg-surface p-4">
+          <p className="eyebrow mb-2">By category</p>
+          <div className="grid gap-x-8 gap-y-1.5 sm:grid-cols-2">
+            {categories.map(([name, total]) => (
+              <div key={name} className="flex justify-between gap-3 text-sm">
+                <span>{name}</span>
+                <span className="font-semibold tabular-nums">{formatINR(total)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {book.isLoading && <TableSkeleton columns={6} />}
       {!book.isLoading && !book.error && lines.length === 0 && (
@@ -130,17 +177,20 @@ export const CashBookPage = () => (
   />
 );
 
-export const BankBookPage = () => (
-  <AccountBookPage
-    title="Bank book"
-    subtitle="UPI and bank movements"
-    accounts={["Bank", "UPI"]}
-    inLabel="Deposits"
-    outLabel="Withdrawals"
-    defaultKind="expense"
-    defaultSource="Bank"
-  />
-);
+export function BankBookPage() {
+  const { books } = useBooksSettings();
+  return (
+    <AccountBookPage
+      title="Bank book"
+      subtitle={`${books.bank_name}: UPI and bank movements`}
+      accounts={["Bank", "UPI"]}
+      inLabel="Deposits"
+      outLabel="Withdrawals"
+      defaultKind="expense"
+      defaultSource="Bank"
+    />
+  );
+}
 
 export const ExpensesPage = () => (
   <AccountBookPage
@@ -151,6 +201,6 @@ export const ExpensesPage = () => (
     outLabel="Refunded"
     kinds={["expense"]}
     defaultKind="expense"
-    defaultSource="Cash"
+    byCategory
   />
 );

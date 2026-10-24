@@ -14,6 +14,7 @@ const TABS = [
   { to: "profit-loss", label: "Profit & loss" },
   { to: "balance-sheet", label: "Balance sheet" },
   { to: "opening", label: "Opening balances", noRange: true },
+  { to: "settings", label: "Settings", noRange: true },
 ];
 
 const tabClass = ({ isActive }) =>

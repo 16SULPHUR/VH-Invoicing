@@ -18,6 +18,7 @@ const DayBookPage = lazy(() => import("@/features/books/pages/DayBookPage"));
 const CustomerAccountsPage = lazy(() => import("@/features/books/pages/CustomerAccountsPage"));
 const ProfitLossPage = lazy(() => import("@/features/books/pages/ProfitLossPage"));
 const BalanceSheetPage = lazy(() => import("@/features/books/pages/BalanceSheetPage"));
+const BooksSettingsPage = lazy(() => import("@/features/books/pages/BooksSettingsPage"));
 const OpeningBalancePage = lazy(() => import("@/features/books/pages/OpeningBalancePage"));
 const CashBookPage = lazy(() => import("@/features/books/pages/AccountBookPage").then((m) => ({ default: m.CashBookPage })));
 const BankBookPage = lazy(() => import("@/features/books/pages/AccountBookPage").then((m) => ({ default: m.BankBookPage })));
@@ -80,6 +81,7 @@ export function createRouter({ onSignOut }) {
             { path: "profit-loss", element: <ProfitLossPage /> },
             { path: "balance-sheet", element: <BalanceSheetPage /> },
             { path: "opening", element: <OpeningBalancePage /> },
+            { path: "settings", element: <BooksSettingsPage /> },
           ],
         },
         {
