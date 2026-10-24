@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { booksService } from "@/services/booksService";
+import { BooksSettingsPanel } from "@/features/books/components/BooksSettingsPanel";
 import { OpeningBalances } from "@/features/books/components/OpeningBalances";
 import { Section } from "../components/fields";
 
@@ -14,7 +14,7 @@ function Accounts() {
   );
 
   return (
-    <Section title="Accounts" description="The accounts sales, payments, supplier bills and your entries are posted to. Set by the database, shown here for reference.">
+    <Section title="Chart of accounts" description="The accounts sales, payments, supplier bills and your entries are posted to. Set by the database, shown here for reference.">
       {accounts.isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : accounts.error ? (
@@ -41,17 +41,9 @@ export function BooksSection() {
         <Section title="Opening balances" description="What the shop held when these books begin. Set once.">
           <OpeningBalances />
         </Section>
-        <Section title="Home & Shop" description="Cash kept at home and at the shop is tracked separately from the books.">
-          <p className="text-sm">
-            To correct a balance, use <b>Set counted amount</b> on the{" "}
-            <Link to="/holdings" className="font-bold text-rani hover:underline">
-              Home & Shop
-            </Link>{" "}
-            page. The name on entries is under Settings › This device.
-          </p>
-        </Section>
+        <Accounts />
       </div>
-      <Accounts />
+      <BooksSettingsPanel />
     </div>
   );
 }
