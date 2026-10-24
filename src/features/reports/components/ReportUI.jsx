@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, Download, FileText } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Columns3, Download, FileText } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { downloadCsv, toCsv } from "@/utils/csv";
 import { downloadPdfTable } from "@/utils/pdfTable";
 import { percent } from "../lib/format";
@@ -98,6 +100,62 @@ export function PdfButton({ onClick, label = "PDF" }) {
   );
 }
 
+const readHidden = (key) => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(key) ?? "[]"));
+  } catch {
+    return new Set();
+  }
+};
+
+function useExportColumns(columns, csvName) {
+  const storageKey = `export-columns:${(csvName ?? "").replace(/_\d{4}-\d{2}.*$/, "")}`;
+  const [hidden, setHidden] = useState(() => readHidden(storageKey));
+  const save = (next) => {
+    setHidden(next);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...next]));
+    } catch {
+      /* private mode */
+    }
+  };
+  const toggle = (key) => {
+    const next = new Set(hidden);
+    if (next.has(key)) next.delete(key);
+    else if (columns.length - next.size > 1) next.add(key);
+    save(next);
+  };
+  return { hidden, toggle, showAll: () => save(new Set()), picked: columns.filter((c) => !hidden.has(c.key)) };
+}
+
+function ColumnPicker({ columns, hidden, toggle, showAll }) {
+  const count = columns.length - columns.filter((c) => hidden.has(c.key)).length;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" className="press inline-flex h-8 items-center gap-1.5 rounded-full border-[1.5px] border-border bg-surface px-3 text-xs font-bold hover:border-indigo/40">
+          <Columns3 className="h-3.5 w-3.5" aria-hidden />
+          Columns {count < columns.length ? `${count}/${columns.length}` : ""}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56 p-2">
+        <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">Columns to export</p>
+        {columns.map((column) => (
+          <label key={column.key} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-accent/60">
+            <Checkbox checked={!hidden.has(column.key)} onCheckedChange={() => toggle(column.key)} />
+            {column.header}
+          </label>
+        ))}
+        {hidden.size > 0 && (
+          <button type="button" onClick={showAll} className="press mt-1 w-full rounded-lg px-2 py-1.5 text-left text-sm font-bold text-rani hover:bg-accent/60">
+            Tick all
+          </button>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function Pills({ options, value, onChange, label }) {
   return (
     <div role="group" aria-label={label} className="inline-flex h-8 gap-0.5 rounded-full border border-border bg-surface p-0.5">
@@ -126,6 +184,8 @@ export function Pills({ options, value, onChange, label }) {
 export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (row, i) => row.id ?? i, csvName, title, subtitle, footer, onRowClick, empty = "Nothing in this period." }) {
   const [sort, setSort] = useState(initialSort ?? { key: null, asc: false });
   const [showAll, setShowAll] = useState(false);
+  const exportCols = useExportColumns(columns, csvName);
+  const picked = exportCols.picked;
 
   const sorted = useMemo(() => {
     if (!sort.key) return rows;
@@ -157,10 +217,10 @@ export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (ro
       filename: csvName.replace(/\.csv$/, "") + ".pdf",
       title: title ?? csvName.replace(/\.csv$/, "").replace(/_/g, " "),
       subtitle,
-      headers: columns.map((c) => c.header),
-      aligns: columns.map((c) => c.align),
-      rows: sorted.map((row) => columns.map((c) => textCell(c, row))),
-      footer: footer && columns.map((c, i) => footerCell(c, i, textCell)),
+      headers: picked.map((c) => c.header),
+      aligns: picked.map((c) => c.align),
+      rows: sorted.map((row) => picked.map((c) => textCell(c, row))),
+      footer: footer && picked.map((c, i) => footerCell(c, i, textCell)),
     });
 
   if (rows.length === 0) return <p className="rounded-xl bg-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">{empty}</p>;
@@ -169,12 +229,13 @@ export function DataTable({ columns, rows, initialSort, limit = 15, rowKey = (ro
     <div>
       {csvName && (
         <div className="-mt-1 mb-2 flex justify-end gap-2">
+          <ColumnPicker columns={columns} {...exportCols} />
           <CsvButton
             filename={csvName}
-            headers={columns.map((c) => c.header)}
+            headers={picked.map((c) => c.header)}
             rows={[
-              ...sorted.map((row) => columns.map((c) => csvCell(c, row))),
-              ...(footer ? [columns.map((c, i) => footerCell(c, i, csvCell))] : []),
+              ...sorted.map((row) => picked.map((c) => csvCell(c, row))),
+              ...(footer ? [picked.map((c, i) => footerCell(c, i, csvCell))] : []),
             ]}
           />
           <PdfButton onClick={exportPdf} />
