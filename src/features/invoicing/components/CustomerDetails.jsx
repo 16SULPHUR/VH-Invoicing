@@ -14,11 +14,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Field } from "@/components/common/Field";
 import { cn } from "@/lib/utils";
 import { NewCustomerDialog } from "@/features/customers/components/NewCustomerDialog";
-import { findKnownCustomer } from "@/utils/invoice";
+import { findKnownCustomer, normalizePhone } from "@/utils/invoice";
 
-function CustomerCombobox({ customers, value, onSelect, onAddNew, id }) {
+const details = (customer) => [customer.remarks, customer.phone, customer.address].map((part) => String(part ?? "").trim()).filter(Boolean).join(" · ");
+
+function CustomerCombobox({ customers, value, phone, chosenId, onSelect, onAddNew, id }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const digits = normalizePhone(phone);
+  const picked = customers.find((customer) => customer.id === chosenId && customer.name === value);
+  const isChosen = (customer) =>
+    picked ? customer === picked : customer.name === value && (!digits || normalizePhone(customer.phone) === digits);
+  const chosen = customers.find(isChosen);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -32,6 +39,7 @@ function CustomerCombobox({ customers, value, onSelect, onAddNew, id }) {
         >
           <span className={cn("truncate", !value && "text-muted-foreground")}>
             {value || "Select customer"}
+            {chosen?.remarks && <span className="ml-1.5 text-xs text-muted-foreground">· {chosen.remarks}</span>}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
         </Button>
@@ -48,7 +56,7 @@ function CustomerCombobox({ customers, value, onSelect, onAddNew, id }) {
               {customers.map((customer) => (
                 <CommandItem
                   key={customer.id}
-                  value={customer.name}
+                  value={`${customer.name} ${details(customer)} ${customer.id}`}
                   onSelect={() => {
                     onSelect(customer);
                     setOpen(false);
@@ -57,13 +65,13 @@ function CustomerCombobox({ customers, value, onSelect, onAddNew, id }) {
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === customer.name ? "opacity-100" : "opacity-0"
+                      isChosen(customer) ? "opacity-100" : "opacity-0"
                     )}
                     aria-hidden
                   />
-                  <span className="flex w-full justify-between gap-2">
-                    <span className="truncate">{customer.name}</span>
-                    <span className="shrink-0 text-muted-foreground">{customer.address}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate">{customer.name}</span>
+                    {details(customer) && <span className="block truncate text-xs text-muted-foreground">{details(customer)}</span>}
                   </span>
                 </CommandItem>
               ))}
@@ -95,9 +103,11 @@ export function CustomerDetails({
   setCustomerNumber,
 }) {
   const [adding, setAdding] = useState(null);
+  const [chosenId, setChosenId] = useState(null);
   const known = findKnownCustomer(customers, customerName);
 
   const choose = (customer) => {
+    setChosenId(customer.id);
     setCustomerName(customer.name);
     setCustomerNumber(customer.phone ? String(customer.phone) : "");
   };
@@ -110,6 +120,8 @@ export function CustomerDetails({
             id={id}
             customers={customers}
             value={customerName}
+            phone={customerNumber}
+            chosenId={chosenId}
             onSelect={choose}
             onAddNew={setAdding}
           />
