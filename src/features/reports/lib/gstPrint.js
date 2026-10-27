@@ -9,11 +9,13 @@ function table(headers, rows) {
 }
 
 /** A one-page summary for the accountant, printed from a hidden frame so the app layout stays out of it. */
-export function printGstSummary({ gst, settings, period, shopName, payable, itc }) {
+export function printGstSummary({ gst, settings, period, shopName, address, payable, itc }) {
   const s = gst.summary;
   const body = `
-    <h1>${esc(shopName)} · GST summary</h1>
-    <p class="sub">GSTIN ${esc(settings.gstin)} · ${esc(period.label)} (${esc(period.from)} to ${esc(period.to)})</p>
+    <h1>${esc(shopName)}</h1>
+    ${address ? `<p class="sub">${esc(address)}</p>` : ""}
+    <p class="sub">GSTIN ${esc(settings.gstin)}</p>
+    <h2>GST summary · ${esc(period.label)} (${esc(period.from)} to ${esc(period.to)})</h2>
     <h2>GSTR-3B 3.1(a) Outward taxable supplies</h2>
     ${table(["Taxable value", "IGST", "CGST", "SGST", "Cess"], [[rupees2(s.taxable), "0", rupees2(s.cgst), rupees2(s.sgst), "0"]])}
     <h2>Tax to pay</h2>

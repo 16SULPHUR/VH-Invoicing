@@ -59,11 +59,14 @@ export const queryKeys = {
     scans: (countId) => ["shop-tools", "scans", countId],
     lastSold: (since) => ["shop-tools", "last-sold", since],
   },
-  cashbook: {
-    accounts: ["cashbook", "accounts"],
-    transactions: ["cashbook", "transactions"],
-    reconciliations: ["cashbook", "reconciliations"],
-    closeDay: (date) => ["cashbook", "close-day", date],
+  books: {
+    all: ["books"],
+    account: (names, from, to) => ["books", "account", names, from, to],
+    daybook: (from, to) => ["books", "daybook", from, to],
+    customers: ["books", "customers"],
+    holdings: ["books", "holdings"],
+    opening: ["books", "opening"],
+    accounts: ["books", "accounts"],
   },
   accounting: {
     transactions: ["accounting", "transactions"],

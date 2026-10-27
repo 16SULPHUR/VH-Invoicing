@@ -74,7 +74,7 @@ function TabIcon({ icon: Icon, active }) {
   );
 }
 
-/** Mobile: bottom tab bar, with Cashbook, Reports and sign-out under More. */
+/** Mobile: bottom tab bar, with Books, Reports and sign-out under More. */
 export function AppTabBar({ onSignOut }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { pathname } = useLocation();

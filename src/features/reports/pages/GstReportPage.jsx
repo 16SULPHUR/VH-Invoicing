@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, FileJson, Info, Printer } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ import { useReportData } from "../hooks/useReportData";
 import { useGstSettings } from "../hooks/useGstSettings";
 import { ReportShell } from "../components/ReportShell";
 import { CsvButton, DataTable, Kpi, Panel, Pills } from "../components/ReportUI";
-import { GstSettingsPanel } from "../components/GstSettingsPanel";
 import { ItemHsnPanel } from "../components/ItemHsnPanel";
 
 const LEVEL = {
@@ -172,7 +171,7 @@ export default function GstReportPage() {
           )}
           <button
             type="button"
-            onClick={() => printGstSummary({ gst, settings, period, shopName: shop.shop_name, payable, itc })}
+            onClick={() => printGstSummary({ gst, settings, period, shopName: shop.shop_name, address: shop.address, payable, itc })}
             className="press inline-flex h-10 items-center gap-2 rounded-full bg-indigo px-4 text-sm font-bold text-white"
           >
             <Printer className="h-4 w-4" aria-hidden /> Print summary
@@ -330,12 +329,12 @@ export default function GstReportPage() {
         />
       </Panel>
 
-      <GstSettingsPanel nonSalePatterns={data.nonSalePatterns} patternsShared={data.patternsShared} />
       <p className="text-xs text-muted-foreground">
-        Scheme: {regular ? "Regular" : "Composition"}.{" "}
-        <button type="button" className="font-bold text-rani hover:underline" onClick={() => save({ scheme: regular ? "composition" : "regular" })}>
-          Switch to {regular ? "composition" : "regular"}
-        </button>
+        Scheme: {regular ? "Regular" : "Composition"}. GSTIN, HSN codes, HSN rules and the not-a-sale list are in{" "}
+        <Link to="/settings?tab=gst" className="font-bold text-rani hover:underline">
+          Settings › GST
+        </Link>
+        .
       </p>
     </ReportShell>
   );

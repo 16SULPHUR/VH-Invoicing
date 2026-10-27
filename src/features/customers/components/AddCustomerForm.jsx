@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAddCustomer } from "../hooks/useCustomers";
 import { WhatsAppFields } from "./WhatsAppFields";
 
-const EMPTY_CUSTOMER = { name: "", address: "", phone: "" };
+const EMPTY_CUSTOMER = { name: "", address: "", phone: "", remarks: "", gstin: "" };
 const FIELDS = [
   { key: "name", label: "Name", type: "text" },
   { key: "address", label: "Address", type: "text" },
   { key: "phone", label: "Phone", type: "tel" },
+  { key: "remarks", label: "Remarks (optional)", type: "text", optional: true },
+  { key: "gstin", label: "GSTIN (optional)", type: "text", optional: true },
 ];
 
 export default function AddCustomerForm() {
@@ -29,7 +31,7 @@ export default function AddCustomerForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {FIELDS.map(({ key, label, type }) => (
+          {FIELDS.map(({ key, label, type, optional }) => (
             <div key={key} className="space-y-1.5">
               <Label htmlFor={key} className="text-xs font-semibold text-muted-foreground">
                 {label}
@@ -41,7 +43,7 @@ export default function AddCustomerForm() {
                 onChange={(event) =>
                   setCustomer((previous) => ({ ...previous, [key]: event.target.value }))
                 }
-                required
+                required={!optional}
               />
             </div>
           ))}

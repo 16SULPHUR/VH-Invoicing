@@ -13,7 +13,7 @@ import { formatRupees, toNumber } from "@/utils/formatters";
 import { ToolSheet } from "@/features/counter/components/ToolSheet";
 import { TextArea } from "@/features/counter/components/Bits";
 import { useGstSettings } from "@/features/reports/hooks/useGstSettings";
-import { useEnteredBy } from "@/features/cashbook/hooks/useEnteredBy";
+import { useEnteredBy } from "@/features/books/useEnteredBy";
 import { DEFAULT_CREDIT_DAYS, GST_RATES, addDays, gstSplit, isInterState, round2 } from "../lib/billMath";
 import { readSupplierBill } from "../lib/readBill";
 import { useSupplierBookMutations } from "../hooks/useSupplierBooks";

@@ -1,11 +1,10 @@
-import { BUSINESS } from "@/config/business";
 import { formatRupees } from "@/utils/formatters";
 
 const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const day = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
 /** Opens a plain printable statement of one supplier's bills and payments. */
-export function printStatement({ supplier, entries, totals }) {
+export function printStatement({ supplier, entries, totals, company }) {
   const rows = entries
     .map(
       (entry) =>
@@ -15,8 +14,9 @@ export function printStatement({ supplier, entries, totals }) {
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(supplier.name)} statement</title>
 <style>body{font:13px system-ui,sans-serif;margin:24px;color:#111}h1{font-size:18px;margin:0}p{margin:4px 0 14px;color:#555}
 table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f4f4f4}.n{text-align:right;font-variant-numeric:tabular-nums}
-.t{margin-top:14px;font-weight:700;text-align:right}</style></head><body>
-<h1>${esc(supplier.name)}</h1><p>Statement from ${esc(BUSINESS.name ?? "Variety Heaven")} · ${day(new Date().toISOString().slice(0, 10))}${supplier.gstin ? ` · GSTIN ${esc(supplier.gstin)}` : ""}</p>
+.t{margin-top:14px;font-weight:700;text-align:right}.co{text-align:center;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #ccc;color:#333}.co b{font-size:17px}</style></head><body>
+<div class="co"><b>${esc(company.name)}</b>${company.address ? `<br>${esc(company.address)}` : ""}${company.gstin ? `<br>GSTIN ${esc(company.gstin)}` : ""}</div>
+<h1>${esc(supplier.name)}</h1><p>Statement · ${day(new Date().toISOString().slice(0, 10))}${supplier.gstin ? ` · GSTIN ${esc(supplier.gstin)}` : ""}</p>
 <table><thead><tr><th>Date</th><th>Particulars</th><th class="n">Billed</th><th class="n">Paid / adjusted</th><th class="n">Balance</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="t">Outstanding ${formatRupees(totals.outstanding)}</p><script>window.onload=()=>window.print()</script></body></html>`;
   const win = window.open("", "_blank");

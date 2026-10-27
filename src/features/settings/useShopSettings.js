@@ -15,6 +15,7 @@ export const DEFAULT_PRODUCT_FIELDS = [
 export const SHOP_DEFAULTS = {
   shop_name: BUSINESS.displayName,
   tagline: "Drape Yourself in Luxury",
+  address: "Shop no. 09, Sentosa Enclave, Near Ramipark Soc., Dindoli, Surat, Gujarat 394210",
   phone: "",
   whatsapp: "",
   upi_id: BUSINESS.upiId,

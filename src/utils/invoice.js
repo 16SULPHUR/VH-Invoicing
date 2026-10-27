@@ -90,3 +90,16 @@ export function creditCustomerError({ payments, customerName, customerNumber, cu
   if (findKnownCustomer(customers, customerName)) return null;
   return "New credit customer: add a 10-digit phone, or pick a saved customer.";
 }
+
+export const WALK_IN = "Walk-in";
+
+/** Every bill belongs to a saved customer. Returns an error message or null. */
+export function customerRequiredError({ payments, customerName, customers, walkIn = WALK_IN }) {
+  if (!String(customerName ?? "").trim()) return "Pick the customer, or add a new one.";
+  const known = findKnownCustomer(customers, customerName);
+  if (!known) return `${String(customerName).trim()} is not a saved customer. Pick one, or add them as new.`;
+  if (nameKey(known.name) === nameKey(walkIn) && toNumber(payments.credit) > 0) {
+    return `${walkIn} can't take credit. Pick or add the customer.`;
+  }
+  return null;
+}
