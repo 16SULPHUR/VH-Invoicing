@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { CompanyHeader } from "@/components/common/CompanyHeader";
 import { PageLoader } from "@/components/common/PageLoader";
 import { ReportRangePicker } from "@/features/reports/range/ReportRangePicker";
+import { useShowProfit } from "@/features/reports/hooks/useShowProfit";
 
 const TABS = [
   { to: "daybook", label: "Day book" },
@@ -12,7 +13,7 @@ const TABS = [
   { to: "expenses", label: "Expenses" },
   { to: "ledger", label: "Ledger" },
   { to: "trial-balance", label: "Trial balance" },
-  { to: "profit-loss", label: "Profit & loss" },
+  { to: "profit-loss", label: "Profit & loss", profit: true },
   { to: "balance-sheet", label: "Balance sheet" },
   { to: "opening", label: "Opening balances", noRange: true },
   { to: "settings", label: "Settings", noRange: true },
@@ -25,6 +26,8 @@ const tabClass = ({ isActive }) =>
 
 export default function BooksLayout() {
   const location = useLocation();
+  const [showProfit] = useShowProfit();
+  const tabs = TABS.filter((tab) => showProfit || !tab.profit);
   const current = TABS.find((tab) => location.pathname.endsWith(`/books/${tab.to}`));
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -32,7 +35,7 @@ export default function BooksLayout() {
         <CompanyHeader className="mx-auto mb-3 max-w-[1400px]" />
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3">
           <div className="inline-flex h-11 max-w-full gap-1 overflow-x-auto rounded-full border border-border bg-surface p-1">
-            {TABS.map((tab) => (
+            {tabs.map((tab) => (
               <NavLink key={tab.to} to={{ pathname: tab.to, search: location.search }} className={tabClass}>
                 {tab.label}
               </NavLink>

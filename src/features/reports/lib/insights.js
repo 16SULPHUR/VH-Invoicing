@@ -2,7 +2,7 @@ import { change } from "./analytics";
 import { dayLabel, hourLabel, percent, rupees, WEEKDAYS, weekdayLabel } from "./format";
 
 /** Plain sentences about what stands out, most useful first. tone: good | bad | note. */
-export function buildInsights({ now, previous, days, products, customers, grid, stock, lastYear }) {
+export function buildInsights({ now, previous, days, products, customers, grid, stock, lastYear, showProfit = true }) {
   const out = [];
   if (!now.bills) return out;
 
@@ -32,7 +32,7 @@ export function buildInsights({ now, previous, days, products, customers, grid, 
   const topHour = hours.indexOf(Math.max(...hours));
   if (weekday[topDay] > 0) out.push({ tone: "note", text: `${WEEKDAYS[topDay]} is the busiest day and ${hourLabel(topHour)} to ${hourLabel((topHour + 1) % 24)} the busiest hour, so keep the counter fully staffed then.` });
 
-  if (now.margin != null) {
+  if (showProfit && now.margin != null) {
     out.push({
       tone: now.margin >= 0.3 ? "good" : "note",
       text: `Real margin on items with a cost price is ${percent(now.margin)}, so profit is about ${rupees(now.profit)}.${now.costCoverage < 0.9 ? ` ${percent(1 - now.costCoverage)} of sales are items not in the stock list, so this is an estimate.` : ""}`,
@@ -48,7 +48,7 @@ export function buildInsights({ now, previous, days, products, customers, grid, 
   const topProduct = [...products].sort((a, b) => b.sales - a.sales)[0];
   if (topProduct) out.push({ tone: "good", text: `${topProduct.name} earned the most: ${rupees(topProduct.sales)} from ${topProduct.quantity} pieces.` });
 
-  const topMargin = products.filter((p) => p.margin != null && p.quantity >= 3).sort((a, b) => b.profit - a.profit)[0];
+  const topMargin = !showProfit ? null : products.filter((p) => p.margin != null && p.quantity >= 3).sort((a, b) => b.profit - a.profit)[0];
   if (topMargin && topMargin.name !== topProduct?.name) out.push({ tone: "good", text: `${topMargin.name} made the most profit (${rupees(topMargin.profit)} at ${percent(topMargin.margin)} margin).` });
 
   const topCustomer = [...customers].sort((a, b) => b.sales - a.sales)[0];

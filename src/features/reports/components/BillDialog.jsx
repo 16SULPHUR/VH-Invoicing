@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { dayYearLabel, rupees } from "../lib/format";
+import { dayYearLabel, percent, rupees } from "../lib/format";
+import { useShowProfit } from "../hooks/useShowProfit";
 
 const KIND_LABEL = { return: "Return", adjustment: "Not a sale" };
 
 export function BillDialog({ bill, onClose }) {
+  const [showProfit] = useShowProfit();
   return (
     <Dialog open={Boolean(bill)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg">
@@ -22,7 +24,7 @@ export function BillDialog({ bill, onClose }) {
                     <p className="truncate font-semibold">{line.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {line.quantity} × {rupees(line.price)}
-                      {line.cost != null && ` · cost ${rupees(line.cost)}`}
+                      {showProfit && line.cost != null && ` · cost ${rupees(line.cost)} · profit ${rupees(line.amount - line.cost)}`}
                       {KIND_LABEL[line.kind] && <span className="ml-1.5 rounded-full bg-marigold/25 px-1.5 py-0.5 font-bold text-warning">{KIND_LABEL[line.kind]}</span>}
                     </p>
                   </div>
@@ -38,6 +40,14 @@ export function BillDialog({ bill, onClose }) {
                 </div>
               ))}
             </dl>
+            {showProfit && (
+              <p className="flex items-baseline justify-between rounded-xl bg-marigold/15 px-3 py-2 text-sm">
+                <span className="font-semibold">Profit on this bill</span>
+                <span className="font-bold tabular-nums">
+                  {bill.profit == null ? "No cost on file" : `${rupees(bill.profit)} · ${percent(bill.margin)}`}
+                </span>
+              </p>
+            )}
           </>
         )}
       </DialogContent>

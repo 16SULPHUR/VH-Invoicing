@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { customerRows } from "../lib/analytics";
 import { dayYearLabel, percent, rupees } from "../lib/format";
 import { useRangeReport } from "../hooks/useRangeReport";
+import { useShowProfit } from "../hooks/useShowProfit";
 import { ReportShell } from "../components/ReportShell";
 import { DataTable, Kpi, Panel, Pills } from "../components/ReportUI";
 
@@ -20,6 +21,8 @@ const COLUMNS = [
   { key: "last", header: "Last visit", value: (r) => r.last, render: (r) => dayYearLabel(r.last) },
 ];
 
+const PROFIT_COLUMN = { key: "profit", header: "Profit", align: "right", render: (r) => (r.profit == null ? "—" : rupees(r.profit)) };
+
 const LAPSED_COLUMNS = [
   ...COLUMNS.slice(0, 5),
   { key: "last", header: "Last visit", value: (r) => r.last, render: (r) => dayYearLabel(r.last) },
@@ -35,6 +38,7 @@ const SEGMENTS = [
 export default function CustomersReportPage() {
   const report = useRangeReport();
   const [segment, setSegment] = useState("all");
+  const [showProfit] = useShowProfit();
   const { bills, all, now, effective } = report;
   const start = new Date(`${effective.from}T00:00:00`);
 
@@ -51,6 +55,7 @@ export default function CustomersReportPage() {
     [all]
   );
 
+  const columns = useMemo(() => (showProfit ? [...COLUMNS.slice(0, 5), PROFIT_COLUMN, ...COLUMNS.slice(5)] : COLUMNS), [showProfit]);
   const rows = segment === "new" ? customers.filter(isNew) : segment === "returning" ? customers.filter((c) => !isNew(c)) : customers;
   const namedSales = customers.reduce((s, c) => s + c.sales, 0);
   const file = `${effective.from}_${effective.to}`;
@@ -65,7 +70,7 @@ export default function CustomersReportPage() {
       </div>
 
       <Panel title="Customers" actions={<Pills options={SEGMENTS} value={segment} onChange={setSegment} label="Customer segment" />}>
-        <DataTable key={segment} columns={COLUMNS} rows={rows} initialSort={{ key: "sales", asc: false }} rowKey={(r) => r.key} csvName={`customers_${file}.csv`} />
+        <DataTable key={segment} columns={columns} rows={rows} initialSort={{ key: "sales", asc: false }} rowKey={(r) => r.key} csvName={`customers_${file}.csv`} />
       </Panel>
 
       <Panel

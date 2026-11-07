@@ -7,8 +7,10 @@ import { formatRupees } from "@/utils/formatters";
 import { invoiceItemCount, parseInvoiceLines } from "@/utils/invoice";
 import { SeenTicks } from "@/features/invoicing/components/SeenTicks";
 import { BillWhatsAppButton } from "@/features/whatsapp/components/BillWhatsApp";
+import { useBillProfit } from "@/features/reports/hooks/useBillProfit";
 
 export function CustomerBills({ invoices, onEdit }) {
+  const { show, ready, profitOf } = useBillProfit();
   if (invoices.length === 0) {
     return <EmptyState title="No bills yet" description="Bills with this name or phone show up here." />;
   }
@@ -18,6 +20,7 @@ export function CustomerBills({ invoices, onEdit }) {
       {invoices.map((invoice) => {
         const due = Number(invoice.credit) || 0;
         const items = invoiceItemCount(parseInvoiceLines(invoice.products));
+        const profit = show && ready ? profitOf(invoice)?.profit : null;
         return (
           <li key={invoice.date} className="flex items-center gap-3 px-3.5 py-3">
             <div className="min-w-0 flex-1">
@@ -25,6 +28,7 @@ export function CustomerBills({ invoices, onEdit }) {
                 <span className="font-bold">#{invoice.id}</span>
                 <span className="text-xs text-muted-foreground">
                   {formatDateDDMMMYYYY(invoice.date)} · {items} item{items === 1 ? "" : "s"}
+                  {profit != null && ` · profit ${formatRupees(Math.round(profit))}`}
                 </span>
               </div>
               <SeenTicks count={invoice.seen_count} lastSeen={invoice.last_seen_at} onlySeen className="mt-0.5" />

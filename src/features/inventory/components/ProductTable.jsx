@@ -108,6 +108,7 @@ function ProductThumb({ product, onViewImages }) {
 export function ProductTable({
   products,
   showCost,
+  showMargin,
   selection,
   supplierNameFor,
   onQuantityCommit,
@@ -127,6 +128,7 @@ export function ProductTable({
             </TableHead>
             <TableHead>Product</TableHead>
             {showCost && <TableHead className="text-right">Cost</TableHead>}
+            {showCost && showMargin && <TableHead className="text-right">Margin</TableHead>}
             <TableHead className="text-right">Price</TableHead>
             <TableHead className="hidden md:table-cell">Barcode</TableHead>
             <TableHead>Stock</TableHead>
@@ -136,7 +138,7 @@ export function ProductTable({
         <TableBody>
           {products.length === 0 && (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={showCost ? 7 : 6} className="py-10 text-center text-muted-foreground">
+              <TableCell colSpan={showCost ? (showMargin ? 8 : 7) : 6} className="py-10 text-center text-muted-foreground">
                 No products match these filters.
               </TableCell>
             </TableRow>
@@ -167,6 +169,13 @@ export function ProductTable({
                 {showCost && (
                   <TableCell className="text-right tabular-nums text-muted-foreground">
                     {formatRupees(product.cost)}
+                  </TableCell>
+                )}
+                {showCost && showMargin && (
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {Number(product.cost) > 0 && Number(product.sellingPrice) > 0
+                      ? `${formatRupees(product.sellingPrice - product.cost)} · ${Math.round(((product.sellingPrice - product.cost) / product.sellingPrice) * 100)}%`
+                      : "—"}
                   </TableCell>
                 )}
                 <TableCell className="text-right font-display text-base font-bold tabular-nums">

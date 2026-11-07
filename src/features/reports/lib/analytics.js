@@ -11,13 +11,19 @@ function costTotals(lines) {
   return { cost, costedSales };
 }
 
-/** Headline numbers for a set of prepared bills. Profit is measured on lines with a known cost and scaled to all sales. */
+/** Profit is measured on lines with a known cost and scaled to all sales. */
+export function profitOf(lines, sales) {
+  const { cost, costedSales } = costTotals(lines);
+  const margin = costedSales > 0 ? (costedSales - cost) / costedSales : null;
+  return { margin, profit: margin == null ? null : sales * margin, costedSales };
+}
+
+/** Headline numbers for a set of prepared bills. */
 export function totals(bills) {
   const sold = bills.filter((bill) => bill.sales !== 0);
   const lines = bills.flatMap((bill) => bill.lines);
   const sales = sum(bills, (b) => b.sales);
-  const { cost, costedSales } = costTotals(lines);
-  const margin = costedSales > 0 ? (costedSales - cost) / costedSales : null;
+  const { margin, profit, costedSales } = profitOf(lines, sales);
   return {
     bills: sold.length,
     sales,
@@ -30,7 +36,7 @@ export function totals(bills) {
     credit: sum(bills, (b) => b.credit),
     discount: sum(lines, (l) => l.discount),
     margin,
-    profit: margin == null ? null : sales * margin,
+    profit,
     costCoverage: sales > 0 ? costedSales / sales : 0,
     customers: new Set(sold.filter((b) => !b.walkIn).map((b) => b.customerKey)).size,
     walkIns: sold.filter((b) => b.walkIn).length,
@@ -171,6 +177,7 @@ export function customerRows(bills, allBills = bills) {
       sales: 0,
       credit: 0,
       items: 0,
+      profit: null,
       first: firstSeen.get(bill.customerKey),
       last: bill.date,
     };
@@ -178,6 +185,7 @@ export function customerRows(bills, allBills = bills) {
     row.sales += bill.sales;
     row.credit += bill.credit;
     row.items += bill.items;
+    if (bill.profit != null) row.profit = (row.profit ?? 0) + bill.profit;
     if (bill.date >= row.last) {
       row.last = bill.date;
       row.name = bill.customerName;
