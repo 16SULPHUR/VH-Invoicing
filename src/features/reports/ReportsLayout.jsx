@@ -3,12 +3,13 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { CompanyHeader } from "@/components/common/CompanyHeader";
 import { PageLoader } from "@/components/common/PageLoader";
 import { ReportRangePicker } from "./range/ReportRangePicker";
+import { ProfitToggle } from "./components/ProfitToggle";
 
 const REPORT_TABS = [
-  { to: "overview", label: "Overview" },
-  { to: "sales", label: "Sales" },
-  { to: "products", label: "Products" },
-  { to: "customers", label: "Customers" },
+  { to: "overview", label: "Overview", profit: true },
+  { to: "sales", label: "Sales", profit: true },
+  { to: "products", label: "Products", profit: true },
+  { to: "customers", label: "Customers", profit: true },
   { to: "stock", label: "Stock", noRange: true },
   { to: "gst", label: "GST", noRange: true },
   { to: "purchases", label: "Purchases", noRange: true },
@@ -34,7 +35,10 @@ export default function ReportsLayout() {
               </NavLink>
             ))}
           </div>
-          {!current?.noRange && <ReportRangePicker />}
+          <div className="flex flex-wrap items-center gap-2">
+            {current?.profit && <ProfitToggle />}
+            {!current?.noRange && <ReportRangePicker />}
+          </div>
         </div>
       </nav>
 

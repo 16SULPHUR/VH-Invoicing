@@ -1,6 +1,7 @@
 import { parseInvoiceLines } from "@/utils/invoice";
 import { invoiceCustomerKey } from "@/features/customers/lib/customerKey";
 import { localISODate } from "@/utils/date";
+import { profitOf } from "./analytics";
 
 /**
  * Case-insensitive patterns for lines that move money but are not goods (old dues, deposits, advances).
@@ -81,6 +82,8 @@ export function prepareBills(invoices = [], { index, nonSalePatterns = DEFAULT_N
     });
     const goods = lines.filter((line) => line.kind !== "adjustment");
     const customerName = String(invoice.customerName ?? "").trim();
+    const sales = goods.reduce((sum, line) => sum + line.amount, 0);
+    const { profit, margin } = profitOf(lines, sales);
     return {
       id: invoice.id,
       key: invoice.date,
@@ -98,7 +101,9 @@ export function prepareBills(invoices = [], { index, nonSalePatterns = DEFAULT_N
       upi: num(invoice.upi),
       credit: num(invoice.credit),
       lines,
-      sales: goods.reduce((sum, line) => sum + line.amount, 0),
+      sales,
+      profit,
+      margin,
       returns: goods.filter((line) => line.kind === "return").reduce((sum, line) => sum + line.amount, 0),
       adjustments: lines.filter((line) => line.kind === "adjustment").reduce((sum, line) => sum + line.amount, 0),
       items: goods.reduce((sum, line) => sum + line.quantity, 0),

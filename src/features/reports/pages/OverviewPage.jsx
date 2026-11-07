@@ -5,6 +5,7 @@ import { change, customerRows, hourWeekGrid, lastSoldMap, productRows, stockRows
 import { buildInsights } from "../lib/insights";
 import { percent, rangeLabel, rupees } from "../lib/format";
 import { useRangeReport } from "../hooks/useRangeReport";
+import { useShowProfit } from "../hooks/useShowProfit";
 import { ReportShell } from "../components/ReportShell";
 import { Kpi, Panel } from "../components/ReportUI";
 import { CalendarHeat, HourHeat, PaymentMix, TrendChart } from "../components/Charts";
@@ -12,7 +13,7 @@ import { CalendarHeat, HourHeat, PaymentMix, TrendChart } from "../components/Ch
 const TONE_ICON = { good: TrendingUp, bad: TrendingDown, note: Lightbulb };
 const TONE_CLASS = { good: "bg-success/10 text-success", bad: "bg-destructive/10 text-destructive", note: "bg-marigold/20 text-warning" };
 
-function TopList({ title, rows, to, search }) {
+function TopList({ title, rows, to, search, showProfit }) {
   const max = Math.max(1, ...rows.map((r) => r.sales));
   return (
     <Panel title={title} actions={<Link to={{ pathname: to, search }} className="text-xs font-bold text-rani hover:underline">See all</Link>}>
@@ -21,7 +22,10 @@ function TopList({ title, rows, to, search }) {
           <li key={row.key ?? row.name} className="grid grid-cols-[1.25rem_1fr_auto] items-center gap-x-2">
             <span className="text-xs font-bold text-muted-foreground tabular-nums">{i + 1}</span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{row.name}</p>
+              <p className="truncate text-sm font-semibold">
+                {row.name}
+                {showProfit && row.profit != null && <span className="ml-1.5 text-xs font-normal text-muted-foreground">{rupees(row.profit)} profit</span>}
+              </p>
               <span className="mt-1 block h-1 rounded-full bg-rani/80" style={{ width: `${(row.sales / max) * 100}%` }} aria-hidden />
             </div>
             <span className="text-sm font-bold tabular-nums">{rupees(row.sales)}</span>
@@ -35,6 +39,7 @@ function TopList({ title, rows, to, search }) {
 
 export default function OverviewPage() {
   const report = useRangeReport();
+  const [showProfit] = useShowProfit();
   const { now, before, bills, all, index, days, trend, unit, effective, setRange } = report;
 
   const extra = useMemo(() => {
@@ -46,8 +51,8 @@ export default function OverviewPage() {
   }, [bills, all, index]);
 
   const insights = useMemo(
-    () => buildInsights({ now, previous: before, lastYear: report.lastYearTotals, days, ...extra }),
-    [now, before, report.lastYearTotals, days, extra]
+    () => buildInsights({ now, previous: before, lastYear: report.lastYearTotals, days, showProfit, ...extra }),
+    [now, before, report.lastYearTotals, days, showProfit, extra]
   );
 
   const collected = now.cash + now.upi;
@@ -66,8 +71,10 @@ export default function OverviewPage() {
         </div>
         <Kpi label="Bills" value={now.bills} delta={change(now.bills, before?.bills)} hint={`${now.customers} named customers`} />
         <Kpi label="Average bill" value={rupees(now.averageBill)} delta={change(now.averageBill, before?.averageBill)} />
-        <Kpi label="Gross profit" value={now.profit == null ? "—" : rupees(now.profit)} delta={change(now.profit, before?.profit)} hint={`${percent(now.margin)} margin · cost known for ${percent(now.costCoverage)}`} />
-        <Kpi label="Given on credit" value={rupees(now.credit)} delta={change(now.credit, before?.credit)} invert hint={`Collected ${rupees(collected)} in cash and UPI`} />
+        {showProfit && <Kpi label="Gross profit" value={now.profit == null ? "—" : rupees(now.profit)} delta={change(now.profit, before?.profit)} hint={`${percent(now.margin)} margin · cost known for ${percent(now.costCoverage)}`} />}
+        <div className={showProfit ? "" : "col-span-2"}>
+          <Kpi label="Given on credit" value={rupees(now.credit)} delta={change(now.credit, before?.credit)} invert hint={`Collected ${rupees(collected)} in cash and UPI`} />
+        </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
@@ -107,8 +114,8 @@ export default function OverviewPage() {
         <Panel eyebrow="Payments" title="How customers paid">
           <PaymentMix totals={now} />
         </Panel>
-        <TopList title="Top designs" rows={[...extra.products].sort((a, b) => b.sales - a.sales).slice(0, 6)} to="../products" search={search} />
-        <TopList title="Top customers" rows={[...extra.customers].sort((a, b) => b.sales - a.sales).slice(0, 6)} to="../customers" search={search} />
+        <TopList title="Top designs" rows={[...extra.products].sort((a, b) => b.sales - a.sales).slice(0, 6)} to="../products" search={search} showProfit={showProfit} />
+        <TopList title="Top customers" rows={[...extra.customers].sort((a, b) => b.sales - a.sales).slice(0, 6)} to="../customers" search={search} showProfit={showProfit} />
       </div>
     </ReportShell>
   );

@@ -18,6 +18,7 @@ import { EntityEditDialog } from "./components/EntityEditDialog";
 import { PRODUCT_FIELDS, SUPPLIER_FIELDS, pickFields } from "./entityFields";
 import { ImageGalleryDialog } from "./components/ImageGalleryDialog";
 import { ImageUploadDialog } from "./components/ImageUploadDialog";
+import { useShowProfit } from "@/features/reports/hooks/useShowProfit";
 import { InventoryAnalytics, StockAlerts } from "./components/InventoryAnalytics";
 import { ProductFilterPanel } from "./components/ProductFilterPanel";
 import { ProductTable } from "./components/ProductTable";
@@ -55,6 +56,7 @@ export default function ManageProducts() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showCost, setShowCost] = useState(false);
+  const [showProfit] = useShowProfit();
 
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
@@ -223,6 +225,7 @@ export default function ManageProducts() {
           <ProductTable
             products={filters.visibleProducts}
             showCost={showCost}
+            showMargin={showProfit}
             selection={selection}
             supplierNameFor={filters.supplierNameFor}
             onQuantityCommit={(id, quantity) => {

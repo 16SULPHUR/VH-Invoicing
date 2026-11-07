@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useReportRange } from "@/features/reports/range/useReportRange";
+import { useShowProfit } from "@/features/reports/hooks/useShowProfit";
 import { booksService } from "@/services/booksService";
 import { formatINR } from "@/utils/formatters";
 
@@ -17,6 +18,7 @@ function Row({ label, value, bold, note }) {
 }
 
 export default function ProfitLossPage() {
+  const [showProfit, setShowProfit] = useShowProfit();
   const { range } = useReportRange();
   const { data, isLoading, error } = useQuery({
     queryKey: ["books", "profit-loss", range.from, range.to],
@@ -27,6 +29,17 @@ export default function ProfitLossPage() {
   const purchases = data?.Purchases ?? 0;
   const expenses = data?.Expenses ?? 0;
   const gross = sales - purchases;
+
+  if (!showProfit) {
+    return (
+      <div className="max-w-2xl space-y-4 p-4 md:p-6">
+        <PageHeader title="Profit & loss" subtitle="Profit is hidden on this device" />
+        <button type="button" onClick={() => setShowProfit(true)} className="press rounded-full border-[1.5px] border-border bg-surface px-4 py-2 text-sm font-bold hover:border-indigo/40">
+          Show profit
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl space-y-4 p-4 md:p-6">

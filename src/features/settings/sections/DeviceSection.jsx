@@ -9,6 +9,7 @@ import { DPI_OPTIONS, printerSettings, usePrinterSettings } from "@/features/inv
 import { useLabelPrinter } from "@/features/inventory/stickers/useLabelPrinter";
 import { useLabelDesigns } from "@/features/inventory/stickers/useLabelDesigns";
 import { useEnteredBy } from "@/features/books/useEnteredBy";
+import { useShowProfit } from "@/features/reports/hooks/useShowProfit";
 import { DeviceBadge, FieldLabel, Section } from "../components/fields";
 
 function PhoneBills() {
@@ -77,10 +78,26 @@ function EnteredBy() {
   );
 }
 
+function ProfitFigures() {
+  const [show, setShow] = useShowProfit();
+  return (
+    <Section title="Profit figures" description="Hide profit and margin in Reports, bills, customers, products and Books on this device." aside={<DeviceBadge />}>
+      <label className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-3.5 py-3">
+        <span>
+          <span className="block text-sm font-semibold">Show profit</span>
+          <span className="text-xs text-muted-foreground">Also switchable from the Profit button at the top of Reports.</span>
+        </span>
+        <Switch checked={show} onCheckedChange={setShow} aria-label="Show profit" />
+      </label>
+    </Section>
+  );
+}
+
 export function DeviceSection() {
   return (
     <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
       <div className="space-y-4">
+        <ProfitFigures />
         <PhoneBills />
         <Section title="Reminders" aside={<DeviceBadge />}>
           <PushReminder />

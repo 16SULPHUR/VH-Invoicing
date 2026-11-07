@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { byPeriod } from "../lib/analytics";
+import { byPeriod, totals } from "../lib/analytics";
 import { dayLabel, dayYearLabel, monthLabel, percent, rupees, weekdayLabel } from "../lib/format";
 import { useRangeReport } from "../hooks/useRangeReport";
+import { useShowProfit } from "../hooks/useShowProfit";
 import { ReportShell } from "../components/ReportShell";
 import { DataTable, Kpi, Panel, Pills } from "../components/ReportUI";
 import { BillDialog } from "../components/BillDialog";
@@ -15,6 +16,11 @@ const VIEWS = [
 ];
 
 const money = (key, header) => ({ key, header, align: "right", render: (r) => rupees(r[key]) });
+
+const PROFIT_COLUMNS = [
+  { key: "profit", header: "Profit", align: "right", render: (r) => (r.profit == null ? "—" : rupees(r.profit)) },
+  { key: "margin", header: "Margin", align: "right", render: (r) => percent(r.margin) },
+];
 
 const periodColumns = (unit) => [
   unit === "month"
@@ -33,8 +39,6 @@ const periodColumns = (unit) => [
   money("cash", "Cash"),
   money("upi", "UPI"),
   money("credit", "Credit"),
-  { key: "profit", header: "Profit", align: "right", render: (r) => (r.profit == null ? "—" : rupees(r.profit)) },
-  { key: "margin", header: "Margin", align: "right", render: (r) => percent(r.margin) },
 ];
 
 const BILL_SUMS = ["items", "sales", "adjustments", "total", "cash", "upi", "credit"];
@@ -58,6 +62,7 @@ export default function SalesPage() {
   const [view, setView] = useState(report.unit === "month" ? "month" : "day");
   const [query, setQuery] = useState("");
   const [bill, setBill] = useState(null);
+  const [showProfit] = useShowProfit();
   const { bills, now, effective } = report;
 
   const periods = useMemo(() => (view === "bill" ? [] : byPeriod(bills, view)), [bills, view]);
@@ -75,10 +80,13 @@ export default function SalesPage() {
     [bills]
   );
 
-  const billTotals = useMemo(
-    () => Object.fromEntries(BILL_SUMS.map((key) => [key, billRows.reduce((sum, b) => sum + (Number(b[key]) || 0), 0)])),
-    [billRows]
-  );
+  const billTotals = useMemo(() => {
+    const { profit, margin } = totals(billRows);
+    return { ...Object.fromEntries(BILL_SUMS.map((key) => [key, billRows.reduce((sum, b) => sum + (Number(b[key]) || 0), 0)])), profit, margin };
+  }, [billRows]);
+
+  const billColumns = useMemo(() => (showProfit ? [...BILL_COLUMNS, ...PROFIT_COLUMNS] : BILL_COLUMNS), [showProfit]);
+  const dayColumns = useMemo(() => (showProfit ? [...periodColumns(view), ...PROFIT_COLUMNS] : periodColumns(view)), [view, showProfit]);
 
   const file = `${effective.from}_${effective.to}`;
   const range = effective.from === effective.to ? dayYearLabel(effective.from) : `${dayYearLabel(effective.from)} to ${dayYearLabel(effective.to)}`;
@@ -86,9 +94,10 @@ export default function SalesPage() {
 
   return (
     <ReportShell report={report}>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className={`grid grid-cols-2 gap-3 ${showProfit ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
         <Kpi label="Net sales" value={rupees(now.sales)} hint={`${now.bills} bills · ${now.items} pieces`} />
         <Kpi label="Returns" value={rupees(-now.returns)} hint="Goods taken back, already netted off" />
+        {showProfit && <Kpi label="Gross profit" value={now.profit == null ? "—" : rupees(now.profit)} hint={`${percent(now.margin)} margin on known costs`} />}
         <Kpi label="Discount off tag" value={rupees(now.discount)} hint="Sold below the stock list price" />
         <Kpi label="Not sales" value={rupees(now.adjustments)} hint="Old dues, deposits and advances on bills" />
       </div>
@@ -108,9 +117,9 @@ export default function SalesPage() {
         }
       >
         {view === "bill" ? (
-          <DataTable key="bills" columns={BILL_COLUMNS} rows={billRows} footer={billTotals} limit={25} rowKey={(r) => r.key} csvName={`bills_${file}.csv`} title={pdfTitle} subtitle={range} onRowClick={setBill} />
+          <DataTable key="bills" columns={billColumns} rows={billRows} footer={billTotals} limit={25} rowKey={(r) => r.key} csvName={`bills_${file}.csv`} title={pdfTitle} subtitle={range} onRowClick={setBill} />
         ) : (
-          <DataTable key={view} columns={periodColumns(view)} rows={periods} footer={now} limit={31} rowKey={(r) => r.period} csvName={`sales_by_${view}_${file}.csv`} title={pdfTitle} subtitle={range} />
+          <DataTable key={view} columns={dayColumns} rows={periods} footer={now} limit={31} rowKey={(r) => r.period} csvName={`sales_by_${view}_${file}.csv`} title={pdfTitle} subtitle={range} />
         )}
       </Panel>
 

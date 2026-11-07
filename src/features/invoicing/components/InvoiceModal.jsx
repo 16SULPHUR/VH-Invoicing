@@ -29,6 +29,7 @@ import { appOrigin } from "@/features/whatsapp/lib/rules";
 import { useBillLink, useBillSeen } from "../hooks/useBillLink";
 import { SeenTicks } from "./SeenTicks";
 import { billShareText } from "../billShareText";
+import { useBillProfit } from "@/features/reports/hooks/useBillProfit";
 
 export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -40,8 +41,11 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const { rules } = useWhatsAppSettings();
   const link = useBillLink(invoice, appOrigin(rules));
   const seen = useBillSeen(invoice, Boolean(link));
+  const billProfit = useBillProfit();
 
   if (!invoice) return null;
+
+  const profit = billProfit.show && billProfit.ready ? billProfit.profitOf(invoice) : null;
 
   const printable = (
     <PrintableInvoice
@@ -134,6 +138,15 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
                     </dd>
                   </div>
                 ))}
+                {profit?.profit != null && (
+                  <div className="col-span-2 rounded-xl border border-border/70 bg-marigold/15 px-3 py-2 lg:col-span-1">
+                    <dt className="text-xs text-muted-foreground">Profit</dt>
+                    <dd className="font-display text-lg font-bold tabular-nums">
+                      {formatRupees(Math.round(profit.profit))}
+                      <span className="ml-1.5 text-xs font-semibold text-muted-foreground">{Math.round(profit.margin * 100)}%</span>
+                    </dd>
+                  </div>
+                )}
               </dl>
 
               <div className="grid gap-2">
