@@ -1,0 +1,63 @@
+import { useCallback } from "react";
+import ReactDOMServer from "react-dom/server";
+import { BUSINESS } from "@/config/business";
+import { billShareText } from "../billShareText";
+import { PrintableInvoice } from "../components/PrintableInvoice";
+import { parseInvoiceLines } from "@/utils/invoice";
+import { formatInvoiceDate } from "@/utils/date";
+
+/** Rasterises each A5 page of an invoice into a PDF file. */
+export async function buildInvoicePdf(invoice) {
+  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+    import("jspdf"),
+    import("html2canvas"),
+  ]);
+
+  const host = document.createElement("div");
+  host.style.position = "absolute";
+  host.style.left = "-9999px";
+  host.innerHTML = ReactDOMServer.renderToStaticMarkup(
+    <PrintableInvoice
+      invoiceId={invoice.id}
+      invoiceDate={formatInvoiceDate(invoice.date)}
+      customerName={invoice.customerName}
+      customerContact={invoice.customerNumber}
+      products={parseInvoiceLines(invoice.products)}
+      total={invoice.total}
+      payments={invoice}
+      note={invoice.note}
+    />
+  );
+  document.body.appendChild(host);
+
+  try {
+    await document.fonts.ready;
+    const pdf = new jsPDF("p", "mm", "a5");
+    const pages = [...host.querySelectorAll(".vhb-page")];
+    for (const [index, page] of pages.entries()) {
+      const canvas = await html2canvas(page, { scale: 2, backgroundColor: "#ffffff" });
+      if (index > 0) pdf.addPage("a5", "p");
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, 148, 210);
+    }
+    const fileName = `invoice-${invoice.id}.pdf`;
+    return { pdf, fileName, file: new File([pdf.output("blob")], fileName, { type: "application/pdf" }) };
+  } finally {
+    host.remove();
+  }
+}
+
+/** Hands the bill PDF to the Web Share API, falling back to a download where sharing files is unsupported. */
+export function useShareInvoicePdf() {
+  return useCallback(async (invoice, link) => {
+    const { pdf, fileName, file } = await buildInvoicePdf(invoice);
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({
+        title: `${BUSINESS.displayName} bill #${invoice.id}`,
+        text: billShareText(invoice, link),
+        files: [file],
+      });
+    } else {
+      pdf.save(fileName);
+    }
+  }, []);
+}
