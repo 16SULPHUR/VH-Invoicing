@@ -69,19 +69,25 @@ export function bookingSlip(booking) {
 }
 
 export function creditNoteSlip(note) {
-  const balance = rupees(note.amount) - rupees(note.redeemed);
-  const money = [{ label: "Credit note value", value: formatRupees(note.amount), big: balance === rupees(note.amount) }];
-  if (balance !== rupees(note.amount)) {
-    money.push({ label: "Used", value: formatRupees(note.redeemed) }, { label: "Balance", value: formatRupees(balance), big: true });
-  }
+  const settled = rupees(note.refund_cash) + rupees(note.refund_upi) + rupees(note.refund_due);
+  const balance = Math.max(0, rupees(note.amount) - rupees(note.redeemed) - settled);
+  const money = [{ label: "Goods returned", value: formatRupees(note.amount), big: balance === rupees(note.amount) }];
+  if (rupees(note.refund_cash)) money.push({ label: "Refunded in cash", value: formatRupees(note.refund_cash) });
+  if (rupees(note.refund_upi)) money.push({ label: "Refunded by UPI", value: formatRupees(note.refund_upi) });
+  if (rupees(note.refund_due)) money.push({ label: "Taken off your due", value: formatRupees(note.refund_due) });
+  if (rupees(note.redeemed)) money.push({ label: "Used", value: formatRupees(note.redeemed) });
+  if (balance !== rupees(note.amount)) money.push({ label: balance > 0 ? "Store credit balance" : "Fully settled", value: formatRupees(balance), big: true });
+  const bill = note.source_bill ? [{ label: "Against bill", value: `#${note.source_bill}` }] : [];
   return {
     kind: "Credit note",
     token: note.token,
     customer: who(note),
-    highlight: { label: "Valid till", value: note.expires_on ? longDate(note.expires_on) : "No expiry" },
-    details: note.source_bill ? [{ label: "Against bill", value: `#${note.source_bill}` }] : [],
+    highlight: balance > 0 ? { label: "Valid till", value: note.expires_on ? longDate(note.expires_on) : "No expiry" } : null,
+    details: bill,
     lines: slipLines(note.lines),
     money,
-    note: `Issued ${issued(note)} for goods returned. Use it towards any purchase at the shop. Not payable in cash.`,
+    note: balance > 0
+      ? `Issued ${issued(note)} for goods returned. Use it towards any purchase at the shop. Not payable in cash.`
+      : `Issued ${issued(note)} for goods returned. Settled in full.`,
   };
 }

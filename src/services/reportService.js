@@ -63,7 +63,7 @@ export const reportService = {
 
   async creditNotes(range) {
     try {
-      return unwrap(await bounded(supabase.from("credit_notes").select("token, customer_name, amount, status, lines, created_at"), range, "created_at")) || [];
+      return unwrap(await bounded(supabase.from("credit_notes").select("*"), range, "created_at")) || [];
     } catch (error) {
       if (isMissingTable(error)) return [];
       throw error;

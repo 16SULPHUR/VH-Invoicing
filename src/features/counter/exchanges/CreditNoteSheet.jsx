@@ -11,7 +11,7 @@ import { ToolSheet } from "../components/ToolSheet";
 import { MoneyInput, StatusPill } from "../components/Bits";
 import { useSaveTool } from "../hooks/useShopTools";
 import { usePrintSlip } from "../hooks/usePrintSlip";
-import { CREDIT_STATUS, creditBalance, isExpired, isUsable } from "../lib/credit";
+import { CREDIT_STATUS, creditBalance, isExpired, isUsable, settledAmount } from "../lib/credit";
 import { creditNoteSlip, longDate } from "../lib/slips";
 import { formatPhone, rupees, stockMoves } from "../lib/shopTools";
 
@@ -66,7 +66,7 @@ export function CreditNoteSheet({ open, note, onClose }) {
       {
         record: note,
         row: { status: "void", note: [note.note, "Voided"].filter(Boolean).join(" · ") },
-        moves: voiding.piecesLeft ? stockMoves(note.lines, -1).map((move) => ({ ...move, reason: "exchange_void" })) : [],
+        moves: voiding.piecesLeft ? stockMoves(note.lines.filter((line) => line.restock !== false), -1).map((move) => ({ ...move, reason: "exchange_void" })) : [],
       },
       {
         onSuccess: () => {
@@ -191,9 +191,23 @@ export function CreditNoteSheet({ open, note, onClose }) {
             </section>
           )}
 
+          {settledAmount(note) > 0 && (
+            <p className="rounded-xl bg-surface-elevated px-3 py-2 text-sm">
+              Refunded:{" "}
+              {[
+                [note.refund_cash, "cash"],
+                [note.refund_upi, "UPI"],
+                [note.refund_due, "off the bill's due"],
+              ]
+                .filter(([value]) => rupees(value) > 0)
+                .map(([value, label]) => `${formatRupees(value)} ${label}`)
+                .join(" · ")}
+            </p>
+          )}
+
           {note.note && <p className="rounded-xl bg-surface-elevated px-3 py-2 text-sm">{note.note}</p>}
 
-          {note.status === "open" && rupees(note.redeemed) === 0 && (
+          {note.status === "open" && rupees(note.redeemed) === 0 && settledAmount(note) === 0 && (
             <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setVoiding({ piecesLeft: false })}>
               Void this credit note
             </Button>

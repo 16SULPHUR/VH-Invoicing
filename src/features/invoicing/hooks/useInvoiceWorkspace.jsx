@@ -158,6 +158,14 @@ export function useInvoiceWorkspace({
     [toast]
   );
 
+  const refreshInvoice = useCallback(
+    async (invoiceDate) => {
+      refreshAll();
+      await openInvoice(invoiceDate);
+    },
+    [refreshAll, openInvoice]
+  );
+
   const deleteInvoice = useCallback(
     async (invoiceDate) => {
       try {
@@ -406,6 +414,7 @@ export function useInvoiceWorkspace({
     selectedInvoice,
     closeInvoice: () => setSelectedInvoice(null),
     openInvoice,
+    refreshInvoice,
     editInvoice,
     deleteInvoice,
     submitInvoice,

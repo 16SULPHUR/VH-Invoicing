@@ -1,6 +1,9 @@
 import { daysUntil, rupees } from "./shopTools";
 
-export const creditBalance = (note) => Math.max(0, rupees(note.amount) - rupees(note.redeemed));
+/** What a return paid out straight away (cash, UPI, off the bill's due). */
+export const settledAmount = (note) => rupees(note.refund_cash) + rupees(note.refund_upi) + rupees(note.refund_due);
+
+export const creditBalance = (note) => Math.max(0, rupees(note.amount) - rupees(note.redeemed) - settledAmount(note));
 
 export const isExpired = (note) => Boolean(note.expires_on) && (daysUntil(note.expires_on) ?? 0) < 0;
 

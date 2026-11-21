@@ -43,6 +43,7 @@ export default function BalanceSheetPage() {
   ];
   const liabilities = [
     ["Suppliers to pay", -net("Accounts Payable")],
+    ["Store credit owed to customers", -net("Customer Credits")],
     ["GST payable", -net("GST Output")],
   ];
   const profit = -(net("Sales Revenue") + net("Purchases") + net("Expenses"));

@@ -12,7 +12,7 @@ export function BillDialog({ bill, onClose }) {
         {bill && (
           <>
             <DialogHeader>
-              <DialogTitle>Bill {bill.id}</DialogTitle>
+              <DialogTitle>{bill.returnNote ? "Return" : "Bill"} {bill.id}</DialogTitle>
               <DialogDescription>
                 {dayYearLabel(bill.date)} · {bill.customerName || "Walk-in"} {bill.customerPhone && `· ${bill.customerPhone}`}
               </DialogDescription>

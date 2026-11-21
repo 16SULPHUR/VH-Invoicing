@@ -30,8 +30,11 @@ import { useBillLink, useBillSeen } from "../hooks/useBillLink";
 import { SeenTicks } from "./SeenTicks";
 import { billShareText } from "../billShareText";
 import { useBillProfit } from "@/features/reports/hooks/useBillProfit";
+import { useBillReturns } from "@/features/returns/hooks/useBillReturns";
+import { ReturnAction } from "@/features/returns/components/ReturnAction";
+import { BillReturns } from "@/features/returns/components/BillReturns";
 
-export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
+export function InvoiceModal({ invoice, onClose, onEdit, onDelete, onChanged }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -42,8 +45,10 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
   const link = useBillLink(invoice, appOrigin(rules));
   const seen = useBillSeen(invoice, Boolean(link));
   const billProfit = useBillProfit();
+  const { notes: returns } = useBillReturns(invoice);
 
   if (!invoice) return null;
+  const hasReturns = returns.length > 0;
 
   const profit = billProfit.show && billProfit.ready ? billProfit.profitOf(invoice) : null;
 
@@ -149,6 +154,8 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
                 )}
               </dl>
 
+              <BillReturns notes={returns} total={invoice.total} />
+
               <div className="grid gap-2">
                 <BillWhatsAppButton invoice={invoice} />
                 <OffersSwitch name={invoice.customerName} phone={invoice.customerNumber} />
@@ -178,18 +185,27 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete }) {
                   <Printer size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
                   Print
                 </Button>
-                <Button variant="rani" className="press" onClick={() => onEdit(invoice)}>
-                  <Pencil size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  className="press text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <Trash2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
-                  Delete
-                </Button>
+                <ReturnAction invoice={invoice} notes={returns} onReturned={() => onChanged?.(invoice.date)} />
+                {hasReturns ? (
+                  <p className="rounded-xl bg-secondary px-3 py-2 text-xs text-muted-foreground">
+                    This bill has returns, so it can no longer be edited or deleted.
+                  </p>
+                ) : (
+                  <>
+                    <Button variant="rani" className="press" onClick={() => onEdit(invoice)}>
+                      <Pencil size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="press text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                      Delete
+                    </Button>
+                  </>
+                )}
                 <Button variant="ghost" className="press" onClick={onClose}>
                   <X size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
                   Close
