@@ -41,6 +41,9 @@ import { usePrintDocument } from "../hooks/useInvoicePrinting";
 import { useShareInvoicePdf } from "../hooks/useInvoiceSharing";
 import { useBillLink } from "../hooks/useBillLink";
 import { billShareText } from "../billShareText";
+import { useBillReturns } from "@/features/returns/hooks/useBillReturns";
+import { ReturnAction } from "@/features/returns/components/ReturnAction";
+import { BillReturns } from "@/features/returns/components/BillReturns";
 
 function Tile({ icon: Icon, label, onClick, disabled, active }) {
   return (
@@ -58,7 +61,7 @@ function Tile({ icon: Icon, label, onClick, disabled, active }) {
   );
 }
 
-export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete }) {
+export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete, onChanged }) {
   const [showDelete, setShowDelete] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [showBill, setShowBill] = useState(false);
@@ -69,6 +72,7 @@ export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete }) {
   const { toast } = useToast();
   const { rules } = useWhatsAppSettings();
   const link = useBillLink(invoice, appOrigin(rules));
+  const { notes: returns } = useBillReturns(invoice);
 
   const lines = useMemo(() => parseInvoiceLines(invoice?.products), [invoice?.products]);
   if (!invoice) return null;
@@ -239,6 +243,8 @@ export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete }) {
 
           <BillSummary lines={lines} invoice={invoice} />
 
+          <BillReturns notes={returns} total={invoice.total} />
+
           <div>
             <button
               type="button"
@@ -261,20 +267,28 @@ export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete }) {
             )}
           </div>
 
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <Button variant="outline" className="press h-11 font-bold" onClick={() => onEdit(invoice)}>
-              <Pencil size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
-              Edit bill
-            </Button>
-            <Button
-              variant="ghost"
-              className="press h-11 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => setShowDelete(true)}
-              aria-label="Delete bill"
-            >
-              <Trash2 size={18} strokeWidth={ICON_STROKE} aria-hidden />
-            </Button>
-          </div>
+          <ReturnAction invoice={invoice} notes={returns} onReturned={() => onChanged?.(invoice.date)} className="h-11 w-full font-bold" />
+
+          {returns.length > 0 ? (
+            <p className="rounded-xl bg-secondary px-3 py-2 text-center text-xs text-muted-foreground">
+              This bill has returns, so it can no longer be edited or deleted.
+            </p>
+          ) : (
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <Button variant="outline" className="press h-11 font-bold" onClick={() => onEdit(invoice)}>
+                <Pencil size={16} strokeWidth={ICON_STROKE} className="mr-2" aria-hidden />
+                Edit bill
+              </Button>
+              <Button
+                variant="ghost"
+                className="press h-11 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setShowDelete(true)}
+                aria-label="Delete bill"
+              >
+                <Trash2 size={18} strokeWidth={ICON_STROKE} aria-hidden />
+              </Button>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 

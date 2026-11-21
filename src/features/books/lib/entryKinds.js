@@ -22,6 +22,7 @@ export const SOURCE_OPTIONS = [
 export const REFERENCE_LABELS = {
   invoices: "Sale",
   credit_payments: "Customer payment",
+  credit_notes: "Goods return",
   supplier_bills: "Purchase",
   supplier_payments: "Supplier payment",
   journal: "Manual entry",

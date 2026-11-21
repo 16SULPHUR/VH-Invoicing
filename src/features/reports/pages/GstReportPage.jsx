@@ -82,7 +82,7 @@ export default function GstReportPage() {
   const ledger = useQuery({ queryKey: queryKeys.reports.ledgerGst(range.from, range.to), queryFn: () => reportService.ledgerGst(range), staleTime: 60_000, retry: false });
   const notes = useQuery({ queryKey: queryKeys.reports.creditNotes(range.from, range.to), queryFn: () => reportService.creditNotes(range), staleTime: 60_000 });
 
-  const bills = useMemo(() => data.pick(range), [data.all, range.from, range.to]); // eslint-disable-line react-hooks/exhaustive-deps
+  const bills = useMemo(() => data.pick(range).filter((bill) => !bill.returnNote), [data.all, range.from, range.to]); // eslint-disable-line react-hooks/exhaustive-deps
   const creditNotes = useMemo(() => creditNoteDocs(notes.data ?? []), [notes.data]);
   const gst = useMemo(() => computeGst(bills, settings, creditNotes), [bills, settings, creditNotes]);
   const itc = settings.itc?.[periodKey] ?? {};

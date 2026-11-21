@@ -67,6 +67,30 @@ export function classifyLine(line, nonSale) {
   return { name, amount, quantity: amount < 0 ? -quantity : quantity, price: num(line.price), barcode: line.barcode, kind };
 }
 
+/** Credit notes (returns and exchanges) as negative bills, so reports net them off the day they were issued. */
+export function prepareReturnNotes(notes = [], options) {
+  const invoices = notes
+    .filter((note) => note.status !== "void")
+    .map((note) => ({
+      id: note.token,
+      date: note.created_at,
+      customerName: note.customer_name,
+      customerNumber: note.customer_phone,
+      products: (note.lines ?? []).map((line) => ({
+        name: line.name,
+        barcode: line.barcode,
+        price: -num(line.price),
+        quantity: num(line.quantity),
+        amount: -num(line.price) * num(line.quantity),
+      })),
+      total: -num(note.amount),
+      cash: -num(note.refund_cash),
+      upi: -num(note.refund_upi),
+      credit: 0,
+    }));
+  return prepareBills(invoices, options).map((bill) => ({ ...bill, key: `credit-note:${bill.id}`, returnNote: true }));
+}
+
 /** Flattens raw invoices into bills with classified, costed lines. */
 export function prepareBills(invoices = [], { index, nonSalePatterns = DEFAULT_NON_SALE } = {}) {
   const nonSale = compilePatterns(nonSalePatterns);

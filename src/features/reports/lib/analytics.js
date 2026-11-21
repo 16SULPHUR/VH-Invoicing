@@ -20,7 +20,7 @@ export function profitOf(lines, sales) {
 
 /** Headline numbers for a set of prepared bills. */
 export function totals(bills) {
-  const sold = bills.filter((bill) => bill.sales !== 0);
+  const sold = bills.filter((bill) => bill.sales !== 0 && !bill.returnNote);
   const lines = bills.flatMap((bill) => bill.lines);
   const sales = sum(bills, (b) => b.sales);
   const { margin, profit, costedSales } = profitOf(lines, sales);
@@ -86,7 +86,7 @@ export function hourWeekGrid(bills) {
     if (bill.sales === 0) continue;
     const cell = grid[bill.weekday][bill.hour];
     cell.sales += bill.sales;
-    cell.bills += 1;
+    if (!bill.returnNote) cell.bills += 1;
   }
   return grid;
 }
@@ -116,8 +116,10 @@ export function productRows(bills) {
         row.cost += line.cost;
         row.costedSales += line.amount;
       }
-      row.bills.add(bill.key);
-      if (bill.date > row.lastSold) row.lastSold = bill.date;
+      if (!bill.returnNote) {
+        row.bills.add(bill.key);
+        if (bill.date > row.lastSold) row.lastSold = bill.date;
+      }
       rows.set(line.name, row);
     }
   }
@@ -181,19 +183,19 @@ export function customerRows(bills, allBills = bills) {
       first: firstSeen.get(bill.customerKey),
       last: bill.date,
     };
-    row.bills += 1;
+    if (!bill.returnNote) row.bills += 1;
     row.sales += bill.sales;
     row.credit += bill.credit;
     row.items += bill.items;
     if (bill.profit != null) row.profit = (row.profit ?? 0) + bill.profit;
-    if (bill.date >= row.last) {
+    if (!bill.returnNote && bill.date >= row.last) {
       row.last = bill.date;
       row.name = bill.customerName;
       if (bill.customerPhone) row.phone = bill.customerPhone;
     }
     rows.set(bill.customerKey, row);
   }
-  return [...rows.values()].map((row) => ({ ...row, averageBill: row.sales / row.bills }));
+  return [...rows.values()].map((row) => ({ ...row, averageBill: row.bills ? row.sales / row.bills : 0 }));
 }
 
 /** Stock on hand valued at cost, and how long each design has sat since it last sold (or was added). */

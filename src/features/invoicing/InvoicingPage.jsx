@@ -41,6 +41,7 @@ export default function InvoicingPage() {
           onClose={workspace.closeInvoice}
           onEdit={workspace.editInvoice}
           onDelete={workspace.deleteInvoice}
+          onChanged={workspace.refreshInvoice}
         />
       )}
     </div>

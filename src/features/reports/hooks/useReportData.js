@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryClient";
 import { nonSalePatternService, reportService } from "@/services/reportService";
-import { buildProductIndex, DEFAULT_NON_SALE, prepareBills } from "../lib/lines";
+import { buildProductIndex, DEFAULT_NON_SALE, prepareBills, prepareReturnNotes } from "../lib/lines";
 import { inRange } from "../range/reportRange";
 
 const STALE = 60_000;
@@ -15,14 +15,17 @@ export function useReportData() {
   const bills = useQuery({ queryKey: queryKeys.reports.bills("all", "all"), queryFn: () => reportService.bills({}), staleTime: STALE });
   const products = useQuery({ queryKey: queryKeys.reports.products, queryFn: reportService.products, staleTime: STALE });
   const suppliers = useQuery({ queryKey: queryKeys.reports.suppliers, queryFn: reportService.suppliers, staleTime: 5 * STALE });
+  const notes = useQuery({ queryKey: queryKeys.reports.creditNotes("all", "all"), queryFn: () => reportService.creditNotes({}), staleTime: STALE });
   const patterns = useQuery({ queryKey: queryKeys.reports.nonSale, queryFn: nonSalePatternService.list, staleTime: 5 * STALE, retry: false });
 
   const nonSalePatterns = patterns.data ?? DEFAULT_NON_SALE;
   const index = useMemo(() => buildProductIndex(products.data, suppliers.data), [products.data, suppliers.data]);
-  const all = useMemo(
-    () => (bills.data ? prepareBills(bills.data, { index, nonSalePatterns }) : []),
-    [bills.data, index, nonSalePatterns]
-  );
+  const all = useMemo(() => {
+    if (!bills.data) return [];
+    const options = { index, nonSalePatterns };
+    const sold = prepareBills(bills.data, options);
+    return [...sold, ...prepareReturnNotes(notes.data ?? [], options)].sort((a, b) => a.date - b.date);
+  }, [bills.data, notes.data, index, nonSalePatterns]);
 
   return {
     all,
