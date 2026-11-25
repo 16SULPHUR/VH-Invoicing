@@ -43,7 +43,7 @@ import { useBillLink } from "../hooks/useBillLink";
 import { billShareText } from "../billShareText";
 import { useBillReturns } from "@/features/returns/hooks/useBillReturns";
 import { ReturnAction } from "@/features/returns/components/ReturnAction";
-import { BillReturns } from "@/features/returns/components/BillReturns";
+import { ReturnsSummary } from "@/features/returns/components/ReturnsSummary";
 
 function Tile({ icon: Icon, label, onClick, disabled, active }) {
   return (
@@ -243,7 +243,7 @@ export function MobileInvoiceSheet({ invoice, onClose, onEdit, onDelete, onChang
 
           <BillSummary lines={lines} invoice={invoice} />
 
-          <BillReturns notes={returns} total={invoice.total} />
+          <ReturnsSummary invoice={invoice} notes={returns} onChanged={onChanged} />
 
           <div>
             <button

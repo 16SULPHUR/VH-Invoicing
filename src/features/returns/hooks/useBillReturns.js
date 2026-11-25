@@ -26,23 +26,56 @@ export function useNonSalePatterns() {
   return query.data ?? DEFAULT_NON_SALE;
 }
 
-export function useReturnGoods(invoice) {
+function useRefreshAfterReturn(invoice) {
   const queryClient = useQueryClient();
+  return () => {
+    for (const key of [returnsKey(invoice), queryKeys.invoices.all, queryKeys.products.all, queryKeys.customers.all, queryKeys.books.all, queryKeys.shopTools.records("credit_notes"), ["reports"]]) {
+      queryClient.invalidateQueries({ queryKey: key });
+    }
+  };
+}
+
+function stockFailureToast(toast, result) {
+  if (!result.stock_failures?.length) return;
+  toast({
+    variant: "destructive",
+    title: "Saved, but stock not updated",
+    description: `Stock did not change for: ${result.stock_failures.map((failure) => failure.name).join(", ")}. Fix these in Inventory.`,
+  });
+}
+
+export function useReturnGoods(invoice) {
   const { toast } = useToast();
+  const refresh = useRefreshAfterReturn(invoice);
   return useMutation({
     mutationFn: (input) => returnService.returnGoods(invoice, input),
     onSuccess: (result) => {
-      if (result.stock_failures?.length) {
-        toast({
-          variant: "destructive",
-          title: "Returned, but stock not updated",
-          description: `Stock did not change for: ${result.stock_failures.map((failure) => failure.name).join(", ")}. Fix these in Inventory.`,
-        });
-      }
-      for (const key of [returnsKey(invoice), queryKeys.invoices.all, queryKeys.products.all, queryKeys.customers.all, queryKeys.books.all, queryKeys.shopTools.records("credit_notes"), ["reports"]]) {
-        queryClient.invalidateQueries({ queryKey: key });
-      }
+      stockFailureToast(toast, result);
+      refresh();
     },
     onError: (error) => toast({ variant: "destructive", title: "Couldn't save the return", description: error.message }),
+  });
+}
+
+export function useEditReturn(invoice) {
+  const { toast } = useToast();
+  const refresh = useRefreshAfterReturn(invoice);
+  return useMutation({
+    mutationFn: (input) => returnService.editReturn(input.note, input),
+    onSuccess: refresh,
+    onError: (error) => toast({ variant: "destructive", title: "Couldn't change the return", description: error.message }),
+  });
+}
+
+export function useCancelReturn(invoice) {
+  const { toast } = useToast();
+  const refresh = useRefreshAfterReturn(invoice);
+  return useMutation({
+    mutationFn: (note) => returnService.cancelReturn(note),
+    onSuccess: (result) => {
+      stockFailureToast(toast, result);
+      refresh();
+    },
+    onError: (error) => toast({ variant: "destructive", title: "Couldn't delete the return", description: error.message }),
   });
 }

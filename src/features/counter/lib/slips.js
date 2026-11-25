@@ -9,6 +9,12 @@ export function longDate(iso) {
   return new Date(year, month - 1, day).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
 }
 
+export function longDateYear(iso) {
+  if (!iso) return "";
+  const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+}
+
 const who = (record) => ({ name: record.customer_name, phone: formatPhone(record.customer_phone) });
 const issued = (record) => formatDateDDMMMYYYY(record.created_at ?? new Date());
 
@@ -68,7 +74,8 @@ export function bookingSlip(booking) {
   };
 }
 
-export function creditNoteSlip(note) {
+/** `bill` is { id, date, total } of the bill the goods came from, when known. */
+export function creditNoteSlip(note, bill = null) {
   const settled = rupees(note.refund_cash) + rupees(note.refund_upi) + rupees(note.refund_due);
   const balance = Math.max(0, rupees(note.amount) - rupees(note.redeemed) - settled);
   const money = [{ label: "Goods returned", value: formatRupees(note.amount), big: balance === rupees(note.amount) }];
@@ -77,17 +84,22 @@ export function creditNoteSlip(note) {
   if (rupees(note.refund_due)) money.push({ label: "Taken off your due", value: formatRupees(note.refund_due) });
   if (rupees(note.redeemed)) money.push({ label: "Used", value: formatRupees(note.redeemed) });
   if (balance !== rupees(note.amount)) money.push({ label: balance > 0 ? "Store credit balance" : "Fully settled", value: formatRupees(balance), big: true });
-  const bill = note.source_bill ? [{ label: "Against bill", value: `#${note.source_bill}` }] : [];
+
+  const billId = bill?.id ?? note.source_bill;
+  const billDate = bill?.date ?? note.source_invoice_date;
+  const details = [{ label: "Issued on", value: issued(note) }];
+  if (billId) details.push({ label: "Against bill", value: `#${billId}${billDate ? ` of ${formatDateDDMMMYYYY(billDate)}` : ""}` });
+  if (bill?.total != null) details.push({ label: "Bill total", value: formatRupees(bill.total) });
+  if (note.note) details.push({ label: "Reason", value: note.note });
+
   return {
     kind: "Credit note",
     token: note.token,
     customer: who(note),
-    highlight: balance > 0 ? { label: "Valid till", value: note.expires_on ? longDate(note.expires_on) : "No expiry" } : null,
-    details: bill,
+    highlight: balance > 0 ? { label: "Valid till", value: note.expires_on ? longDateYear(note.expires_on) : "No expiry" } : null,
+    details,
     lines: slipLines(note.lines),
     money,
-    note: balance > 0
-      ? `Issued ${issued(note)} for goods returned. Use it towards any purchase at the shop. Not payable in cash.`
-      : `Issued ${issued(note)} for goods returned. Settled in full.`,
+    note: balance > 0 ? "Use the store credit towards any purchase at the shop. Not payable in cash." : "Settled in full. Nothing more is payable on this note.",
   };
 }

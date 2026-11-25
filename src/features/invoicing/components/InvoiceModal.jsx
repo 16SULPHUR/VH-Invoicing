@@ -29,10 +29,9 @@ import { appOrigin } from "@/features/whatsapp/lib/rules";
 import { useBillLink, useBillSeen } from "../hooks/useBillLink";
 import { SeenTicks } from "./SeenTicks";
 import { billShareText } from "../billShareText";
-import { useBillProfit } from "@/features/reports/hooks/useBillProfit";
 import { useBillReturns } from "@/features/returns/hooks/useBillReturns";
 import { ReturnAction } from "@/features/returns/components/ReturnAction";
-import { BillReturns } from "@/features/returns/components/BillReturns";
+import { ReturnsSummary } from "@/features/returns/components/ReturnsSummary";
 
 export function InvoiceModal({ invoice, onClose, onEdit, onDelete, onChanged }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -44,13 +43,10 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete, onChanged }) 
   const { rules } = useWhatsAppSettings();
   const link = useBillLink(invoice, appOrigin(rules));
   const seen = useBillSeen(invoice, Boolean(link));
-  const billProfit = useBillProfit();
   const { notes: returns } = useBillReturns(invoice);
 
   if (!invoice) return null;
   const hasReturns = returns.length > 0;
-
-  const profit = billProfit.show && billProfit.ready ? billProfit.profitOf(invoice) : null;
 
   const printable = (
     <PrintableInvoice
@@ -143,18 +139,9 @@ export function InvoiceModal({ invoice, onClose, onEdit, onDelete, onChanged }) 
                     </dd>
                   </div>
                 ))}
-                {profit?.profit != null && (
-                  <div className="col-span-2 rounded-xl border border-border/70 bg-marigold/15 px-3 py-2 lg:col-span-1">
-                    <dt className="text-xs text-muted-foreground">Profit</dt>
-                    <dd className="font-display text-lg font-bold tabular-nums">
-                      {formatRupees(Math.round(profit.profit))}
-                      <span className="ml-1.5 text-xs font-semibold text-muted-foreground">{Math.round(profit.margin * 100)}%</span>
-                    </dd>
-                  </div>
-                )}
               </dl>
 
-              <BillReturns notes={returns} total={invoice.total} />
+              <ReturnsSummary invoice={invoice} notes={returns} onChanged={onChanged} />
 
               <div className="grid gap-2">
                 <BillWhatsAppButton invoice={invoice} />

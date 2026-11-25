@@ -4,6 +4,18 @@ import { isMissingColumn } from "@/lib/supabaseErrors";
 
 const isMissingFunction = (error) => error?.code === "PGRST202" || error?.code === "42883";
 
+async function callReturnFunction(name, args) {
+  const { error, data } = await supabase.rpc(name, args);
+  if (error) {
+    if (isMissingFunction(error)) {
+      throw Object.assign(new Error("Run docs/schema/goods_return_edit.sql in Supabase first."), { code: error.code });
+    }
+    throw error;
+  }
+  if (data.invoice?.date) await db.invoices.update(data.invoice.date, { credit: data.invoice.credit });
+  return data;
+}
+
 export const returnService = {
   /** Return notes for one bill, oldest first. Empty until goods_return.sql has been run. */
   async listForInvoice(invoice) {
@@ -44,5 +56,22 @@ export const returnService = {
     }
     if (data.invoice?.date) await db.invoices.update(data.invoice.date, { credit: data.invoice.credit });
     return data;
+  },
+
+  /** Changes how a return was refunded, its valid till date and the reason. */
+  editReturn(note, { cash, upi, due, expiresOn, reason }) {
+    return callReturnFunction("vh_edit_return", {
+      p_note_id: note.id,
+      p_cash: cash,
+      p_upi: upi,
+      p_due: due,
+      p_expires_on: expiresOn,
+      p_note: reason || null,
+    });
+  },
+
+  /** Cancels a return: stock goes back out, the due goes back on the bill, the books entries go. */
+  cancelReturn(note) {
+    return callReturnFunction("vh_cancel_return", { p_note_id: note.id });
   },
 };
