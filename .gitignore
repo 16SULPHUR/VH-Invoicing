@@ -73,7 +73,8 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
+# .env is intentionally committed: it holds only PUBLIC VITE_* values that Vite
+# inlines into the client bundle anyway (see .env.example). Secrets never go in it.
 .env.development.local
 .env.test.local
 .env.production.local

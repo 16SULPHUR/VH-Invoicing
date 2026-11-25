@@ -7,9 +7,25 @@ export default {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['"Hanken Grotesk Variable"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  			display: ['"Bricolage Grotesque Variable"', '"Hanken Grotesk Variable"', 'ui-sans-serif', 'sans-serif']
+  		},
   		colors: {
-  			skyBlue: '#38BDF8',
-  			// pink: '#db2777',
+  			indigo: {
+  				DEFAULT: 'hsl(var(--indigo))',
+  				raised: 'hsl(var(--indigo-raised))',
+  				foreground: 'hsl(var(--indigo-foreground))'
+  			},
+  			rani: {
+  				DEFAULT: 'hsl(var(--rani))',
+  				foreground: 'hsl(var(--rani-foreground))'
+  			},
+  			marigold: {
+  				DEFAULT: 'hsl(var(--marigold))',
+  				foreground: 'hsl(var(--marigold-foreground))'
+  			},
+  			leaf: 'hsl(var(--leaf))',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -40,6 +56,21 @@ export default {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
   			},
+  			surface: {
+  				DEFAULT: 'hsl(var(--surface))',
+  				elevated: 'hsl(var(--surface-elevated))'
+  			},
+  			success: {
+  				DEFAULT: 'hsl(var(--success))',
+  				foreground: 'hsl(var(--success-foreground))'
+  			},
+  			warning: {
+  				DEFAULT: 'hsl(var(--warning))',
+  				foreground: 'hsl(var(--warning-foreground))'
+  			},
+  			cash: 'hsl(var(--cash))',
+  			upi: 'hsl(var(--upi))',
+  			credit: 'hsl(var(--credit))',
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',

@@ -1,0 +1,35 @@
+import {
+  ClipboardList,
+  MessageCircle,
+  ReceiptIndianRupee,
+  PackageSearch,
+  ScanBarcode,
+  Users,
+  BookOpen,
+  House,
+  FileChartColumn,
+  Truck,
+  Settings,
+} from "lucide-react";
+
+// Single source of truth for navigation. Adding a screen means adding a route in
+// app/router.jsx and an entry here. `short` is the phone tab label.
+export const NAV_ITEMS = [
+  { label: "New bill", short: "Bill", to: "/", icon: ReceiptIndianRupee, end: true, primary: true },
+  { label: "Scan", short: "Scan", to: "/scan", icon: ScanBarcode, primary: true },
+  { label: "Counter", short: "Counter", to: "/counter", icon: ClipboardList, primary: true },
+  { label: "Inventory", short: "Stock", to: "/inventory", icon: PackageSearch, primary: true },
+  { label: "Customers", short: "Customers", to: "/customers", icon: Users, primary: true },
+  { label: "WhatsApp", short: "WhatsApp", to: "/whatsapp", icon: MessageCircle, primary: false },
+  { label: "Suppliers", short: "Suppliers", to: "/suppliers", icon: Truck, primary: false },
+  { label: "Books", short: "Books", to: "/books", icon: BookOpen, primary: false },
+  { label: "Home & Shop", short: "Home/Shop", to: "/holdings", icon: House, primary: false },
+  { label: "Reports", short: "Reports", to: "/reports", icon: FileChartColumn, primary: false },
+  { label: "Settings", short: "Settings", to: "/settings", icon: Settings, primary: false },
+];
+
+export const PRIMARY_NAV_ITEMS = NAV_ITEMS.filter((item) => item.primary);
+export const MORE_NAV_ITEMS = NAV_ITEMS.filter((item) => !item.primary);
+
+// Icon stroke weight is standardised across the app.
+export const ICON_STROKE = 1.9;
