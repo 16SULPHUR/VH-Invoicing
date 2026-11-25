@@ -12,7 +12,7 @@ import { MoneyInput, StatusPill } from "../components/Bits";
 import { useSaveTool } from "../hooks/useShopTools";
 import { usePrintSlip } from "../hooks/usePrintSlip";
 import { CREDIT_STATUS, creditBalance, isExpired, isUsable, settledAmount } from "../lib/credit";
-import { creditNoteSlip, longDate } from "../lib/slips";
+import { creditNoteSlip, longDateYear } from "../lib/slips";
 import { formatPhone, rupees, stockMoves } from "../lib/shopTools";
 
 /** A credit note's balance, what it was used on, and using it against a bill. */
@@ -112,7 +112,7 @@ export function CreditNoteSheet({ open, note, onClose }) {
         <p className="relative mt-1 font-display text-4xl font-extrabold tabular-nums leading-none">{formatRupees(balance)}</p>
         <p className="relative mt-1.5 text-sm">
           of {formatRupees(note.amount)} · issued {formatDateDDMMMYYYY(note.created_at)} ·{" "}
-          {note.expires_on ? `valid till ${longDate(note.expires_on)}` : "no expiry"}
+          {note.expires_on ? `valid till ${longDateYear(note.expires_on)}` : "no expiry"}
         </p>
       </div>
 
@@ -137,7 +137,7 @@ export function CreditNoteSheet({ open, note, onClose }) {
               {expired && (
                 <label className="flex items-start gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                  <span className="flex-1">Expired on {longDate(note.expires_on)}.</span>
+                  <span className="flex-1">Expired on {longDateYear(note.expires_on)}.</span>
                   <span className="flex items-center gap-1.5 text-foreground">
                     <Checkbox checked={acceptExpired} onCheckedChange={(value) => setAcceptExpired(value === true)} /> Accept anyway
                   </span>
